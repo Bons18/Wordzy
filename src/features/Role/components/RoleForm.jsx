@@ -70,10 +70,6 @@ const RoleForm = ({ onSubmit, onCancel }) => {
       </div>
 
       <div className="mb-6">
-        {/* <div className="flex justify-between min-w-182 mt-10 py-1" style={{ backgroundColor: '#1F384C', color: '#FFFFFFFF' }}>
-            <h3 className="text-lg font-semibold mb-3 mt-3">Permisos</h3>
-            <h3 className="text-lg font-semibold mb-3 mt-3">Privilegios</h3>
-        </div> */}
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200">
             <thead className="bg-gray-50">
