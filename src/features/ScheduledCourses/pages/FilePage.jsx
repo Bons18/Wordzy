@@ -26,7 +26,7 @@ const FilePage = () => {
     const navigate = useNavigate();
 
     const handleShowTrainees = () => {
-        navigate("/cursosProgramados/fichas/aprendices");
+        navigate("/progreso/cursosProgramados/fichas/aprendices");
     }
 
     return (

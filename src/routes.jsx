@@ -14,9 +14,13 @@ import Badges2 from "./features/Badges/pages/Badges2";
 import Badges3 from "./features/Badges/pages/Badges3";
 import Ranking from "./features/Ranking/pages/Ranking"
 import UsersPage from "./features/Users/pages/UsersPage"
-import RolesPage from "./features/Role/pages/RolePage"
 import Dashboard from "./features/dashboard/pages/Dashboard"
 import LoginPage from "./features/auth/pages/LoginPage"
+import CourseProgramming from "./features/CourseProgramming/components/CourseProgrammingForm"
+import FilePage from "./features/ScheduledCourses/pages/FilePage"
+import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
+import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
+import RolesPage from "./features/Role/pages/RolesPage"
 
 
 
@@ -65,8 +69,12 @@ const routes = [
     element: <Evaluations />,
   },
   {
-    path: "/programacion/cursos",
+    path: "/programacion/programacionCursos",
     element: <CouseProgrammingPage />,
+  },
+  {
+    path: "/programacion/programacionCursos/registrarProgramacion",
+    element: <CourseProgramming />,
   },
   {
     path: "/programacion/escala",
@@ -86,8 +94,16 @@ const routes = [
   },
   // Progreso
   {
-    path: "/progreso/cursos",
+    path: "/progreso/cursosProgramados",
     element: <ScheduledCoursesPage />,
+  },
+  {
+    path: "/progreso/cursosProgramados/fichas",
+    element: <FilePage />,
+  },
+  {
+    path: "/progreso/cursosProgramados/fichas/aprendices",
+    element: <TraineesPage />,
   },
   {
     path: "/progreso/ranking",
@@ -106,6 +122,10 @@ const routes = [
   {
     path: "/configuracion/roles",
     element: <RolesPage />,
+  },
+  {
+    path: "/configuracion/roles/registrarRol",
+    element: <RegistrarRolPage />,
   },
 ]
 

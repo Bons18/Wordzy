@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { formatDate} from "../../../shared/utils/dateFormatter";
+import { formatDate } from "../../../shared/utils/dateFormatter";
 
 const RoleForm = ({ onSubmit, onCancel }) => {
   const [nombre, setNombre] = useState("");
@@ -47,7 +47,7 @@ const RoleForm = ({ onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-        <h2 className="text-[27px] font-bold mb-6">CREAR ROL</h2>
+      <h2 className="text-[27px] font-bold mb-6">CREAR ROL</h2>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700">Nombre*</label>
         <input
@@ -70,13 +70,17 @@ const RoleForm = ({ onSubmit, onCancel }) => {
       </div>
 
       <div className="mb-6">
-        <div className="flex justify-between min-w-182 mt-10 py-1" style={{ backgroundColor: '#1F384C', color: '#FFFFFFFF' }}>
-            <h3 className="text-lg font-semibold mb-3 ml-30 mt-3">Permisos</h3>
-            <h3 className="text-lg font-semibold mb-3 mr-56 mt-3">Privilegios</h3>
-        </div>
+        {/* <div className="flex justify-between min-w-182 mt-10 py-1" style={{ backgroundColor: '#1F384C', color: '#FFFFFFFF' }}>
+            <h3 className="text-lg font-semibold mb-3 mt-3">Permisos</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-3">Privilegios</h3>
+        </div> */}
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200">
             <thead className="bg-gray-50">
+              <tr className="" style={{ backgroundColor: '#1F384C', color: '#FFFFFFFF' }}>
+                <th colSpan="1" className="text-lg font-semibold text-center py-3">Permisos</th>
+                <th colSpan="4" className="text-lg font-semibold text-center py-3">Privilegios</th>
+              </tr>
               <tr>
                 <th className="px-4 py-2 border border-gray-200">Módulos</th>
                 <th className="px-4 py-2 border border-gray-200">Visualizar</th>
@@ -87,16 +91,34 @@ const RoleForm = ({ onSubmit, onCancel }) => {
             </thead>
             <tbody>
               {Object.keys(permisos).map((modulo) => (
-                <tr key={modulo} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border border-gray-200">{modulo}</td>
+                <tr key={modulo} className="hover:bg-gray-50 even:bg-gray-50">
+                  <td className="px-6 py-3 border border-gray-200 font-medium text-gray-700 whitespace-nowrap">
+                    {/* Separa las palabras en mayúsculas y añade espacios */}
+                    {modulo
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/([a-z])([0-9])/g, '$1 $2')
+                      .trim()}
+                  </td>
                   {Object.keys(permisos[modulo]).map((accion) => (
                     <td key={accion} className="px-4 py-2 border border-gray-200 text-center">
-                      <input
-                        type="checkbox"
-                        checked={permisos[modulo][accion]}
-                        onChange={() => handlePermisoChange(modulo, accion)}
-                        className="form-checkbox h-5 w-5 text-blue-600 rounded-[10px] focus:ring-blue-500"
-                      />
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={permisos[modulo][accion]}
+                          onChange={() => handlePermisoChange(modulo, accion)}
+                          className="hidden"
+                        />
+                        <span className={`relative w-5 h-5 border-2 rounded-[5px] flex items-center justify-center transition-all duration-200 ${permisos[modulo][accion]
+                            ? 'border-[#1F384C] bg-[#1F384C] hover:bg-[#1F384C]'
+                            : 'border-gray-400 hover:border-gray-500'
+                          }`}>
+                          {permisos[modulo][accion] && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                      </label>
                     </td>
                   ))}
                 </tr>

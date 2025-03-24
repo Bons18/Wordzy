@@ -1,23 +1,8 @@
-"use client"
+import React from "react";
+import { FiSearch, FiEdit, FiTrash, FiChevronLeft, FiChevronRight, FiEye } from "react-icons/fi";
+import { MdAddCircleOutline } from "react-icons/md";
+import Tooltip from "../components/Tooltip"; // Importa el componente Tooltip
 
-import { useState } from "react"
-import { FiSearch, FiEdit, FiTrash, FiChevronLeft, FiChevronRight, FiEye } from "react-icons/fi"
-import { MdAddCircleOutline } from "react-icons/md"
-
-/**
- * Componente de tabla reutilizable con Tailwind CSS
- * @param {Object} props - Propiedades del componente
- * @param {Array} props.data - Array de objetos con la información de los elementos
- * @param {Function} props.onAdd - Función que se ejecuta al hacer clic en "Añadir"
- * @param {Function} props.onShow - Función que se ejecuta al hacer clic en el botón de "Detalle"
- * @param {Function} props.onEdit - Función que se ejecuta al hacer clic en el botón de editar
- * @param {Function} props.onDelete - Función que se ejecuta al hacer clic en el botón de eliminar
- * @param {string} props.title - Título de la tabla (opcional)
- * @param {number} props.defaultItemsPerPage - Número de elementos por página por defecto (opcional)
- * @param {Array} props.columns - Array de objetos con la configuración de las columnas
- * @param {Object} props.showActions - Objeto que define qué acciones mostrar (opcional)
- * @returns {JSX.Element} Componente GenericTable
- */
 const GenericTable = ({
   data = [],
   onAdd,
@@ -27,31 +12,30 @@ const GenericTable = ({
   title = "TABLA",
   defaultItemsPerPage = 10,
   columns = [],
-  showActions = { show: false, edit: true, delete: true, add: true }, // Valores por defecto
+  showActions = { show: false, edit: true, delete: true, add: true },
+  tooltipText = "Ver detalle", // Texto personalizado para el tooltip
 }) => {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(defaultItemsPerPage)
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [itemsPerPage] = React.useState(defaultItemsPerPage);
 
-  // Filtrar datos basados en el término de búsqueda
   const filteredData = data.filter((item) =>
     columns.some((column) =>
       String(item[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
     )
-  )
+  );
 
-  // Calcular paginación
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem)
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber)
-  }
+    setCurrentPage(pageNumber);
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-[10px] shadow-sm p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">{title}</h1>
 
       <div className="flex justify-between items-center mb-6">
@@ -59,7 +43,7 @@ const GenericTable = ({
           <input
             type="text"
             placeholder="Buscar..."
-            className="w-full pl-3 pr-10 py-1 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors"
+            className="w-full pl-3 pr-10 py-1 border border-gray-200 rounded-[10px] focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -69,7 +53,7 @@ const GenericTable = ({
         {showActions.delete && (
           <button
             onClick={onAdd}
-            className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-[10px] hover:bg-green-600 transition-colors"
           >
             <MdAddCircleOutline size={20} />
             Añadir
@@ -100,32 +84,38 @@ const GenericTable = ({
                 <td className="px-4 py-3 border-b border-gray-200">
                   <div className="flex items-center gap-2 justify-center">
                     {showActions.show && (
-                      <button
-                        onClick={() => onShow(item)}
-                        className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"
-                        style={{ backgroundColor: '#1F384C' }} // Color personalizado
-                        aria-label="Detalle"
-                      >
-                        <FiEye size={16} />
-                      </button>
+                      <Tooltip text={tooltipText} position="top">
+                        <button
+                          onClick={() => onShow(item)}
+                          className="p-2 text-white rounded-[10px] transition-colors flex items-center justify-center"
+                          style={{ backgroundColor: '#1F384C' }}
+                          aria-label="Detalle"
+                        >
+                          <FiEye size={16} />
+                        </button>
+                      </Tooltip>
                     )}
                     {showActions.edit && (
-                      <button
-                        onClick={() => onEdit(item)}
-                        className="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center"
-                        aria-label="Editar"
-                      >
-                        <FiEdit size={16} />
-                      </button>
+                      <Tooltip text="Editar" position="top">
+                        <button
+                          onClick={() => onEdit(item)}
+                          className="p-2 bg-yellow-500 text-white rounded-[10px] hover:bg-yellow-600 transition-colors flex items-center justify-center"
+                          aria-label="Editar"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                      </Tooltip>
                     )}
                     {showActions.delete && (
-                      <button
-                        onClick={() => onDelete(item.id)}
-                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center"
-                        aria-label="Eliminar"
-                      >
-                        <FiTrash size={16} />
-                      </button>
+                      <Tooltip text="Eliminar" position="top">
+                        <button
+                          onClick={() => onDelete(item.id)}
+                          className="p-2 bg-red-500 text-white rounded-[10px] hover:bg-red-600 transition-colors flex items-center justify-center"
+                          aria-label="Eliminar"
+                        >
+                          <FiTrash size={16} />
+                        </button>
+                      </Tooltip>
                     )}
                   </div>
                 </td>
@@ -164,7 +154,7 @@ const GenericTable = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GenericTable
+export default GenericTable;

@@ -23,7 +23,7 @@ const ScheduledCoursesPage = () => {
     const navigate = useNavigate();
 
     const handleShowProgramming = () => {
-        navigate("/cursosProgramados/fichas");
+        navigate("/progreso/cursosProgramados/fichas");
     }
 
     return (

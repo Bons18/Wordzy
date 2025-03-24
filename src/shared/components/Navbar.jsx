@@ -132,7 +132,7 @@ const Navbar = () => {
               <NavSubItem
                 icon={<Calendar size={16} />}
                 text="Programación de Cursos"
-                onClick={() => handleNavigation("/programacion/cursos")}
+                onClick={() => handleNavigation("/programacion/programacionCursos")}
               />
               <NavSubItem
                 icon={<Star size={16} />}
@@ -166,7 +166,7 @@ const Navbar = () => {
               <NavSubItem
                 icon={<List size={16} />}
                 text="Cursos Programados"
-                onClick={() => handleNavigation("/progreso/cursos")}
+                onClick={() => handleNavigation("/progreso/cursosProgramados")}
               />
               <NavSubItem
                 icon={<TrendingUp size={16} />}
