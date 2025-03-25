@@ -6,7 +6,7 @@ export const loginUser = async (credentials) => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   // Basic validation
-  if (!credentials.name || !credentials.email || !credentials.password) {
+  if (!credentials.email || !credentials.password) {
     throw new Error("Todos los campos son requeridos")
   }
 
@@ -18,13 +18,12 @@ export const loginUser = async (credentials) => {
 
   // Check for specific admin credentials
   if (
-    credentials.name === "admin" &&
     credentials.email === "admin@gmail.com" &&
     credentials.password === "admin"
   ) {
     return {
       id: "1",
-      name: credentials.name,
+      name: "Admin",
       email: credentials.email,
       role: "admin"
     }
