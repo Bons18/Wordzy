@@ -53,7 +53,7 @@ const LoginPage = () => {
       {/* Left Section */}
       <div className="flex-1 flex flex-col justify-center px-6 py-8 lg:px-16 lg:py-0 items-center lg:items-start">
         <div className="mb-6 lg:mb-10">
-          <img src={logo} alt="Wordzy Logo" className="h-24 lg:h-32 w-auto" />
+          <img src={logo} alt="Wordzy Logo" className="h-32 lg:h-40 w-auto" />
         </div>
         <h1 className="text-2xl lg:text-4xl font-bold mb-4 text-center lg:text-left">
           Bienvenido a<br />
