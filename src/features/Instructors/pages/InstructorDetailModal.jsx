@@ -26,71 +26,75 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose, onViewFicha }) => 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold text-center text-[#1f384c] mb-8">DETALLE DEL INSTRUCTOR</h2>
+      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-lg">
+          <h2 className="text-xl font-bold text-center text-[#1f384c]">DETALLE DEL INSTRUCTOR</h2>
+        </div>
 
-        <div className="space-y-6 px-8">
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Nombre:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.nombre}</div>
-          </div>
+        <div className="p-4 overflow-y-auto">
+          <div className="space-y-3 px-2">
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Nombre:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.nombre}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Apellido:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.apellido}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Apellido:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.apellido}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Documento:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.documento}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Documento:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.documento}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Tipo documento:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.tipoDocumento}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Tipo documento:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.tipoDocumento}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Telefono:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.telefono}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Telefono:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.telefono}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Estado:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.estado}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Estado:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.estado}</div>
+            </div>
 
-          <div className="flex gap-x-8">
-            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Correo:</div>
-            <div className="w-2/3 text-xl text-gray-500">{instructor.correo}</div>
-          </div>
+            <div className="flex gap-x-4">
+              <div className="w-2/5 font-bold text-base whitespace-nowrap">Correo:</div>
+              <div className="w-3/5 text-base text-gray-500">{instructor.correo}</div>
+            </div>
 
-          <div className="mt-10">
-            <h3 className="text-xl font-bold mb-6">Fichas en formacion asociadas</h3>
+            <div className="mt-4">
+              <h3 className="text-base font-bold mb-3">Fichas en formacion asociadas</h3>
 
-            <div className="space-y-4 px-8">
-              {instructor.fichas &&
-                instructor.fichas.map((ficha, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <div className="text-lg text-gray-500">{ficha.numero} :</div>
-                    <button
-                      onClick={() => onViewFicha(ficha)}
-                      className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"
-                      style={{ backgroundColor: "#1F384C" }}
-                      aria-label="Ver detalle de ficha"
-                    >
-                      <FiEye size={20} />
-                    </button>
-                  </div>
-                ))}
+              <div className="space-y-2 px-2">
+                {instructor.fichas &&
+                  instructor.fichas.map((ficha, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <div className="text-sm text-gray-500">{ficha.numero} :</div>
+                      <button
+                        onClick={() => onViewFicha(ficha)}
+                        className="p-1 text-white rounded-lg transition-colors flex items-center justify-center"
+                        style={{ backgroundColor: "#1F384C" }}
+                        aria-label="Ver detalle de ficha"
+                      >
+                        <FiEye size={16} />
+                      </button>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center mt-10">
+        <div className="p-4 border-t border-gray-200 flex justify-center rounded-b-lg">
           <button
             onClick={onClose}
-            className="bg-[#f44144] text-white py-3 px-10 rounded-lg text-lg font-medium hover:bg-red-600 transition-colors"
+            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-base font-medium hover:bg-red-600 transition-colors"
           >
             Cerrar
           </button>
