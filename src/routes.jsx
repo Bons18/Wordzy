@@ -1,4 +1,4 @@
-import Apprentices from "./features/Apprentices/pages/Aprendices"
+import Apprentices from "./features/Apprentices/pages/Apprentices"
 import Files from "./features/File/pages/Files"
 import InstructorsPage from "./features/Instructors/pages/InstructorsPage"
 import Programs from "./features/Programs/pages/Programs"

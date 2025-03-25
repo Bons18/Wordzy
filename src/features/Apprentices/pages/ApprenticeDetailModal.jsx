@@ -3,6 +3,13 @@
 import { useEffect, useRef } from "react"
 import { FiEye } from "react-icons/fi"
 
+const InfoRow = ({ label, value }) => (
+  <div className="flex items-start py-3 border-b border-gray-100">
+    <div className="w-1/3 font-bold text-lg text-[#1f384c]">{label}:</div>
+    <div className="w-2/3 text-lg text-gray-600 break-words">{value}</div>
+  </div>
+)
+
 const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) => {
   const modalRef = useRef(null)
 
@@ -24,86 +31,52 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 
   if (!isOpen) return null
 
+  const apprenticeInfo = [
+    { label: "Nombre", value: apprentice.nombre },
+    { label: "Apellido", value: apprentice.apellido },
+    { label: "Documento", value: apprentice.documento },
+    { label: "Tipo Documento", value: apprentice.tipoDocumento },
+    { label: "Telefono", value: apprentice.telefono },
+    { label: "Estado", value: apprentice.estado },
+    { label: "Nivel actual", value: apprentice.nivel },
+    { label: "Ficha", value: apprentice.ficha[0] },
+    { label: "Programa", value: apprentice.programa },
+    { label: "Correo", value: apprentice.correo },
+    { label: "Progreso actual", value: `${apprentice.progresoActual}%` },
+  ]
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg p-8 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold text-center text-[#1f384c] mb-8">DETALLE DEL APRENDIZ</h2>
+      <div ref={modalRef} className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold text-center text-[#1f384c] pb-6 mb-6 border-b border-gray-200">
+          DETALLE DEL APRENDIZ
+        </h2>
 
-        <div className="space-y-6">
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Nombre:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.nombre}</div>
-          </div>
+        <div className="space-y-2">
+          {apprenticeInfo.map((info, index) => (
+            <InfoRow key={index} label={info.label} value={info.value} />
+          ))}
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Apellido:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.apellido}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Documento:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.documento}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Tipo Documento:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.tipoDocumento}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Telefono:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.telefono}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Estado:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.estado}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Nivel actual:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.nivel}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Ficha:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.ficha[0]}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Programa:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.programa}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Correo:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.correo}</div>
-          </div>
-
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Progreso actual:</div>
-            <div className="w-2/3 text-xl text-gray-500">{apprentice.progresoActual}%</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-1/3 font-bold text-xl">Progreso Niveles:</div>
+          <div className="flex items-center py-3 border-b border-gray-100">
+            <div className="w-1/3 font-bold text-lg text-[#1f384c]">Progreso Niveles:</div>
             <div className="w-2/3 flex justify-start">
               <button
                 onClick={onShowProgress}
-                className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"
+                className="px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 hover:opacity-90"
                 style={{ backgroundColor: "#1F384C" }}
                 aria-label="Ver progreso de niveles"
               >
                 <FiEye size={20} />
+                <span>Ver Progreso</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-8 pt-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="bg-[#f44144] text-white py-3 px-10 rounded-lg text-lg font-medium hover:bg-red-600 transition-colors"
+            className="bg-[#f44144] text-white py-3 px-12 rounded-lg text-lg font-medium hover:bg-red-600 transition-colors"
           >
             Cerrar
           </button>

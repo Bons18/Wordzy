@@ -26,49 +26,49 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose, onViewFicha }) => 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg p-8 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="bg-white rounded-lg p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-center text-[#1f384c] mb-8">DETALLE DEL INSTRUCTOR</h2>
 
-        <div className="space-y-6">
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Nombre:</div>
+        <div className="space-y-6 px-8">
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Nombre:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.nombre}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Apellido:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Apellido:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.apellido}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Documento:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Documento:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.documento}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Tipo Documento:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Tipo documento:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.tipoDocumento}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Telefono:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Telefono:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.telefono}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Estado:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Estado:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.estado}</div>
           </div>
 
-          <div className="flex">
-            <div className="w-1/3 font-bold text-xl">Correo:</div>
+          <div className="flex gap-x-8">
+            <div className="w-1/3 font-bold text-xl whitespace-nowrap">Correo:</div>
             <div className="w-2/3 text-xl text-gray-500">{instructor.correo}</div>
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-xl font-bold mb-4">Fichas en formacion asociadas</h3>
+          <div className="mt-10">
+            <h3 className="text-xl font-bold mb-6">Fichas en formacion asociadas</h3>
 
-            <div className="space-y-4">
+            <div className="space-y-4 px-8">
               {instructor.fichas &&
                 instructor.fichas.map((ficha, index) => (
                   <div key={index} className="flex justify-between items-center">

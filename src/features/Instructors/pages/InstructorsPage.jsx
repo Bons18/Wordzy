@@ -1,6 +1,11 @@
-import { useState } from "react"
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { ChevronDown } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
+import { useAuth } from "../../auth/hooks/useAuth"
 
 // Datos de ejemplo con campos adicionales
 const instructorsData = [
@@ -97,10 +102,24 @@ const columns = [
   },
 ]
 
-const InstructorsPage
-= () => {
+const Instructores = () => {
   const [selectedInstructor, setSelectedInstructor] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleShowInstructor = (instructor) => {
     setSelectedInstructor(instructor)
@@ -114,30 +133,62 @@ const InstructorsPage
   const handleViewFicha = (ficha) => {
     console.log("Ver detalle de ficha:", ficha)
     // Aquí podrías implementar la lógica para mostrar el detalle de la ficha
-    // Por ejemplo, abrir otro modal o navegar a otra página
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
   }
 
   return (
-    <div>
-      <GenericTable
-        data={instructorsData}
-        columns={columns}
-        onShow={handleShowInstructor}
-        title="LISTA DE INSTRUCTORES"
-        showActions={{ show: true, edit: false, delete: false }}
-      />
+    <div className="min-h-screen">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[#1f384c]">Instructores</h1>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              <span>Administrador</span>
+              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
 
-      {selectedInstructor && (
-        <InstructorDetailModal
-          instructor={selectedInstructor}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onViewFicha={handleViewFicha}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-6">
+        <GenericTable
+          data={instructorsData}
+          columns={columns}
+          onShow={handleShowInstructor}
+          title="LISTA DE INSTRUCTORES"
+          showActions={{ show: true, edit: false, delete: false }}
         />
-      )}
+
+        {selectedInstructor && (
+          <InstructorDetailModal
+            instructor={selectedInstructor}
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onViewFicha={handleViewFicha}
+          />
+        )}
+      </div>
     </div>
   )
 }
 
-export default InstructorsPage
+export default Instructores
 
