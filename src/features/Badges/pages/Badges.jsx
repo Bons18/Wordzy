@@ -98,13 +98,13 @@ const Badges = () => {
               )}
             </div>
 
-            {/* Subir imagen - adjusted height */}
+            {/* Subir imagen - improved layout */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-[#1f384c]">
                 Subir imagen:
               </label>
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-gray-300 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100">
+                <label className="flex flex-col items-center justify-center w-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                   {!formData.file ? (
                     <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
                       <Upload className="w-10 h-10 mb-3 text-gray-400" />
@@ -112,35 +112,43 @@ const Badges = () => {
                       <p className="text-xs text-gray-400 mt-1">PNG, JPG (MAX. 800x400px)</p>
                     </div>
                   ) : (
-                    <div className="w-full p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <Upload className="w-6 h-6 text-blue-500" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 truncate max-w-[200px]">{formData.file.name}</p>
-                            <p className="text-xs text-gray-500">{formData.fileSize} MB</p>
-                          </div>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            file: null,
-                            filePreview: null,
-                            fileSize: null
-                          }))}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
+                    <div className="w-full p-6">
                       {formData.filePreview && (
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center">
                           <img 
                             src={formData.filePreview} 
                             alt="Preview" 
-                            className="h-24 w-24 object-contain rounded-lg"
+                            className="h-40 w-40 object-contain rounded-lg shadow-sm mb-4"
                           />
+                          <div className="w-full max-w-sm bg-white rounded-lg shadow-sm p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="bg-blue-50 p-2 rounded-lg">
+                                  <Upload className="w-5 h-5 text-blue-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                                    {formData.file.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-0.5">
+                                    Tamaño: {formData.fileSize} MB
+                                  </p>
+                                </div>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  file: null,
+                                  filePreview: null,
+                                  fileSize: null
+                                }))}
+                                className="p-1.5 hover:bg-red-50 rounded-lg group transition-colors"
+                              >
+                                <X className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

@@ -10,6 +10,7 @@ const Badges = () => {
 
   // Estado para controlar la vista (formulario o lista)
   const [view, setView] = useState("list") // "list" o "form"
+  const [showEditConfirm, setShowEditConfirm] = useState(false)
 
   // Estado para los campos del formulario
   const [badgeName, setBadgeName] = useState("")
@@ -101,9 +102,19 @@ const Badges = () => {
   }
 
   // Función para navegar a la página de edición de insignias
-  const handleEditBadges = () => {
+  const handleEditClick = () => {
+    setShowEditConfirm(true)
+  }
+
+  const handleEditConfirm = () => {
+    setShowEditConfirm(false)
     navigate("/programacion/insigneas3")
   }
+
+  // Remove or comment out the old handleEditBadges function since we're not using it anymore
+  // const handleEditBadges = () => {
+  //   navigate("/programacion/insigneas3")
+  // }
 
   // Renderizar la vista de lista de insignias
   const renderBadgesList = () => {
@@ -113,8 +124,8 @@ const Badges = () => {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-[#1f384c]">INSIGNIAS</h1>
             <button
-              onClick={handleEditBadges}
-              className="bg-[#1f384c] text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors"
+              onClick={handleEditClick}
+              className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
             >
               Editar insignias
             </button>
@@ -143,6 +154,39 @@ const Badges = () => {
             ))}
           </div>
         </main>
+
+        {/* Edit Confirmation Modal */}
+        {showEditConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-semibold text-[#1f384c]">
+                    Editar Insignias
+                  </h3>
+                  <p className="mt-2 text-[#627b87]">
+                    ¿Está seguro de que desea editar las insignias?
+                  </p>
+                </div>
+                
+                <div className="flex justify-center gap-3">
+                  <button
+                    className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                    onClick={() => setShowEditConfirm(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                    onClick={handleEditConfirm}
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }

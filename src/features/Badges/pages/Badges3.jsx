@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const Ranking = () => {
+  const navigate = useNavigate()
   const [badges, setBadges] = useState([
     {
       id: 1,
@@ -30,13 +32,35 @@ const Ranking = () => {
     },
   ])
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false)
+  const [badgeToDelete, setBadgeToDelete] = useState(null)
+
   const handleInputChange = (id, field, value) => {
     setBadges(badges.map((badge) => (badge.id === id ? { ...badge, [field]: value } : badge)))
   }
 
-  const handleDelete = (id) => {
-    // In a real app, you would confirm before deleting
-    setBadges(badges.filter((badge) => badge.id !== id))
+  const handleDeleteClick = (id) => {
+    setBadgeToDelete(id)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDelete = () => {
+    setBadges(badges.filter((badge) => badge.id !== badgeToDelete))
+    setShowDeleteConfirm(false)
+  }
+
+  const handleSaveClick = () => {
+    setShowSaveConfirm(true)
+  }
+
+  const handleSave = () => {
+    // Here you would make your API call
+    setShowSaveConfirm(false)
+  }
+
+  const handleCancel = () => {
+    navigate("/programacion/insigneas")
   }
 
   return (
@@ -98,10 +122,10 @@ const Ranking = () => {
               />
             </div>
 
-            {/* Delete Button */}
+            {/* Updated Delete Button */}
             <div className="sm:col-span-1 flex items-center justify-center sm:justify-end">
               <button
-                onClick={() => handleDelete(badge.id)}
+                onClick={() => handleDeleteClick(badge.id)}
                 className="px-3 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors w-full sm:w-auto"
               >
                 Eliminar
@@ -111,15 +135,87 @@ const Ranking = () => {
         ))}
       </div>
 
-      {/* Action Buttons */}
+      {/* Updated Action Buttons */}
       <div className="flex justify-end gap-4">
-        <button className="px-6 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
+        <button 
+          onClick={handleCancel}
+          className="px-6 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+        >
           Cancelar
         </button>
-        <button className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+        <button 
+          onClick={handleSaveClick}
+          className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        >
           Guardar Cambios
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold text-[#1f384c]">
+                  Eliminar Insignia
+                </h3>
+                <p className="mt-2 text-[#627b87]">
+                  ¿Está seguro de que desea eliminar esta insignia?
+                </p>
+              </div>
+              
+              <div className="flex justify-center gap-3">
+                <button
+                  className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
+                  onClick={handleDelete}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Confirmation Modal */}
+      {showSaveConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold text-[#1f384c]">
+                  Guardar Cambios
+                </h3>
+                <p className="mt-2 text-[#627b87]">
+                  ¿Está seguro de que desea guardar los cambios realizados?
+                </p>
+              </div>
+              
+              <div className="flex justify-center gap-3">
+                <button
+                  className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                  onClick={() => setShowSaveConfirm(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                  onClick={handleSave}
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
