@@ -32,6 +32,11 @@ const Navbar = () => {
     configuracion: false,
   })
 
+  // Add this new handler
+  const handleLogoClick = () => {
+    navigate('/dashboard')
+  }
+
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -45,8 +50,11 @@ const Navbar = () => {
 
   return (
     <div className="h-screen w-56 bg-[#1f384c] text-white flex flex-col flex-shrink-0">
-      {/* Logo */}
-      <div className="p-4 flex items-center shrink-0">
+      {/* Update the logo div to be clickable */}
+      <div 
+        className="p-4 flex items-center shrink-0 cursor-pointer hover:bg-[#2a4a64] transition-colors"
+        onClick={handleLogoClick}
+      >
         <img src={logo || "/placeholder.svg"} alt="Wordzy Logo" className="h-8 w-8 mr-2" />
         <h1 className="text-xl font-bold font-['Poppins']">WORDZY</h1>
       </div>

@@ -13,22 +13,38 @@ const LoginPage = () => {
 
   const handleLoginSuccess = () => {
     setIsSuccess(true)
-    // Show success alert
+    // Show success alert with improved styling and animation
     const alert = document.createElement('div')
-    alert.className = 'fixed top-4 right-4 left-4 md:left-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50'
+    alert.className = 'fixed top-4 right-4 left-4 md:left-auto md:w-96 bg-white border border-green-200 rounded-xl shadow-lg z-50 transform transition-all duration-300 ease-out translate-y-[-100%] opacity-0'
     alert.innerHTML = `
-      <div class="flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-        </svg>
-        <span class="font-medium">¡Inicio de sesión exitoso!</span>
+      <div class="flex items-center p-4">
+        <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-medium text-gray-800">¡Inicio de sesión exitoso!</p>
+          <p class="text-sm text-gray-500">Redirigiendo al dashboard...</p>
+        </div>
       </div>
     `
     document.body.appendChild(alert)
 
+    // Trigger animation
     setTimeout(() => {
-      alert.remove()
-      navigate("/dashboard")
+      alert.style.transform = 'translateY(0)'
+      alert.style.opacity = '1'
+    }, 100)
+
+    // Remove alert and navigate
+    setTimeout(() => {
+      alert.style.transform = 'translateY(-100%)'
+      alert.style.opacity = '0'
+      setTimeout(() => {
+        alert.remove()
+        navigate("/dashboard")
+      }, 300)
     }, 2000)
   }
 
@@ -48,17 +64,19 @@ const LoginPage = () => {
         </p>
       </div>
 
-      {/* Right Section */}
+      {/* Right Section - With animation */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-0">
         {!isSuccess ? (
-          <div className="w-full max-w-md bg-white p-6 lg:p-8 rounded-lg">
-            <h2 className="text-xl lg:text-2xl font-bold text-[#1F384C] mb-6 lg:mb-8 text-center lg:text-left">
+          <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-gray-50 
+            animate-[fadeIn_0.5s_ease-out] hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] transition-shadow duration-300"
+          >
+            <h2 className="text-xl lg:text-2xl font-bold text-[#1F384C] mb-8 text-center lg:text-left">
               Inicio de Sesión
             </h2>
             <LoginForm onLoginSuccess={handleLoginSuccess} login={login} />
           </div>
         ) : (
-          <div className="text-center p-4">
+          <div className="text-center p-4 animate-[fadeIn_0.5s_ease-out]">
             <img src={logo} alt="Wordzy Logo" className="h-16 w-auto mx-auto" />
             <h2 className="mt-6 text-xl lg:text-2xl font-semibold text-green-600">
               ¡Inicio de sesión exitoso!
