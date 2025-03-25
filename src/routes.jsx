@@ -14,7 +14,7 @@ import Badges2 from "./features/Badges/pages/Badges2";
 import Badges3 from "./features/Badges/pages/Badges3";
 import Ranking from "./features/Ranking/pages/Ranking"
 import UsersPage from "./features/Users/pages/UsersPage"
-import Dashboard from "./features/Dashboard/pages/Dashboard"
+import Dashboard from "./features/dashboard/pages/Dashboard"
 import LoginPage from "./features/auth/pages/LoginPage"
 import CourseProgramming from "./features/CourseProgramming/components/CourseProgrammingForm"
 import FilePage from "./features/ScheduledCourses/pages/FilePage"

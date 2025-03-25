@@ -38,13 +38,10 @@ export default function Programs() {
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="p-6">
-        <div className="flex justify-between mb-6">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-[#1f384c]">PROGRAMAS</h2>
-          </div>
-
+    <div className="min-h-screen">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[#1f384c]">PROGRAMAS</h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -66,7 +63,9 @@ export default function Programs() {
             )}
           </div>
         </div>
+      </header>
 
+      <div className="container mx-auto px-6">
         <div className="mb-4">
           <div className="relative">
             <input
