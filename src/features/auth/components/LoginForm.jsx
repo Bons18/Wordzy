@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { User, Mail, Eye, EyeOff } from "lucide-react"
+import { Mail, Eye, EyeOff } from "lucide-react"
 import InputField from "../../../shared/components/InputField"
 import Checkbox from "../../../shared/components/Checkbox"
 
 const LoginForm = ({ onLoginSuccess, login }) => {
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     rememberMe: false,
@@ -41,19 +40,6 @@ const LoginForm = ({ onLoginSuccess, login }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
-      <div>
-        <InputField
-          name="name"
-          type="text"
-          value={formData.name}
-          onChange={handleChange}
-          icon={<User size={20} />}
-          placeholder="Daniel"
-          label="Nombre"
-          className="w-full text-sm lg:text-base"
-        />
-      </div>
-
       <div>
         <InputField
           name="email"
