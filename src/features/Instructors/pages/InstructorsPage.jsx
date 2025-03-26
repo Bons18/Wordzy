@@ -5,9 +5,10 @@ import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
+import FichaDetailModal from "./FichaDetailModal"
 import { useAuth } from "../../auth/hooks/useAuth"
 
-// Datos de ejemplo con campos adicionales
+// Datos de ejemplo con campos adicionales y estudiantes en las fichas
 const instructorsData = [
   {
     id: 1,
@@ -19,9 +20,43 @@ const instructorsData = [
     telefono: "3102568799",
     correo: "carlos.gomez@example.com",
     fichas: [
-      { id: 1, numero: "2889927", programa: "Desarrollo de Software" },
-      { id: 2, numero: "2829397", programa: "Diseño Gráfico" },
-      { id: 3, numero: "2978765", programa: "Redes de Computadores" },
+      {
+        id: 1,
+        numero: "2889927",
+        programa: "Desarrollo de Software",
+        fechaInicio: "23/01/2024",
+        fechaFin: "30/01/2025",
+        estudiantes: [
+          { nombre: "Manolo", apellido: "Bermudez", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Maria", apellido: "Perez", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Cody", apellido: "Fisher", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Esther", apellido: "Howard", documento: "704.555.0127", tipoDocumento: "PEP" },
+          { nombre: "Ronald", apellido: "Richards", documento: "704.555.0127", tipoDocumento: "PPT" },
+        ],
+      },
+      {
+        id: 2,
+        numero: "2829397",
+        programa: "Diseño Gráfico",
+        fechaInicio: "15/02/2024",
+        fechaFin: "15/02/2025",
+        estudiantes: [
+          { nombre: "Albert", apellido: "Flores", documento: "704.555.0127", tipoDocumento: "DNI" },
+          { nombre: "Marvin", apellido: "McKinney", documento: "704.555.0127", tipoDocumento: "DNI" },
+          { nombre: "Leslie", apellido: "Alexander", documento: "704.555.0127", tipoDocumento: "CC" },
+        ],
+      },
+      {
+        id: 3,
+        numero: "2978765",
+        programa: "Redes de Computadores",
+        fechaInicio: "10/03/2024",
+        fechaFin: "10/03/2025",
+        estudiantes: [
+          { nombre: "Darlene", apellido: "Robertson", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Jane", apellido: "Cooper", documento: "704.555.0127", tipoDocumento: "PEP" },
+        ],
+      },
     ],
   },
   {
@@ -34,8 +69,29 @@ const instructorsData = [
     telefono: "3156789012",
     correo: "laura.martinez@example.com",
     fichas: [
-      { id: 4, numero: "2889927", programa: "Contabilidad" },
-      { id: 5, numero: "2978765", programa: "Administración de Empresas" },
+      {
+        id: 4,
+        numero: "2889927",
+        programa: "Contabilidad",
+        fechaInicio: "05/01/2024",
+        fechaFin: "05/01/2025",
+        estudiantes: [
+          { nombre: "Cameron", apellido: "Williamson", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Brooklyn", apellido: "Simmons", documento: "704.555.0127", tipoDocumento: "PPT" },
+        ],
+      },
+      {
+        id: 5,
+        numero: "2978765",
+        programa: "Administración de Empresas",
+        fechaInicio: "20/02/2024",
+        fechaFin: "20/02/2025",
+        estudiantes: [
+          { nombre: "Savannah", apellido: "Nguyen", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Ralph", apellido: "Edwards", documento: "704.555.0127", tipoDocumento: "DNI" },
+          { nombre: "Kristin", apellido: "Watson", documento: "704.555.0127", tipoDocumento: "CC" },
+        ],
+      },
     ],
   },
   {
@@ -48,8 +104,29 @@ const instructorsData = [
     telefono: "3209876543",
     correo: "juan.perez@example.com",
     fichas: [
-      { id: 6, numero: "2829397", programa: "Mecánica Automotriz" },
-      { id: 7, numero: "2978765", programa: "Electrónica" },
+      {
+        id: 6,
+        numero: "2829397",
+        programa: "Mecánica Automotriz",
+        fechaInicio: "12/03/2024",
+        fechaFin: "12/03/2025",
+        estudiantes: [
+          { nombre: "Wade", apellido: "Warren", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Robert", apellido: "Fox", documento: "704.555.0127", tipoDocumento: "PEP" },
+        ],
+      },
+      {
+        id: 7,
+        numero: "2978765",
+        programa: "Electrónica",
+        fechaInicio: "01/04/2024",
+        fechaFin: "01/04/2025",
+        estudiantes: [
+          { nombre: "Devon", apellido: "Lane", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Darrell", apellido: "Steward", documento: "704.555.0127", tipoDocumento: "PPT" },
+          { nombre: "Courtney", apellido: "Henry", documento: "704.555.0127", tipoDocumento: "DNI" },
+        ],
+      },
     ],
   },
   {
@@ -61,7 +138,21 @@ const instructorsData = [
     estado: "Activo",
     telefono: "3112345678",
     correo: "ana.lopez@example.com",
-    fichas: [{ id: 8, numero: "2889927", programa: "Cocina Internacional" }],
+    fichas: [
+      {
+        id: 8,
+        numero: "2889927",
+        programa: "Cocina Internacional",
+        fechaInicio: "15/01/2024",
+        fechaFin: "15/01/2025",
+        estudiantes: [
+          { nombre: "Eleanor", apellido: "Pena", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Theresa", apellido: "Webb", documento: "704.555.0127", tipoDocumento: "PEP" },
+          { nombre: "Kathryn", apellido: "Murphy", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Bessie", apellido: "Cooper", documento: "704.555.0127", tipoDocumento: "DNI" },
+        ],
+      },
+    ],
   },
   {
     id: 5,
@@ -73,11 +164,29 @@ const instructorsData = [
     telefono: "3102568799",
     correo: "correo@correo.com",
     fichas: [
-      { id: 9, numero: "2889927", programa: "Desarrollo Web" },
-      { id: 10, numero: "2829397", programa: "Diseño UX/UI" },
-      { id: 11, numero: "2978765", programa: "Inteligencia Artificial" },
-      { id: 12, numero: "2829397", programa: "Ciencia de Datos" },
-      { id: 13, numero: "2978765", programa: "Ciberseguridad" },
+      {
+        id: 9,
+        numero: "2889927",
+        programa: "Desarrollo Web",
+        fechaInicio: "10/02/2024",
+        fechaFin: "10/02/2025",
+        estudiantes: [
+          { nombre: "Jerome", apellido: "Bell", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Dianne", apellido: "Russell", documento: "704.555.0127", tipoDocumento: "PPT" },
+        ],
+      },
+      {
+        id: 10,
+        numero: "2829397",
+        programa: "Diseño UX/UI",
+        fechaInicio: "05/03/2024",
+        fechaFin: "05/03/2025",
+        estudiantes: [
+          { nombre: "Annette", apellido: "Black", documento: "704.555.0127", tipoDocumento: "CC" },
+          { nombre: "Arlene", apellido: "McCoy", documento: "704.555.0127", tipoDocumento: "PEP" },
+          { nombre: "Jenny", apellido: "Wilson", documento: "704.555.0127", tipoDocumento: "DNI" },
+        ],
+      },
     ],
   },
 ]
@@ -102,11 +211,12 @@ const columns = [
   },
 ]
 
-const Instructores = () => {
+const InstructorsPage = () => {
   const [selectedInstructor, setSelectedInstructor] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false)
+  const [selectedFicha, setSelectedFicha] = useState(null)
+  const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
@@ -124,21 +234,20 @@ const Instructores = () => {
 
   const handleShowInstructor = (instructor) => {
     setSelectedInstructor(instructor)
-    setIsModalOpen(true)
+    setIsInstructorModalOpen(true)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
+  const handleCloseInstructorModal = () => {
+    setIsInstructorModalOpen(false)
   }
 
   const handleViewFicha = (ficha) => {
-    console.log("Ver detalle de ficha:", ficha)
-    // Aquí podrías implementar la lógica para mostrar el detalle de la ficha
+    setSelectedFicha(ficha)
+    setIsFichaModalOpen(true)
   }
 
-  const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
+  const handleCloseFichaModal = () => {
+    setIsFichaModalOpen(false)
   }
 
   const handleLogout = () => {
@@ -163,7 +272,7 @@ const Instructores = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
                 <button
-                  onClick={handleLogoutClick}
+                  onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
                 >
                   Cerrar Sesión
@@ -186,48 +295,19 @@ const Instructores = () => {
         {selectedInstructor && (
           <InstructorDetailModal
             instructor={selectedInstructor}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
+            isOpen={isInstructorModalOpen}
+            onClose={handleCloseInstructorModal}
             onViewFicha={handleViewFicha}
           />
         )}
 
-        {/* Logout Confirmation Modal */}
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-              <div className="p-6">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-[#1f384c]">
-                    Cerrar Sesión
-                  </h3>
-                  <p className="mt-2 text-[#627b87]">
-                    ¿Está seguro de que desea cerrar la sesión actual?
-                  </p>
-                </div>
-                
-                <div className="flex justify-center gap-3">
-                  <button
-                    className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                    onClick={() => setShowLogoutConfirm(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                    onClick={handleLogout}
-                  >
-                    Cerrar Sesión
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {selectedFicha && (
+          <FichaDetailModal ficha={selectedFicha} isOpen={isFichaModalOpen} onClose={handleCloseFichaModal} />
         )}
       </div>
     </div>
   )
 }
 
-export default Instructores
+export default InstructorsPage
 
