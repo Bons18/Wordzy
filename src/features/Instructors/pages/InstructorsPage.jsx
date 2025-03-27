@@ -455,8 +455,12 @@ const InstructorsPage = () => {
           data={instructorsData}
           columns={columns}
           onShow={handleShowInstructor}
+<<<<<<< HEAD
           title=""
           showActions={{ show: true }}
+=======
+          showActions={{ show: true, edit: false, delete: false }}
+>>>>>>> de8368b2026623eb9762977501b73134aecdb30c
         />
 
         {selectedInstructor && (

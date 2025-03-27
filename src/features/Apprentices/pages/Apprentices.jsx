@@ -188,7 +188,10 @@ const Apprentices = () => {
           data={aprendices}
           columns={columns}
           onShow={handleShowApprentice}
+<<<<<<< HEAD
           title=""
+=======
+>>>>>>> de8368b2026623eb9762977501b73134aecdb30c
           showActions={{ show: true }}
         />
 
