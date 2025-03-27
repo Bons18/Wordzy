@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import GenericTable from "../../../shared/components/Table"
-import UserDetailModal from "./UserDetailModal"
+import UserTable from "./Usertable"
 import { useAuth } from "../../auth/hooks/useAuth"
 
 // Datos de ejemplo
@@ -46,8 +45,6 @@ const columns = [
 ]
 
 const Usuarios = () => {
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -63,15 +60,6 @@ const Usuarios = () => {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
-
-  const handleShowUser = (user) => {
-    setSelectedUser(user)
-    setIsModalOpen(true)
-  }
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-  }
 
   const handleLogout = () => {
     logout()
@@ -107,15 +95,7 @@ const Usuarios = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <GenericTable
-          data={users}
-          columns={columns}
-          onShow={handleShowUser}
-          title="LISTA DE USUARIOS"
-          showActions={{ show: true, edit: false, delete: false }}
-        />
-
-        {selectedUser && <UserDetailModal user={selectedUser} isOpen={isModalOpen} onClose={handleCloseModal} />}
+        <UserTable data={users} columns={columns} title="" />
       </div>
     </div>
   )
