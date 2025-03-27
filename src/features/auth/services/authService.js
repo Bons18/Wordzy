@@ -29,7 +29,7 @@ export const loginUser = async (credentials) => {
     }
   }
 
-  throw new Error("Credenciales inválidas")
+  throw new Error("Correo o contraseña invalidos")
 }
 
 export const registerUser = async (userData) => {

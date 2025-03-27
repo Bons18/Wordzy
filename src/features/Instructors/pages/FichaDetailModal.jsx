@@ -58,8 +58,9 @@ const FichaDetailModal = ({ ficha, isOpen, onClose }) => {
               <tr className="border-b border-gray-200">
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Nombre</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Apellido</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Documento</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Tipo Documento</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Documento</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Estado</th>
               </tr>
             </thead>
             <tbody>
@@ -68,8 +69,19 @@ const FichaDetailModal = ({ ficha, isOpen, onClose }) => {
                   <tr key={index} className="border-b border-gray-200">
                     <td className="px-4 py-3 text-sm text-gray-700">{estudiante.nombre}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{estudiante.apellido}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{estudiante.documento}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{estudiante.tipoDocumento}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{estudiante.documento}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          estudiante.estado === "Condicionado"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {estudiante.estado || "En formación"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
             </tbody>

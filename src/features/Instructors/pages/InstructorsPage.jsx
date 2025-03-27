@@ -8,7 +8,6 @@ import InstructorDetailModal from "./InstructorDetailModal"
 import FichaDetailModal from "./FichaDetailModal"
 import { useAuth } from "../../auth/hooks/useAuth"
 
-// Datos de ejemplo con campos adicionales y estudiantes en las fichas
 const instructorsData = [
   {
     id: 1,
@@ -27,11 +26,41 @@ const instructorsData = [
         fechaInicio: "23/01/2024",
         fechaFin: "30/01/2025",
         estudiantes: [
-          { nombre: "Manolo", apellido: "Bermudez", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Maria", apellido: "Perez", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Cody", apellido: "Fisher", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Esther", apellido: "Howard", documento: "704.555.0127", tipoDocumento: "PEP" },
-          { nombre: "Ronald", apellido: "Richards", documento: "704.555.0127", tipoDocumento: "PPT" },
+          {
+            nombre: "Manolo",
+            apellido: "Bermudez",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Maria",
+            apellido: "Perez",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Cody",
+            apellido: "Fisher",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Esther",
+            apellido: "Howard",
+            documento: "704.555.0127",
+            tipoDocumento: "PEP",
+            estado: "En formación",
+          },
+          {
+            nombre: "Ronald",
+            apellido: "Richards",
+            documento: "704.555.0127",
+            tipoDocumento: "PPT",
+            estado: "En formación",
+          },
         ],
       },
       {
@@ -41,9 +70,27 @@ const instructorsData = [
         fechaInicio: "15/02/2024",
         fechaFin: "15/02/2025",
         estudiantes: [
-          { nombre: "Albert", apellido: "Flores", documento: "704.555.0127", tipoDocumento: "DNI" },
-          { nombre: "Marvin", apellido: "McKinney", documento: "704.555.0127", tipoDocumento: "DNI" },
-          { nombre: "Leslie", apellido: "Alexander", documento: "704.555.0127", tipoDocumento: "CC" },
+          {
+            nombre: "Albert",
+            apellido: "Flores",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Marvin",
+            apellido: "McKinney",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "En formación",
+          },
+          {
+            nombre: "Leslie",
+            apellido: "Alexander",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
         ],
       },
       {
@@ -53,8 +100,20 @@ const instructorsData = [
         fechaInicio: "10/03/2024",
         fechaFin: "10/03/2025",
         estudiantes: [
-          { nombre: "Darlene", apellido: "Robertson", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Jane", apellido: "Cooper", documento: "704.555.0127", tipoDocumento: "PEP" },
+          {
+            nombre: "Darlene",
+            apellido: "Robertson",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Jane",
+            apellido: "Cooper",
+            documento: "704.555.0127",
+            tipoDocumento: "PEP",
+            estado: "Condicionado",
+          },
         ],
       },
     ],
@@ -76,8 +135,20 @@ const instructorsData = [
         fechaInicio: "05/01/2024",
         fechaFin: "05/01/2025",
         estudiantes: [
-          { nombre: "Cameron", apellido: "Williamson", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Brooklyn", apellido: "Simmons", documento: "704.555.0127", tipoDocumento: "PPT" },
+          {
+            nombre: "Cameron",
+            apellido: "Williamson",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Brooklyn",
+            apellido: "Simmons",
+            documento: "704.555.0127",
+            tipoDocumento: "PPT",
+            estado: "En formación",
+          },
         ],
       },
       {
@@ -87,9 +158,27 @@ const instructorsData = [
         fechaInicio: "20/02/2024",
         fechaFin: "20/02/2025",
         estudiantes: [
-          { nombre: "Savannah", apellido: "Nguyen", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Ralph", apellido: "Edwards", documento: "704.555.0127", tipoDocumento: "DNI" },
-          { nombre: "Kristin", apellido: "Watson", documento: "704.555.0127", tipoDocumento: "CC" },
+          {
+            nombre: "Savannah",
+            apellido: "Nguyen",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Ralph",
+            apellido: "Edwards",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Kristin",
+            apellido: "Watson",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
         ],
       },
     ],
@@ -111,8 +200,20 @@ const instructorsData = [
         fechaInicio: "12/03/2024",
         fechaFin: "12/03/2025",
         estudiantes: [
-          { nombre: "Wade", apellido: "Warren", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Robert", apellido: "Fox", documento: "704.555.0127", tipoDocumento: "PEP" },
+          {
+            nombre: "Wade",
+            apellido: "Warren",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Robert",
+            apellido: "Fox",
+            documento: "704.555.0127",
+            tipoDocumento: "PEP",
+            estado: "En formación",
+          },
         ],
       },
       {
@@ -122,9 +223,21 @@ const instructorsData = [
         fechaInicio: "01/04/2024",
         fechaFin: "01/04/2025",
         estudiantes: [
-          { nombre: "Devon", apellido: "Lane", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Darrell", apellido: "Steward", documento: "704.555.0127", tipoDocumento: "PPT" },
-          { nombre: "Courtney", apellido: "Henry", documento: "704.555.0127", tipoDocumento: "DNI" },
+          { nombre: "Devon", apellido: "Lane", documento: "704.555.0127", tipoDocumento: "CC", estado: "En formación" },
+          {
+            nombre: "Darrell",
+            apellido: "Steward",
+            documento: "704.555.0127",
+            tipoDocumento: "PPT",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Courtney",
+            apellido: "Henry",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "En formación",
+          },
         ],
       },
     ],
@@ -146,10 +259,34 @@ const instructorsData = [
         fechaInicio: "15/01/2024",
         fechaFin: "15/01/2025",
         estudiantes: [
-          { nombre: "Eleanor", apellido: "Pena", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Theresa", apellido: "Webb", documento: "704.555.0127", tipoDocumento: "PEP" },
-          { nombre: "Kathryn", apellido: "Murphy", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Bessie", apellido: "Cooper", documento: "704.555.0127", tipoDocumento: "DNI" },
+          {
+            nombre: "Eleanor",
+            apellido: "Pena",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Theresa",
+            apellido: "Webb",
+            documento: "704.555.0127",
+            tipoDocumento: "PEP",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Kathryn",
+            apellido: "Murphy",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Bessie",
+            apellido: "Cooper",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "Condicionado",
+          },
         ],
       },
     ],
@@ -171,8 +308,20 @@ const instructorsData = [
         fechaInicio: "10/02/2024",
         fechaFin: "10/02/2025",
         estudiantes: [
-          { nombre: "Jerome", apellido: "Bell", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Dianne", apellido: "Russell", documento: "704.555.0127", tipoDocumento: "PPT" },
+          {
+            nombre: "Jerome",
+            apellido: "Bell",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Dianne",
+            apellido: "Russell",
+            documento: "704.555.0127",
+            tipoDocumento: "PPT",
+            estado: "En formación",
+          },
         ],
       },
       {
@@ -182,9 +331,27 @@ const instructorsData = [
         fechaInicio: "05/03/2024",
         fechaFin: "05/03/2025",
         estudiantes: [
-          { nombre: "Annette", apellido: "Black", documento: "704.555.0127", tipoDocumento: "CC" },
-          { nombre: "Arlene", apellido: "McCoy", documento: "704.555.0127", tipoDocumento: "PEP" },
-          { nombre: "Jenny", apellido: "Wilson", documento: "704.555.0127", tipoDocumento: "DNI" },
+          {
+            nombre: "Annette",
+            apellido: "Black",
+            documento: "704.555.0127",
+            tipoDocumento: "CC",
+            estado: "En formación",
+          },
+          {
+            nombre: "Arlene",
+            apellido: "McCoy",
+            documento: "704.555.0127",
+            tipoDocumento: "PEP",
+            estado: "Condicionado",
+          },
+          {
+            nombre: "Jenny",
+            apellido: "Wilson",
+            documento: "704.555.0127",
+            tipoDocumento: "DNI",
+            estado: "En formación",
+          },
         ],
       },
     ],
@@ -194,8 +361,8 @@ const instructorsData = [
 const columns = [
   { key: "nombre", label: "Nombre" },
   { key: "apellido", label: "Apellido" },
-  { key: "documento", label: "Documento" },
   { key: "tipoDocumento", label: "Tipo Documento" },
+  { key: "documento", label: "Documento" },
   {
     key: "estado",
     label: "Estado",
@@ -213,8 +380,8 @@ const columns = [
 
 const InstructorsPage = () => {
   const [selectedInstructor, setSelectedInstructor] = useState(null)
-  const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false)
   const [selectedFicha, setSelectedFicha] = useState(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const { logout } = useAuth()
@@ -234,11 +401,11 @@ const InstructorsPage = () => {
 
   const handleShowInstructor = (instructor) => {
     setSelectedInstructor(instructor)
-    setIsInstructorModalOpen(true)
+    setIsDetailModalOpen(true)
   }
 
-  const handleCloseInstructorModal = () => {
-    setIsInstructorModalOpen(false)
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false)
   }
 
   const handleViewFicha = (ficha) => {
@@ -288,14 +455,15 @@ const InstructorsPage = () => {
           data={instructorsData}
           columns={columns}
           onShow={handleShowInstructor}
-          showActions={{ show: true, edit: false, delete: false }}
+          title=""
+          showActions={{ show: true }}
         />
 
         {selectedInstructor && (
           <InstructorDetailModal
             instructor={selectedInstructor}
-            isOpen={isInstructorModalOpen}
-            onClose={handleCloseInstructorModal}
+            isOpen={isDetailModalOpen}
+            onClose={handleCloseDetailModal}
             onViewFicha={handleViewFicha}
           />
         )}
@@ -309,4 +477,3 @@ const InstructorsPage = () => {
 }
 
 export default InstructorsPage
-
