@@ -288,7 +288,6 @@ const InstructorsPage = () => {
           data={instructorsData}
           columns={columns}
           onShow={handleShowInstructor}
-          title="LISTA DE INSTRUCTORES"
           showActions={{ show: true, edit: false, delete: false }}
         />
 

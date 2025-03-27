@@ -12,6 +12,11 @@ const topics = [
   { id: 4, nombre: "Pronombres", estado: "Inactivo" },
   { id: 5, nombre: "Pasado simple", estado: "Activo" },
   { id: 6, nombre: "Adjetivos", estado: "Inactivo" },
+  { id: 7, nombre: "Futuro simple", estado: "Activo" },
+  { id: 8, nombre: "Adverbios", estado: "Inactivo" },
+  { id: 9, nombre: "Condicionales", estado: "Activo" },
+  { id: 10, nombre: "Preposiciones", estado: "Inactivo" },
+
 ];
 
 const columns = [
@@ -148,7 +153,6 @@ const TopicsPage = () => {
             onAdd={handleAddTopic}
             onEdit={handleEditTopic}
             onDelete={handleDeleteTopic}
-            title="GESTIÓN DE TEMAS"
           />
           <TopicModal
             isOpen={isModalOpen}

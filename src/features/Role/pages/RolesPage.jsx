@@ -133,7 +133,6 @@ const RolesPage = () => {
           onAdd={handleAddRole}
           onEdit={handleEditRole}
           onDelete={handleDeleteRole}
-          title="LISTA DE ROLES"
         />
       </div>
     </div>

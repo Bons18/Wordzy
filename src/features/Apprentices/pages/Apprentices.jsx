@@ -193,7 +193,6 @@ const Apprentices = () => {
           data={aprendices}
           columns={columns}
           onShow={handleShowApprentice}
-          title="LISTA DE APRENDICES"
           showActions={{ show: true }}
         />
 

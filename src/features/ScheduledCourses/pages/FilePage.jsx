@@ -8,17 +8,22 @@ import { useAuth } from "../../auth/hooks/useAuth"
 const files = [
     { fichas: "4556778", programa: "Programa 1", Instructor: "Instructor 1", cantidadAprendices: 10, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "10%" },
     { fichas: "2345543", programa: "Programa 2", Instructor: "Instructor 2", cantidadAprendices: 20, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "20%" },
-    { fichas: "1925422", programa: "Programa 3", Instructor: "Instructor 3", cantidadAprendices: 30, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "30%" },
-    { fichas: "4435672", programa: "Programa 4", Instructor: "Instructor 4", cantidadAprendices: 40, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "40%" },
-    { fichas: "5543673", programa: "Programa 5", Instructor: "Instructor 5", cantidadAprendices: 50, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "50%" },
-    { fichas: "6893354", programa: "Programa 6", Instructor: "Instructor 6", cantidadAprendices: 60, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "60%" },
+    { fichas: "1925422", programa: "Programa 3", Instructor: "Instructor 3", cantidadAprendices: 15, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "30%" },
+    { fichas: "4435672", programa: "Programa 4", Instructor: "Instructor 4", cantidadAprendices: 12, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "40%" },
+    { fichas: "5543673", programa: "Programa 5", Instructor: "Instructor 5", cantidadAprendices: 22, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "50%" },
+    { fichas: "6893354", programa: "Programa 6", Instructor: "Instructor 6", cantidadAprendices: 30, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "60%" },
+    { fichas: "7665544", programa: "Programa 7", Instructor: "Instructor 7", cantidadAprendices: 20, fechaInicio: "10-10-2021", fechaFin: "10-10-2022", progreso: "70%" },
+    { fichas: "8765432", programa: "Programa 8", Instructor: "Instructor 8", cantidadAprendices: 25, fechaInicio: "01-01-2022", fechaFin: "01-01-2023", progreso: "80%" },
+    { fichas: "9876543", programa: "Programa 9", Instructor: "Instructor 9", cantidadAprendices: 18, fechaInicio: "05-05-2022", fechaFin: "05-05-2023", progreso: "90%" },
+    { fichas: "1234567", programa: "Programa 10", Instructor: "Instructor 10", cantidadAprendices: 35, fechaInicio: "07-07-2022", fechaFin: "07-07-2023", progreso: "100%" },
+    
 ]
 
 const columns = [
     { key: "fichas", label: "Fichas" },
     { key: "programa", label: "Programa" },
     { key: "Instructor", label: "Instructor" },
-    { key: "cantidadAprendices", label: "Cantidad de Aprendices" },
+    { key: "cantidadAprendices", label: "N° Aprendices" },
     { key: "fechaInicio", label: "Fecha de Inicio" },
     { key: "fechaFin", label: "Fecha de Fin" },
     { key: "progreso", label: "Progreso" },
@@ -123,7 +128,6 @@ const FilePage = () => {
                     data={files}
                     columns={columns}
                     onShow={handleShowTrainees}
-                    title="LISTA DE FICHAS"
                     tooltipText="Ver Aprendices"
                     showActions={{ show: true, edit: false, delete: false, add: false }}
                 />

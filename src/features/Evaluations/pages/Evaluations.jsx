@@ -156,7 +156,6 @@ const Evaluations = () => {
           onShow={handleShow}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          title={`Listado de ${selectedType === "examenes" ? "Exámenes" : "Actividades"}`}
           showActions={{ show: true, edit: true, delete: true }}
         />
       </div>

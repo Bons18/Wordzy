@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom"
 
 
 const trainees = [
-    { nombre: "Juan Perez", correo: "juan@gmail.com", telefono: "1234567890", progreso: "10%", puntosTotales: "100", ultimaConexion: "10-10-2021" },
-    { nombre: "Maria Rodriguez", correo: "maria@gmail.com", telefono: "1234567890", progreso: "20%", puntosTotales: "200", ultimaConexion: "10-10-2021" },
-    { nombre: "Pedro Gomez", correo: "pedro@gmail.com", telefono: "1234567890", progreso: "30%", puntosTotales: "300", ultimaConexion: "10-10-2021" },
-    { nombre: "Ana Perez", correo: "ana@gmail.com", telefono: "1234567890", progreso: "40%", puntosTotales: "400", ultimaConexion: "10-10-2021" },
-    { nombre: "Luisa Rodriguez", correo: "luisa@gmail.com", telefono: "1234567890", progreso: "50%", puntosTotales: "500", ultimaConexion: "10-10-2021" },
-    { nombre: "Carlos Gomez", correo: "carlos@gmail.com", telefono: "1234567890", progreso: "60%", puntosTotales: "600", ultimaConexion: "10-10-2021" },
+    { nombre: "Juan Perez", correo: "juan@gmail.com", telefono: "1234567890", progreso: "10%", puntosTotales: "100",},
+    { nombre: "Maria Rodriguez", correo: "maria@gmail.com", telefono: "1234567890", progreso: "20%", puntosTotales: "200",},
+    { nombre: "Pedro Gomez", correo: "pedro@gmail.com", telefono: "1234567890", progreso: "30%", puntosTotales: "300",},
+    { nombre: "Ana Perez", correo: "ana@gmail.com", telefono: "1234567890", progreso: "40%", puntosTotales: "400",},
+    { nombre: "Luisa Rodriguez", correo: "luisa@gmail.com", telefono: "1234567890", progreso: "50%", puntosTotales: "500",},
+    { nombre: "Carlos Gomez", correo: "carlos@gmail.com", telefono: "1234567890", progreso: "60%", puntosTotales: "600",},
+    { nombre: "Sofia Martinez", correo: "sofia@gmail.com", telefono: "9876543210", progreso: "70%", puntosTotales: "700" },
+    { nombre: "Diego Torres", correo: "diego@gmail.com", telefono: "9876543211", progreso: "80%", puntosTotales: "800" },
+    { nombre: "Laura Ramirez", correo: "laura@gmail.com", telefono: "9876543212", progreso: "90%", puntosTotales: "900" },
+    { nombre: "Miguel Sanchez", correo: "miguel@gmail.com", telefono: "9876543213", progreso: "100%", puntosTotales: "1000" },
 ]
 
 const columns = [
@@ -20,7 +24,6 @@ const columns = [
     { key: "telefono", label: "Teléfono" },
     { key: "progreso", label: "Progreso" },
     { key: "puntosTotales", label: "Puntos Totales" },
-    { key: "ultimaConexion", label: "Última Conexión" },
 
 ]
 
@@ -122,7 +125,6 @@ const TraineesPage = () => {
                     data={trainees}
                     columns={columns}
                     onShow={handleShowProgress}
-                    title="LISTA DE APRENDICES"
                     tooltipText="Ver Progreso"
                     showActions={{ show: true, edit: false, delete: false, add: false }}
                 />

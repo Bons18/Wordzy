@@ -12,6 +12,10 @@ const schedules = [
     { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 6, nombre: "Programa 6", fechaInicio: "01-01-2023", fechaFin: "01-01-2024", estado: "Inactivo" },
+    { id: 7, nombre: "Programa 7", fechaInicio: "01-02-2023", fechaFin: "01-07-2025", estado: "Activo" },
+    { id: 8, nombre: "Programa 8", fechaInicio: "01-03-2023", fechaFin: "01-08-2025", estado: "Activo" },
+    { id: 9, nombre: "Programa 9", fechaInicio: "01-04-2023", fechaFin: "01-09-2025", estado: "Inactivo" },
+    { id: 10, nombre: "Programa 10", fechaInicio: "01-05-2023", fechaFin: "01-10-2025", estado: "Activo" },
 ]
 
 const columns = [
@@ -147,7 +151,6 @@ const CouseProgrammingPage = () => {
                     onShow={handleShowProgramming}
                     onEdit={handleEditProgramming}
                     onDelete={handleDeleteProgramming}
-                    title="LISTA DE PROGRAMACIONES"
                     showActions={{ show: true, edit: true, delete: true }}
                 />
             </div>

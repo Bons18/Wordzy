@@ -120,7 +120,6 @@ const ScheduledCoursesPage = () => {
                     data={scheduledCourses}
                     columns={columns}
                     onShow={handleShowProgramming}
-                    title="LISTA DE NIVELES"
                     tooltipText="Ver Fichas"
                     showActions={{ show: true, edit: false, delete: false, add: false }}
                 />
