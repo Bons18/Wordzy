@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatDate } from "../../../shared/utils/dateFormatter";
 
-const RoleForm = ({ onSubmit, onCancel }) => {
+const RoleForm = ({ onSubmit, onCancel, initialData }) => {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [estado, setEstado] = useState("Activo");
   const [permisos, setPermisos] = useState({
     Dashboard: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
     Programas: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
@@ -23,6 +24,20 @@ const RoleForm = ({ onSubmit, onCancel }) => {
     Roles: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
   });
 
+  // Efecto para cargar los datos iniciales si existen
+  useEffect(() => {
+    if (initialData) {
+      setNombre(initialData.nombre);
+      setDescripcion(initialData.descripcion);
+      setEstado(initialData.estado || "Activo");
+      setPermisos(initialData.permisos);
+    }
+  }, [initialData]);
+
+  const toggleEstado = () => {
+    setEstado(estado === "Activo" ? "Inactivo" : "Activo");
+  };
+
   const handlePermisoChange = (modulo, accion) => {
     setPermisos({
       ...permisos,
@@ -35,19 +50,20 @@ const RoleForm = ({ onSubmit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const nuevoRol = {
+    const rolActualizado = {
+      ...initialData, // Mantenemos todos los datos originales
       nombre,
       descripcion,
+      estado,
       permisos,
-      fechaCreacion: formatDate(new Date()),
-      estado: "Activo",
+      fechaActualizacion: formatDate(new Date()),
     };
-    onSubmit(nuevoRol);
+    onSubmit(rolActualizado);
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-1">
-      <h2 className="text-xl font-bold mb-4">CREAR ROL</h2>
+      <h2 className="text-xl font-bold mb-4">{initialData ? "EDITAR ROL" : "CREAR ROL"}</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
         <div>
@@ -70,6 +86,23 @@ const RoleForm = ({ onSubmit, onCancel }) => {
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
+
+        {initialData && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+            <div className="flex items-center">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={estado === "Activo"}
+                  onChange={toggleEstado}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-4">
@@ -138,7 +171,7 @@ const RoleForm = ({ onSubmit, onCancel }) => {
           type="submit"
           className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
-          Crear Rol
+          {initialData ? "Actualizar Rol" : "Crear Rol"}
         </button>
       </div>
     </form>

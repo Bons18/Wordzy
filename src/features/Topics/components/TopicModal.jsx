@@ -36,6 +36,22 @@ const TopicModal = ({ isOpen, onClose, onSubmit }) => {
             required
           />
         </div>
+        <div className="flex justify-between space-x-4 mt-4">
+        <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-red-500 text-white rounded-[10px] hover:bg-red-600 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            onClick={onSubmit}
+            className="px-4 py-2 bg-green-600 text-white rounded-[10px] hover:bg-green-700 transition-colors"
+          >
+            Añadir
+          </button>
+        </div>
       </form>
     </Modal>
   );

@@ -151,7 +151,7 @@ const CouseProgrammingPage = () => {
                     onShow={handleShowProgramming}
                     onEdit={handleEditProgramming}
                     onDelete={handleDeleteProgramming}
-                    showActions={{ show: true, edit: true, delete: true }}
+                    showActions={{ show: true, edit: true, delete: true, add: true }}
                 />
             </div>
         </div>

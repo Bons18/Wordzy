@@ -1,75 +1,71 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import GenericTable from "../../../shared/components/Table";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";// Importa el contexto
-import { ChevronDown } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
+import { ChevronDown } from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { useNavigate, useParams } from "react-router-dom";
+import RoleForm from "../components/RoleForm";
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
 
-const columns = [
-  { key: "id", label: "Id" },
-  { key: "nombre", label: "Nombre" },
-  { key: "descripcion", label: "Descripción" },
-  { key: "fechaCreacion", label: "Fecha de creación" },
-  {
-    key: "estado",
-    label: "Estado",
-    render: (item) => (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-      >
-        {item.estado}
-      </span>
-    ),
-  },
-];
 
-const RolesPage = () => {
+const EditarRolPage = () => {
   const navigate = useNavigate();
-  const { roles } = useContext(RoleContext); // Obtén los roles del contexto
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const { logout } = useAuth()
-  const dropdownRef = useRef(null)
+  const { id } = useParams(); // Obtenemos el ID del rol de la URL
+  const { roles, updateRole } = useContext(RoleContext);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { logout } = useAuth();
+  const dropdownRef = useRef(null);
+  const [rol, setRol] = useState(null);
+
+  // Buscar el rol a editar
+  useEffect(() => {
+    const foundRol = roles.find(r => r.id === parseInt(id));
+    if (foundRol) {
+      setRol(foundRol);
+    } else {
+      // Si no se encuentra el rol, redirigir a la lista de roles
+      navigate("/configuracion/roles");
+    }
+  }, [id, roles, navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
+    logout();
+    navigate("/login");
+  };
+
+  const handleFormSubmit = (rolActualizado) => {
+    updateRole(rolActualizado); // Actualiza el rol en el contexto
+    navigate("/configuracion/roles"); // Redirige de vuelta a la lista de roles
+  };
+
+  const handleCancel = () => {
+    navigate("/configuracion/roles"); // Redirige de vuelta a la lista de roles
+  };
+
+  if (!rol) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   }
-
-  const handleAddRole = () => {
-    navigate("/configuracion/roles/registrarRol"); // Redirige a la ruta de registro
-  };
-
-  const handleEditRole = (role) => {
-    navigate(`/configuracion/roles/editar/${role.id}`);
-  };
-
-  const handleDeleteRole = (id) => {
-    console.log("Eliminar Rol con ID:", id);
-  };
 
   return (
     <div className="min-h-screen">
-      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-1">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1f384c]">Roles</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">Editar Rol</h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -127,17 +123,18 @@ const RolesPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <GenericTable
-          data={roles}
-          columns={columns}
-          onAdd={handleAddRole}
-          onEdit={handleEditRole}
-          onDelete={handleDeleteRole}
-        />
+        <div className="min-h-screen">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-10xl mx-auto">
+            <RoleForm 
+              onSubmit={handleFormSubmit} 
+              onCancel={handleCancel} 
+              initialData={rol} 
+            />
+          </div>
+        </div>
       </div>
     </div>
-
   );
 };
 
-export default RolesPage;
+export default EditarRolPage;

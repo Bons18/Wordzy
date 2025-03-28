@@ -1,30 +1,111 @@
-import GenericTable from "../../../shared/components/Table"
+"use client"
+
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
-
+import GenericTable from "../../../shared/components/Table"
 
 const trainees = [
-    { nombre: "Juan Perez", correo: "juan@gmail.com", telefono: "1234567890", progreso: "10%", puntosTotales: "100",},
-    { nombre: "Maria Rodriguez", correo: "maria@gmail.com", telefono: "1234567890", progreso: "20%", puntosTotales: "200",},
-    { nombre: "Pedro Gomez", correo: "pedro@gmail.com", telefono: "1234567890", progreso: "30%", puntosTotales: "300",},
-    { nombre: "Ana Perez", correo: "ana@gmail.com", telefono: "1234567890", progreso: "40%", puntosTotales: "400",},
-    { nombre: "Luisa Rodriguez", correo: "luisa@gmail.com", telefono: "1234567890", progreso: "50%", puntosTotales: "500",},
-    { nombre: "Carlos Gomez", correo: "carlos@gmail.com", telefono: "1234567890", progreso: "60%", puntosTotales: "600",},
-    { nombre: "Sofia Martinez", correo: "sofia@gmail.com", telefono: "9876543210", progreso: "70%", puntosTotales: "700" },
-    { nombre: "Diego Torres", correo: "diego@gmail.com", telefono: "9876543211", progreso: "80%", puntosTotales: "800" },
-    { nombre: "Laura Ramirez", correo: "laura@gmail.com", telefono: "9876543212", progreso: "90%", puntosTotales: "900" },
-    { nombre: "Miguel Sanchez", correo: "miguel@gmail.com", telefono: "9876543213", progreso: "100%", puntosTotales: "1000" },
+    {
+        id: 1,
+        nombre: "Juan Perez",
+        correo: "juan@gmail.com",
+        telefono: "1234567890",
+        progreso: "10%",
+        puntosTotales: "100",
+    },
+    {
+        id: 2,
+        nombre: "Maria Rodriguez",
+        correo: "maria@gmail.com",
+        telefono: "1234567890",
+        progreso: "20%",
+        puntosTotales: "200",
+    },
+    {
+        id: 3,
+        nombre: "Pedro Gomez",
+        correo: "pedro@gmail.com",
+        telefono: "1234567890",
+        progreso: "30%",
+        puntosTotales: "300",
+    },
+    {
+        id: 4,
+        nombre: "Ana Perez",
+        correo: "ana@gmail.com",
+        telefono: "1234567890",
+        progreso: "40%",
+        puntosTotales: "400",
+    },
+    {
+        id: 5,
+        nombre: "Luisa Rodriguez",
+        correo: "luisa@gmail.com",
+        telefono: "1234567890",
+        progreso: "50%",
+        puntosTotales: "500",
+    },
+    {
+        id: 6,
+        nombre: "Carlos Gomez",
+        correo: "carlos@gmail.com",
+        telefono: "1234567890",
+        progreso: "60%",
+        puntosTotales: "600",
+    },
+    {
+        id: 7,
+        nombre: "Sofia Martinez",
+        correo: "sofia@gmail.com",
+        telefono: "9876543210",
+        progreso: "70%",
+        puntosTotales: "700",
+    },
+    {
+        id: 8,
+        nombre: "Diego Torres",
+        correo: "diego@gmail.com",
+        telefono: "9876543211",
+        progreso: "80%",
+        puntosTotales: "800",
+    },
+    {
+        id: 9,
+        nombre: "Laura Ramirez",
+        correo: "laura@gmail.com",
+        telefono: "9876543212",
+        progreso: "90%",
+        puntosTotales: "900",
+    },
+    {
+        id: 10,
+        nombre: "Miguel Sanchez",
+        correo: "miguel@gmail.com",
+        telefono: "9876543213",
+        progreso: "100%",
+        puntosTotales: "1000",
+    },
 ]
 
 const columns = [
     { key: "nombre", label: "Nombre" },
     { key: "correo", label: "Correo" },
     { key: "telefono", label: "Teléfono" },
-    { key: "progreso", label: "Progreso" },
+    {
+        key: "progreso",
+        label: "Progreso",
+        render: (item) => (
+            <div className="flex items-center">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                    <div className="bg-green-500 h-2.5 rounded-full" style={{ width: item.progreso }}></div>
+                </div>
+                <span>{item.progreso}</span>
+            </div>
+        ),
+    },
     { key: "puntosTotales", label: "Puntos Totales" },
-
 ]
 
 const TraineesPage = () => {
@@ -55,9 +136,14 @@ const TraineesPage = () => {
         navigate("/login")
     }
 
-    const handleShowProgress = (progress) => {
-        console.log("Detalle del progreso:", progress)
+    const handleShowProgress = (trainee) => {
+        // Navegar a la página de progreso del aprendiz usando la ruta correcta
+        navigate(`/progreso/cursosProgramados/fichas/aprendices/progreso/${encodeURIComponent(trainee.nombre)}`)
     }
+
+    const handleBack = () => {
+        navigate('/progreso/cursosProgramados/fichas');
+    };
 
     return (
         <div className="min-h-screen">
@@ -90,12 +176,8 @@ const TraineesPage = () => {
                                 <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
                                     <div className="p-6">
                                         <div className="text-center mb-6">
-                                            <h3 className="text-xl font-semibold text-[#1f384c]">
-                                                Cerrar Sesión
-                                            </h3>
-                                            <p className="mt-2 text-[#627b87]">
-                                                ¿Está seguro de que desea cerrar la sesión actual?
-                                            </p>
+                                            <h3 className="text-xl font-semibold text-[#1f384c]">Cerrar Sesión</h3>
+                                            <p className="mt-2 text-[#627b87]">¿Está seguro de que desea cerrar la sesión actual?</p>
                                         </div>
 
                                         <div className="flex justify-center gap-3">
@@ -120,7 +202,16 @@ const TraineesPage = () => {
                 </div>
             </header>
 
+
             <div className="container mx-auto px-6">
+                <div className="flex items-center mb-6">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-1 bg-gray-200 text-black px-3 py-1.5 text-sm rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                        ← Volver a Fichas
+                    </button>
+                </div>
                 <GenericTable
                     data={trainees}
                     columns={columns}
@@ -130,8 +221,8 @@ const TraineesPage = () => {
                 />
             </div>
         </div>
-
     )
 }
 
 export default TraineesPage
+

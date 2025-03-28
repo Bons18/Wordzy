@@ -54,7 +54,7 @@ const aprendices = [
     apellido: "Martínez",
     documento: "1034567890",
     tipoDocumento: "PEP",
-    ficha: [2889927, 2996778],
+    ficha: [2889927],
     nivel: 3,
     estado: "En formación",
     telefono: "3209876543",

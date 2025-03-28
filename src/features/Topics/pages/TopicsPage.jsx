@@ -1,8 +1,11 @@
+// src/features/topics/pages/TopicsPage.jsx
+import React, { useState, useEffect, useRef } from "react";
 import GenericTable from "../../../shared/components/Table";
-import TopicModal from "../components/TopicModal"; // Importa el componente del modal
-import { useState, useEffect, useRef } from "react"
-import { ChevronDown } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
+import TopicModal from "../components/TopicModal";
+import EditTopicModal from "../components/EditTopicModal";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { ChevronDown } from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const topics = [
@@ -16,7 +19,6 @@ const topics = [
   { id: 8, nombre: "Adverbios", estado: "Inactivo" },
   { id: 9, nombre: "Condicionales", estado: "Activo" },
   { id: 10, nombre: "Preposiciones", estado: "Inactivo" },
-
 ];
 
 const columns = [
@@ -27,8 +29,11 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          item.estado === "Activo" 
+            ? "bg-green-100 text-green-800" 
+            : "bg-red-100 text-red-800"
+        }`}
       >
         {item.estado}
       </span>
@@ -38,40 +43,44 @@ const columns = [
 
 const TopicsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(null);
   const [topicsList, setTopicsList] = useState(topics);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-  const dropdownRef = useRef(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+    logout();
+    navigate("/login");
+  };
 
   const handleAddTopic = () => {
-    setIsModalOpen(true); // Abre el modal
+    setIsModalOpen(true);
   };
 
   const handleEditTopic = (topic) => {
-    console.log("Editar Tema:", topic);
+    setCurrentTopic(topic);
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteTopic = (id) => {
@@ -81,7 +90,14 @@ const TopicsPage = () => {
   const handleSubmitTopic = (newTopic) => {
     const newId = topicsList.length + 1;
     const newTema = { ...newTopic, id: newId, estado: "Activo" };
-    setTopicsList([...topicsList, newTema]); // Agrega el nuevo tema a la lista
+    setTopicsList([...topicsList, newTema]);
+  };
+
+  const handleUpdateTopic = (updatedTopic) => {
+    setTopicsList(topicsList.map(topic => 
+      topic.id === currentTopic.id ? { ...topic, ...updatedTopic } : topic
+    ));
+    setIsEditModalOpen(false);
   };
 
   return (
@@ -108,39 +124,6 @@ const TopicsPage = () => {
                 </button>
               </div>
             )}
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                  <div className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-xl font-semibold text-[#1f384c]">
-                        Cerrar Sesión
-                      </h3>
-                      <p className="mt-2 text-[#627b87]">
-                        ¿Está seguro de que desea cerrar la sesión actual?
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3">
-                      <button
-                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                        onClick={() => setShowLogoutConfirm(false)}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                        onClick={handleLogout}
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -154,15 +137,31 @@ const TopicsPage = () => {
             onEdit={handleEditTopic}
             onDelete={handleDeleteTopic}
           />
+          
           <TopicModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleSubmitTopic}
           />
+          
+          <EditTopicModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSubmit={handleUpdateTopic}
+            topic={currentTopic}
+          />
+
+          <ConfirmationModal
+            isOpen={showLogoutConfirm}
+            onClose={() => setShowLogoutConfirm(false)}
+            onConfirm={handleLogout}
+            title="Cerrar Sesión"
+            message="¿Está seguro de que desea cerrar la sesión actual?"
+            confirmText="Cerrar Sesión"
+          />
         </div>
       </div>
     </div>
-
   );
 };
 

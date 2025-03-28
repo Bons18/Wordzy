@@ -13,8 +13,16 @@ export const RoleProvider = ({ children }) => {
     setRoles([...roles, { ...nuevoRol, id: roles.length + 1 }]);
   };
 
+  const updateRole = (updatedRole) => {
+    setRoles(prevRoles => 
+      prevRoles.map(role => 
+        role.id === updatedRole.id ? updatedRole : role
+      )
+    );
+  };
+
   return (
-    <RoleContext.Provider value={{ roles, addRole }}>
+    <RoleContext.Provider value={{ roles, addRole, updateRole }}>
       {children}
     </RoleContext.Provider>
   );

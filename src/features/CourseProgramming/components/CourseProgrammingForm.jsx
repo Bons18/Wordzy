@@ -436,7 +436,7 @@ export default function CourseProgramming() {
                               >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                               </svg>
-                              Añadir Evaluaciones/Material
+                              Añadir Evaluaciones y Material
                             </button>
                           </div>
                         )}
