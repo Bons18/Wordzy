@@ -8,6 +8,7 @@ const ConfirmationModal = ({
   message,
   confirmText = "Confirmar",
   confirmColor = "bg-[#f44144] hover:bg-red-600",
+  showButtonCancel = true,
 }) => {
   if (!isOpen) return null;
 
@@ -21,12 +22,14 @@ const ConfirmationModal = ({
           </div>
 
           <div className="flex justify-center gap-3">
+            {showButtonCancel && (
             <button
               className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
               onClick={onClose}
             >
               Cancelar
             </button>
+            )}
             <button
               className={`px-6 py-2.5 ${confirmColor} text-white rounded-lg font-medium transition-colors`}
               onClick={onConfirm}

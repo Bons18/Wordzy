@@ -153,10 +153,11 @@ const Evaluations = () => {
         <GenericTable
           data={selectedType === "examenes" ? evaluationsData : activitiesData}
           columns={columns}
+          onAdd={''}
           onShow={handleShow}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          showActions={{ show: true, edit: true, delete: true }}
+          showActions={{ show: true, edit: true, delete: true, add: true }}
         />
       </div>
     </div>

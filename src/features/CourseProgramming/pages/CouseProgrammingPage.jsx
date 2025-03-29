@@ -1,21 +1,17 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown } from 'lucide-react'
 import { useAuth } from "../../auth/hooks/useAuth"
 import GenericTable from "../../../shared/components/Table"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
-
-const schedules = [
+// Datos predeterminados
+const defaultSchedules = [
     { id: 1, nombre: "Programa 1", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 2, nombre: "Programa 2", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 3, nombre: "Programa 3", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
     { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-    { id: 6, nombre: "Programa 6", fechaInicio: "01-01-2023", fechaFin: "01-01-2024", estado: "Inactivo" },
-    { id: 7, nombre: "Programa 7", fechaInicio: "01-02-2023", fechaFin: "01-07-2025", estado: "Activo" },
-    { id: 8, nombre: "Programa 8", fechaInicio: "01-03-2023", fechaFin: "01-08-2025", estado: "Activo" },
-    { id: 9, nombre: "Programa 9", fechaInicio: "01-04-2023", fechaFin: "01-09-2025", estado: "Inactivo" },
-    { id: 10, nombre: "Programa 10", fechaInicio: "01-05-2023", fechaFin: "01-10-2025", estado: "Activo" },
 ]
 
 const columns = [
@@ -37,13 +33,50 @@ const columns = [
     },
 ]
 
-const CouseProgrammingPage = () => {
+const CourseProgrammingPage = () => {
     const navigate = useNavigate()
+    const location = useLocation()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [itemToDelete, setItemToDelete] = useState(null)
+    const [successMessage, setSuccessMessage] = useState("")
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
     const { logout } = useAuth()
+    const [schedules, setSchedules] = useState([...defaultSchedules])
 
     const dropdownRef = useRef(null)
+
+    // Función para cargar las programaciones
+    const loadSchedules = () => {
+        try {
+            const savedSchedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
+            
+            if (savedSchedules.length > 0) {
+                // Filtrar para evitar duplicados por ID
+                const existingIds = new Set(defaultSchedules.map(s => s.id));
+                const filteredSavedSchedules = savedSchedules.filter(s => !existingIds.has(s.id));
+                
+                // Combinar con las programaciones predeterminadas
+                setSchedules([...defaultSchedules, ...filteredSavedSchedules]);
+            } else {
+                setSchedules([...defaultSchedules]);
+            }
+        } catch (error) {
+            console.error("Error al cargar programaciones:", error);
+            setSchedules([...defaultSchedules]);
+        }
+    };
+
+    // Cargar programaciones al montar el componente
+    useEffect(() => {
+        loadSchedules();
+    }, []);
+
+    // Recargar programaciones cuando la ubicación cambia (volvemos a esta página)
+    useEffect(() => {
+        loadSchedules();
+    }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -76,10 +109,36 @@ const CouseProgrammingPage = () => {
 
     const handleEditProgramming = (programming) => {
         console.log("Editar Programación:", programming)
+        // navigate(`/programacion/programacionCursos/editarProgramacion/${programming.id}`)
     }
 
     const handleDeleteProgramming = (id) => {
-        console.log("Eliminar Programación con ID:", id)
+        setItemToDelete(id);
+        setShowDeleteConfirm(true);
+    }
+
+    const confirmDeleteProgramming = () => {
+        try {
+            // Eliminar de la lista local
+            const updatedSchedules = schedules.filter(s => s.id !== itemToDelete);
+            setSchedules(updatedSchedules);
+            
+            // Actualizar localStorage
+            const savedSchedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
+            const updatedSavedSchedules = savedSchedules.filter(s => s.id !== itemToDelete);
+            localStorage.setItem('courseSchedules', JSON.stringify(updatedSavedSchedules));
+            
+            // Mostrar mensaje de éxito
+            setSuccessMessage("Programación eliminada exitosamente");
+            setShowSuccessModal(true);
+        } catch (error) {
+            console.error("Error al eliminar la programación:", error);
+            setSuccessMessage("Ocurrió un error al eliminar la programación");
+            setShowSuccessModal(true);
+        } finally {
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+        }
     }
 
     return (
@@ -106,39 +165,6 @@ const CouseProgrammingPage = () => {
                                 </button>
                             </div>
                         )}
-
-                        {/* Logout Confirmation Modal */}
-                        {showLogoutConfirm && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                                    <div className="p-6">
-                                        <div className="text-center mb-6">
-                                            <h3 className="text-xl font-semibold text-[#1f384c]">
-                                                Cerrar Sesión
-                                            </h3>
-                                            <p className="mt-2 text-[#627b87]">
-                                                ¿Está seguro de que desea cerrar la sesión actual?
-                                            </p>
-                                        </div>
-
-                                        <div className="flex justify-center gap-3">
-                                            <button
-                                                className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                                                onClick={() => setShowLogoutConfirm(false)}
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button
-                                                className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                                                onClick={handleLogout}
-                                            >
-                                                Cerrar Sesión
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>
@@ -154,9 +180,41 @@ const CouseProgrammingPage = () => {
                     showActions={{ show: true, edit: true, delete: true, add: true }}
                 />
             </div>
-        </div>
 
+            {/* Modal de confirmación para cerrar sesión */}
+            <ConfirmationModal
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogout}
+                title="Cerrar Sesión"
+                message="¿Está seguro de que desea cerrar la sesión actual?"
+                confirmText="Cerrar Sesión"
+                confirmColor="bg-[#f44144] hover:bg-red-600"
+            />
+
+            {/* Modal de confirmación para eliminar programación */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={confirmDeleteProgramming}
+                title="Eliminar Programación"
+                message="¿Está seguro que desea eliminar esta programación? Esta acción no se puede deshacer."
+                confirmText="Eliminar"
+                confirmColor="bg-[#f44144] hover:bg-red-600"
+            />
+
+            {/* Modal de éxito */}
+            <ConfirmationModal
+                isOpen={showSuccessModal}
+                onConfirm={() => setShowSuccessModal(false)}
+                title="Operación Exitosa"
+                message={successMessage}
+                confirmText="Aceptar"
+                confirmColor="bg-green-500 hover:bg-green-600"
+                showButtonCancel={false}
+            />
+        </div>
     )
 }
 
-export default CouseProgrammingPage
+export default CourseProgrammingPage

@@ -29,11 +29,10 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" 
-            ? "bg-green-100 text-green-800" 
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo"
+            ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800"
-        }`}
+          }`}
       >
         {item.estado}
       </span>
@@ -48,7 +47,35 @@ const TopicsPage = () => {
   const [topicsList, setTopicsList] = useState(topics);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const handleDeleteTopic = (id) => {
+    setItemToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteTopic = () => {
+    try {
+      // Eliminar de la lista local
+      const updatedTopics = topicsList.filter(t => t.id !== itemToDelete);
+      setTopicsList(updatedTopics);
+
+      // Mostrar mensaje de éxito
+      setSuccessMessage("Tema eliminado exitosamente");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error al eliminar el tema:", error);
+      setSuccessMessage("Ocurrió un error al eliminar el tema");
+      setShowSuccessModal(true);
+    } finally {
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+    }
+  };
+
   const { logout } = useAuth();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -83,10 +110,6 @@ const TopicsPage = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteTopic = (id) => {
-    console.log("Eliminar Tema con ID:", id);
-  };
-
   const handleSubmitTopic = (newTopic) => {
     const newId = topicsList.length + 1;
     const newTema = { ...newTopic, id: newId, estado: "Activo" };
@@ -94,7 +117,7 @@ const TopicsPage = () => {
   };
 
   const handleUpdateTopic = (updatedTopic) => {
-    setTopicsList(topicsList.map(topic => 
+    setTopicsList(topicsList.map(topic =>
       topic.id === currentTopic.id ? { ...topic, ...updatedTopic } : topic
     ));
     setIsEditModalOpen(false);
@@ -137,13 +160,13 @@ const TopicsPage = () => {
             onEdit={handleEditTopic}
             onDelete={handleDeleteTopic}
           />
-          
+
           <TopicModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleSubmitTopic}
           />
-          
+
           <EditTopicModal
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
@@ -158,6 +181,28 @@ const TopicsPage = () => {
             title="Cerrar Sesión"
             message="¿Está seguro de que desea cerrar la sesión actual?"
             confirmText="Cerrar Sesión"
+          />
+
+          {/* Modal de confirmación para eliminar tema */}
+          <ConfirmationModal
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={confirmDeleteTopic}
+            title="Eliminar Tema"
+            message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
+            confirmText="Eliminar"
+            confirmColor="bg-[#f44144] hover:bg-red-600"
+          />
+
+          {/* Modal de éxito */}
+          <ConfirmationModal
+            isOpen={showSuccessModal}
+            onConfirm={() => setShowSuccessModal(false)}
+            title="Operación Exitosa"
+            message={successMessage}
+            confirmText="Aceptar"
+            confirmColor="bg-green-500 hover:bg-green-600"
+            showButtonCancel={false}
           />
         </div>
       </div>

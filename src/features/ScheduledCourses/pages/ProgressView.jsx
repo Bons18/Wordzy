@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import GenericTable from '../../../shared/components/Table';
-import { FiInfo } from 'react-icons/fi';
+import { ChevronDown } from "lucide-react"
+import { useAuth } from "../../auth/hooks/useAuth"
 import { useParams, useNavigate } from 'react-router-dom';
+import { FiEye } from 'react-icons/fi';
+import Tooltip from '../../../shared/components/Tooltip';
 
 // Base de datos simulada con progreso para cada aprendiz
 const progressDatabase = {
@@ -44,7 +47,7 @@ const progressDatabase = {
       }
     ]
   },
-  
+
   // Maria Rodriguez - 20% de progreso
   "Maria Rodriguez": {
     learnerData: {
@@ -95,7 +98,7 @@ const progressDatabase = {
       }
     ]
   },
-  
+
   // Pedro Gomez - 30% de progreso
   "Pedro Gomez": {
     learnerData: {
@@ -157,7 +160,7 @@ const progressDatabase = {
       }
     ]
   },
-  
+
   // Ana Perez - 40% de progreso
   "Ana Perez": {
     learnerData: {
@@ -230,7 +233,7 @@ const progressDatabase = {
       }
     ]
   },
-  
+
   // Luisa Rodriguez - 50% de progreso
   "Luisa Rodriguez": {
     learnerData: {
@@ -314,7 +317,7 @@ const progressDatabase = {
       }
     ]
   },
-  
+
   // Datos para los demás aprendices...
   "Carlos Gomez": {
     learnerData: {
@@ -355,7 +358,7 @@ const progressDatabase = {
       },
     ]
   },
-  
+
   "Sofia Martinez": {
     learnerData: {
       nombre: 'Sofia Martinez',
@@ -373,7 +376,7 @@ const progressDatabase = {
       // Datos de progreso para Sofia...
     ]
   },
-  
+
   "Diego Torres": {
     learnerData: {
       nombre: 'Diego Torres',
@@ -391,7 +394,7 @@ const progressDatabase = {
       // Datos de progreso para Diego...
     ]
   },
-  
+
   "Laura Ramirez": {
     learnerData: {
       nombre: 'Laura Ramirez',
@@ -409,7 +412,7 @@ const progressDatabase = {
       // Datos de progreso para Laura...
     ]
   },
-  
+
   "Miguel Sanchez": {
     learnerData: {
       nombre: 'Miguel Sanchez',
@@ -434,12 +437,38 @@ const ProgressView = () => {
   const navigate = useNavigate();
   const [learnerData, setLearnerData] = useState(null);
   const [progressData, setProgressData] = useState([]);
+  const [showProgressTable, setShowProgressTable] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const { logout } = useAuth()
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
 
   useEffect(() => {
     // Simular una carga de datos
     setLoading(true);
-    
+
     // Buscar los datos del aprendiz por su nombre
     setTimeout(() => {
       if (nombre && progressDatabase[nombre]) {
@@ -479,22 +508,17 @@ const ProgressView = () => {
     { id: 2, atributo: 'Nivel Actual', valor: learnerData.nivelActual },
     { id: 3, atributo: 'Ficha', valor: learnerData.ficha },
     { id: 4, atributo: 'Instructor Actual', valor: learnerData.instructorActual },
-    { id: 5, atributo: 'Tiempo Total Activo', valor: learnerData.tiempoTotalActivo },
-    { 
-      id: 6, 
-      atributo: 'Actividades/Exámenes Realizados', 
+    {
+      id: 5,
+      atributo: 'Actividades/Exámenes Realizados',
       valor: (
         <div className="flex items-center gap-2">
-          <div className="bg-[#1F384C] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+          <div className="rounded-full w-5 h-5 flex items-center text-black justify-center text-sm">
             {learnerData.actividadesRealizadas}
           </div>
         </div>
       )
     },
-    { id: 7, atributo: 'Correo', valor: learnerData.correo },
-    { id: 8, atributo: 'Teléfono', valor: learnerData.telefono },
-    { id: 9, atributo: 'Progreso', valor: learnerData.progreso },
-    { id: 10, atributo: 'Puntos Totales', valor: learnerData.puntosTotales }
   ];
 
   // Columnas para la tabla de progreso
@@ -504,14 +528,13 @@ const ProgressView = () => {
     { key: 'tipo', label: 'Tipo', width: '10%' },
     { key: 'nombreEvaluacion', label: 'Nombre Evaluación', width: '20%' },
     { key: 'puntajeObtenido', label: 'Puntaje Obtenido', width: '15%' },
-    { 
-      key: 'estado', 
-      label: 'Estado', 
+    {
+      key: 'estado',
+      label: 'Estado',
       width: '12%',
       render: (item) => (
-        <div className={`px-2 py-1 rounded-full text-xs text-white text-center w-24 ${
-          item.estado === 'Aprobado' ? 'bg-green-500' : 'bg-red-500'
-        }`}>
+        <div className={`px-2 py-1 rounded-full text-xs text-white text-center w-24 ${item.estado === 'Aprobado' ? 'bg-green-500' : 'bg-red-500'
+          }`}>
           {item.estado}
         </div>
       )
@@ -525,50 +548,138 @@ const ProgressView = () => {
   const handleEdit = (item) => console.log('Editar', item);
   const handleDelete = (id) => console.log('Eliminar', id);
   const handleAdd = () => console.log('Añadir');
-  
+
   const handleBack = () => {
     navigate('/progreso/cursosProgramados/fichas/aprendices');
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <div className="flex items-center mb-6">
-        <button 
-          onClick={handleBack}
-          className="mr-4 px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-        >
-          ← Volver
-        </button>
-      </div>
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-[#1F384C] mb-2">PROGRESO DEL APRENDIZ</h2>
-        <GenericTable
-          data={formattedLearnerData}
-          columns={learnerColumns}
-          showActions={{ show: false, edit: false, delete: false, add: false }}
-          defaultItemsPerPage={10}
-          showSearch={false} 
-          showPagination={false}
-        />
-      </div>
+    <div className="min-h-screen">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-2">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+            >
+              <span>Administrador</span>
+              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
 
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-[#1F384C]">TABLA DE PROGRESO</h2>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                <button
+                  onClick={handleLogoutClick}
+                  className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+                  <div className="p-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-[#1f384c]">
+                        Cerrar Sesión
+                      </h3>
+                      <p className="mt-2 text-[#627b87]">
+                        ¿Está seguro de que desea cerrar la sesión actual?
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-3">
+                      <button
+                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                        onClick={() => setShowLogoutConfirm(false)}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
+                        onClick={handleLogout}
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <GenericTable
-          data={progressData}
-          columns={progressColumns}
-          onShow={handleShow}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAdd={handleAdd}
-          showActions={{ show: false, edit: false, delete: false, add: false }}
-          defaultItemsPerPage={10}
-          tooltipText="Ver detalle"
-        />
+      </header>
+
+      <div className="container mx-auto px-6">
+        <div className="container mx-auto p-4 max-w-6xl">
+          <div className="flex items-center mb-3">
+            <button
+              onClick={handleBack}
+              className="mr-4 px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              ← Volver
+            </button>
+          </div>
+          <div className="mb-8 flex flex-col items-center">
+            <h2 className="text-xl font-bold text-[#1F384C] mb-4 text-center">PROGRESO DEL APRENDIZ</h2>
+            <div className="border border-gray-200 rounded-lg overflow-hidden max-w-2xl w-full">
+              <table className="w-full">
+                <tbody>
+                  {formattedLearnerData.map((item) => (
+                    <tr key={item.id} className="border-b border-gray-200 last:border-b-0">
+                      <td className="py-2 px-4 font-semibold bg-gray-50 w-[50%]">
+                        <div className="flex items-center justify-between">
+                          {item.atributo}
+                          {item.atributo === 'Actividades/Exámenes Realizados' && (
+                            <Tooltip text="Ver progreso detallado" position="top">
+                              <button
+                                onClick={() => setShowProgressTable(!showProgressTable)}
+                                className="p-1.5 text-white rounded-lg transition-colors ml-2"
+                                style={{ backgroundColor: '#1F384C' }}
+                                aria-label="Ver progreso"
+                              >
+                                <FiEye size={15} />
+                              </button>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 w-[50%]">
+                        {typeof item.valor === 'object' ? item.valor : item.valor || "N/A"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {showProgressTable && (
+            <div className="mt-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-[#1F384C]">TABLA DE PROGRESO</h2>
+              </div>
+              <GenericTable
+                data={progressData}
+                columns={progressColumns}
+                onShow={handleShow}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onAdd={handleAdd}
+                showActions={{ show: false, edit: false, delete: false, add: false }}
+                defaultItemsPerPage={10}
+                tooltipText="Ver detalle"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
+
   );
 };
 
