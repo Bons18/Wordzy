@@ -1,10 +1,8 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import UserTable from "./Usertable"
 import { useAuth } from "../../auth/hooks/useAuth"
+import GenericTable from "../../../shared/components/Table"
 
 // Datos de ejemplo
 const users = [
@@ -33,9 +31,8 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-        }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          }`}
       >
         {item.estado}
       </span>
@@ -46,6 +43,7 @@ const columns = [
 
 const Usuarios = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
@@ -60,6 +58,11 @@ const Usuarios = () => {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
 
   const handleLogout = () => {
     logout()
@@ -83,11 +86,44 @@ const Usuarios = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
                 >
                   Cerrar Sesión
                 </button>
+              </div>
+            )}
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+                  <div className="p-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-[#1f384c]">
+                        Cerrar Sesión
+                      </h3>
+                      <p className="mt-2 text-[#627b87]">
+                        ¿Está seguro de que desea cerrar la sesión actual?
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-3">
+                      <button
+                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                        onClick={() => setShowLogoutConfirm(false)}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
+                        onClick={handleLogout}
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -95,9 +131,14 @@ const Usuarios = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <UserTable data={users} columns={columns} title="" />
+        <GenericTable
+          data={users}
+          columns={columns}
+          showActions={{ show: false, edit: false, delete: false, add: false }}
+        />
       </div>
     </div>
+
   )
 }
 

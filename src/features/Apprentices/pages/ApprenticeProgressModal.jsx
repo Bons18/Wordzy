@@ -15,8 +15,8 @@ const ProgressBar = ({ level, percentage }) => {
   return (
     <div className="flex flex-col space-y-1 w-full">
       <div className="flex justify-between items-center px-1">
-        <span className="font-semibold text-base text-[#1f384c]">Nivel {level}</span>
-        <span className="text-gray-600 font-medium text-base">{percentage}%</span>
+        <span className="font-semibold text-[14px] text-[#1f384c]">Nivel {level}</span>
+        <span className="text-gray-600 font-medium text-[14px]">{percentage}%</span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-3">
         <div
@@ -55,24 +55,18 @@ const ApprenticeProgressModal = ({ isOpen, onClose, progressData }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div 
-        ref={modalRef} 
+      <div
+        ref={modalRef}
         className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[80vh] flex flex-col overflow-hidden"
       >
         <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-lg">
-          <h2 className="text-xl font-bold text-center text-[#1f384c]">
-            PROGRESO POR NIVELES
-          </h2>
+          <h2 className="text-[18px] font-bold text-center text-[#1f384c]">PROGRESO POR NIVELES</h2>
         </div>
 
         <div className="p-4 overflow-y-auto">
           <div className="space-y-4">
             {progressData.map((progress) => (
-              <ProgressBar
-                key={progress.nivel}
-                level={progress.nivel}
-                percentage={progress.porcentaje}
-              />
+              <ProgressBar key={progress.nivel} level={progress.nivel} percentage={progress.porcentaje} />
             ))}
           </div>
         </div>
@@ -80,7 +74,7 @@ const ApprenticeProgressModal = ({ isOpen, onClose, progressData }) => {
         <div className="p-4 border-t border-gray-200 flex justify-center rounded-b-lg">
           <button
             onClick={onClose}
-            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-base font-medium 
+            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-[14px] font-medium 
                      hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
           >
             Cerrar

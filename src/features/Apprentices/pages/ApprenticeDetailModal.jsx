@@ -3,13 +3,6 @@
 import { useEffect, useRef } from "react"
 import { FiEye } from "react-icons/fi"
 
-const InfoRow = ({ label, value }) => (
-  <div className="flex items-start py-2 border-b border-gray-100">
-    <div className="w-2/5 font-bold text-base text-[#1f384c]">{label}:</div>
-    <div className="w-3/5 text-base text-gray-600 break-words">{value}</div>
-  </div>
-)
-
 const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) => {
   const modalRef = useRef(null)
 
@@ -31,56 +24,86 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 
   if (!isOpen) return null
 
-  const apprenticeInfo = [
-    { label: "Nombre", value: apprentice.nombre },
-    { label: "Apellido", value: apprentice.apellido },
-    { label: "Documento", value: apprentice.documento },
-    { label: "Tipo Documento", value: apprentice.tipoDocumento },
-    { label: "Telefono", value: apprentice.telefono },
-    { label: "Estado", value: apprentice.estado },
-    { label: "Nivel actual", value: apprentice.nivel },
-    { label: "Ficha", value: apprentice.ficha[0] },
-    { label: "Programa", value: apprentice.programa },
-    { label: "Correo", value: apprentice.correo },
-    { label: "Progreso actual", value: `${apprentice.progresoActual}%` },
-  ]
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[80vh] flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-lg">
-          <h2 className="text-xl font-bold text-center text-[#1f384c]">
-            DETALLE DEL APRENDIZ
-          </h2>
-        </div>
+      <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-6">DETALLE DEL APRENDIZ</h2>
+        
+        <div className="space-y-3 px-16">
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Nombre:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.nombre}</div>
+          </div>
 
-        <div className="p-4 overflow-y-auto">
-          <div className="space-y-1">
-            {apprenticeInfo.map((info, index) => (
-              <InfoRow key={index} label={info.label} value={info.value} />
-            ))}
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Apellido:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.apellido}</div>
+          </div>
 
-            <div className="flex items-center py-2 border-b border-gray-100">
-              <div className="w-2/5 font-bold text-base text-[#1f384c]">Progreso Niveles:</div>
-              <div className="w-3/5 flex justify-start">
-                <button
-                  onClick={onShowProgress}
-                  className="px-3 py-1 text-white rounded-lg transition-colors flex items-center gap-1 hover:opacity-90"
-                  style={{ backgroundColor: "#1F384C" }}
-                  aria-label="Ver progreso de niveles"
-                >
-                  <FiEye size={16} />
-                  <span className="text-sm">Ver Progreso</span>
-                </button>
-              </div>
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Documento:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.documento}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Tipo Documento:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.tipoDocumento}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Telefono:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.telefono}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Estado:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.estado}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Nivel actual:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.nivel}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Ficha:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.ficha[0]}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Programa:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.programa}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Correo:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.correo}</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Progreso actual:</div>
+            <div className="w-3/5 text-[14px] text-gray-500">{apprentice.progresoActual}%</div>
+          </div>
+
+          <div className="flex items-center">
+            <div className="w-2/5 font-bold text-[14px]">Progreso Niveles:</div>
+            <div className="w-3/5 flex justify-start">
+              <button
+                onClick={onShowProgress}
+                className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"
+                style={{ backgroundColor: "#1F384C" }}
+                aria-label="Ver progreso de niveles"
+              >
+                <FiEye size={20} />
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-200 flex justify-center rounded-b-lg">
+        <div className="flex justify-center mt-8">
           <button
             onClick={onClose}
-            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-base font-medium hover:bg-red-600 transition-colors"
+            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-[14px] font-medium hover:bg-red-600 transition-colors"
           >
             Cerrar
           </button>
