@@ -62,6 +62,10 @@ const FilePage = () => {
         navigate("/progreso/cursosProgramados/fichas/aprendices");
     }
 
+    const handleBack = () => {
+        navigate('/progreso/cursosProgramados');
+    };
+
     return (
         <div className="min-h-screen">
             <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
@@ -124,6 +128,14 @@ const FilePage = () => {
             </header>
 
             <div className="container mx-auto px-6">
+            <div className="flex items-center mb-6">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-1 bg-gray-200 text-black px-3 py-1.5 text-sm rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                        ← Volver a Niveles
+                    </button>
+                </div>
                 <GenericTable
                     data={files}
                     columns={columns}

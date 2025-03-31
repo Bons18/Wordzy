@@ -21,6 +21,8 @@ import FilePage from "./features/ScheduledCourses/pages/FilePage"
 import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
 import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
 import RolesPage from "./features/Role/pages/RolesPage"
+import EditarRolPage from "./features/Role/pages/EditarRolePage"
+import ProgressView from "./features/ScheduledCourses/pages/ProgressView"
 
 
 
@@ -106,6 +108,10 @@ const routes = [
     element: <TraineesPage />,
   },
   {
+    path: "/progreso/cursosProgramados/fichas/aprendices/progreso/:nombre",
+    element: <ProgressView />,
+  },
+  {
     path: "/progreso/ranking",
     element: <Ranking />,
   },
@@ -127,6 +133,10 @@ const routes = [
     path: "/configuracion/roles/registrarRol",
     element: <RegistrarRolPage />,
   },
+  {
+    path: "/configuracion/roles/editar/:id",
+    element: <EditarRolPage />,
+  }
 ]
 
 export default routes

@@ -10,11 +10,38 @@ export const RoleProvider = ({ children }) => {
   ]);
 
   const addRole = (nuevoRol) => {
-    setRoles([...roles, { ...nuevoRol, id: roles.length + 1 }]);
+    // Genera un nuevo ID basado en el máximo ID existente + 1
+    const newId = roles.length > 0 ? Math.max(...roles.map(r => r.id)) + 1 : 1;
+    setRoles([...roles, { ...nuevoRol, id: newId }]);
+  };
+
+  const updateRole = (updatedRole) => {
+    setRoles(prevRoles => 
+      prevRoles.map(role => 
+        role.id === updatedRole.id ? updatedRole : role
+      )
+    );
+  };
+
+  const deleteRole = (id) => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Validación básica - no permitir eliminar el rol de Administrador (id: 1)
+        if (id === 1) {
+          throw new Error("No se puede eliminar el rol de Administrador");
+        }
+
+        setRoles(prevRoles => prevRoles.filter(role => role.id !== id));
+        resolve();
+      } catch (error) {
+        console.error("Error al eliminar el rol:", error);
+        reject(error);
+      }
+    });
   };
 
   return (
-    <RoleContext.Provider value={{ roles, addRole }}>
+    <RoleContext.Provider value={{ roles, addRole, updateRole, deleteRole }}>
       {children}
     </RoleContext.Provider>
   );
