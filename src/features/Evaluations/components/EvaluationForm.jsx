@@ -202,13 +202,13 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-auto">
-      <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-6">
+    <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-auto">
+      <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-4">
         {evaluation ? "EDITAR EVALUACIÓN" : "CREAR EVALUACION"}
       </h2>
 
       <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
             <label className="block text-[14px] font-medium mb-1">Nombre de la Actividad</label>
             <input
@@ -282,7 +282,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md text-[14px] min-h-[100px]"
+                className="w-full p-2 border border-gray-300 rounded-md text-[14px] min-h-[80px]"
                 placeholder="Escriba una descripción general sobre esta actividad..."
               />
             </div>

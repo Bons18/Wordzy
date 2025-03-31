@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Mail, Eye, EyeOff } from "lucide-react"
+import { Mail, Eye, EyeOff, Lock } from "lucide-react"
 import InputField from "../../../shared/components/InputField"
 import Checkbox from "../../../shared/components/Checkbox"
 
@@ -62,6 +62,7 @@ const LoginForm = ({ onLoginSuccess, login }) => {
           placeholder="••••••••"
           label="Contraseña"
           className="w-full text-sm lg:text-base"
+          icon={<Lock size={20} />}
           rightIcon={
             <button
               type="button"
