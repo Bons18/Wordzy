@@ -7,61 +7,10 @@ import GenericTable from "../../../shared/components/Table"
 import { useAuth } from "../../auth/hooks/useAuth"
 import EvaluationForm from "../components/EvaluationForm"
 import EvaluationDetailModal from "../components/EvaluationDetailModal"
-import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
-import SuccessModal from "../components/SuccessModal"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 // Datos iniciales de ejemplo
 const initialEvaluationsData = [
-  {
-    id: 1,
-    nombre: "Evaluación 1",
-    tema: "Matemáticas",
-    estado: "Activo",
-    tipoEvaluacion: "Examen",
-    descripcion: "This is an example of a general description",
-    preguntas: [
-      {
-        id: 101,
-        tipo: "seleccion",
-        texto: "This is an example of a general question",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 102,
-        tipo: "verdaderoFalso",
-        texto: "This is an example of a general question",
-        respuestaCorrecta: 1, // Falso
-        puntaje: 20,
-      },
-      {
-        id: 103,
-        tipo: "imagen",
-        texto: "This is an example of a general question",
-        imagen: "/placeholder.svg?height=200&width=200",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 104,
-        tipo: "audio",
-        texto: "This is an example of a general question",
-        audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 105,
-        tipo: "completar",
-        completarTexto: "This [] an example of a general []",
-        palabrasCompletar: ["is", "question"],
-        puntaje: 10,
-      },
-    ],
-  },
   {
     id: 2,
     nombre: "Evaluación 2",
@@ -140,6 +89,7 @@ const Evaluations = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [successTitle, setSuccessTitle] = useState("")
   const [currentEvaluation, setCurrentEvaluation] = useState(null)
   const [evaluationToDelete, setEvaluationToDelete] = useState(null)
 
@@ -189,7 +139,8 @@ const Evaluations = () => {
             : item,
         ),
       )
-      setSuccessMessage("¡Evaluación editada con éxito!")
+      setSuccessTitle("Evaluación Editada")
+      setSuccessMessage("La evaluación ha sido editada con éxito")
     } else {
       // Crear nueva evaluación
       const newId = Math.max(...evaluationsData.map((item) => item.id)) + 1
@@ -201,7 +152,8 @@ const Evaluations = () => {
           tema: formData.tipoEvaluacion === "Examen" ? "Matemáticas" : "General",
         },
       ])
-      setSuccessMessage("¡Evaluación registrada con éxito!")
+      setSuccessTitle("Evaluación Creada")
+      setSuccessMessage("La evaluación ha sido creada con éxito")
     }
 
     setIsFormOpen(false)
@@ -212,7 +164,8 @@ const Evaluations = () => {
     if (evaluationToDelete) {
       setEvaluationsData((prev) => prev.filter((item) => item.id !== evaluationToDelete.id))
       setIsDeleteModalOpen(false)
-      setSuccessMessage("¡Evaluación eliminada con éxito!")
+      setSuccessTitle("Evaluación Eliminada")
+      setSuccessMessage("La evaluación ha sido eliminada con éxito")
       setIsSuccessModalOpen(true)
       setEvaluationToDelete(null)
     }
@@ -285,15 +238,31 @@ const Evaluations = () => {
       />
 
       {/* Modal de confirmación para eliminar */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
-        itemName={evaluationToDelete?.nombre}
+        title="Eliminar Evaluación"
+        message={
+          evaluationToDelete
+            ? `¿Estás seguro de que deseas eliminar la evaluación "${evaluationToDelete.nombre}"?`
+            : "¿Estás seguro de que deseas eliminar esta evaluación?"
+        }
+        confirmText="Confirmar Eliminación"
+        confirmColor="bg-[#46ae69] hover:bg-green-600"
       />
 
       {/* Modal de éxito */}
-      <SuccessModal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} message={successMessage} />
+      <ConfirmationModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        onConfirm={() => setIsSuccessModalOpen(false)}
+        title={successTitle}
+        message={successMessage}
+        confirmText="Cerrar"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+        showButtonCancel={false}
+      />
     </div>
   )
 }
