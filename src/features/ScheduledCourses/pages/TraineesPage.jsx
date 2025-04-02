@@ -96,16 +96,24 @@ const columns = [
     {
         key: "progreso",
         label: "Progreso",
+        width: '18%', // Aumenté el ancho de la columna
         render: (item) => (
-            <div className="flex items-center">
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-                    <div className="bg-green-500 h-2.5 rounded-full" style={{ width: item.progreso }}></div>
-                </div>
-                <span>{item.progreso}</span>
+          <div className="flex items-center gap-2 w-full"> {/* Añadí mr-4 para espaciado extra */}
+            <div className="flex-1 min-w-[100px]">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full" 
+                  style={{ width: item.progreso }}
+                ></div>
+              </div>
             </div>
+            <span className="text-sm text-gray-600 w-11 text-right mr-8">
+              {item.progreso}
+            </span>
+          </div>
         ),
-    },
-    { key: "puntosTotales", label: "Puntos Totales" },
+      },
+      { key: "puntosTotales", label: "Puntos Totales", width: '12%' },
 ]
 
 const TraineesPage = () => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { formatDate } from "../../../shared/utils/dateFormatter";
 
 const RoleForm = ({ onSubmit, onCancel, initialData }) => {
+  const [hasChanges, setHasChanges] = useState(false);
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [estado, setEstado] = useState("Activo");
@@ -31,11 +32,20 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
       setDescripcion(initialData.descripcion);
       setEstado(initialData.estado || "Activo");
       setPermisos(initialData.permisos);
+      setHasChanges(false);
     }
   }, [initialData]);
 
   const toggleEstado = () => {
     setEstado(estado === "Activo" ? "Inactivo" : "Activo");
+    setHasChanges(true);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "nombre") setNombre(value);
+    if (name === "descripcion") setDescripcion(value);
+    setHasChanges(true);
   };
 
   const handlePermisoChange = (modulo, accion) => {
@@ -46,6 +56,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
         [accion]: !permisos[modulo][accion],
       },
     });
+    setHasChanges(true);
   };
 
   const handleSubmit = (e) => {
@@ -56,8 +67,10 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
       descripcion,
       estado,
       permisos,
-      fechaActualizacion: formatDate(new Date()),
+      fechaCreacion: formatDate(new Date()),
     };
+    // Agrega este console.log para mostrar los datos del rol
+    console.log('Datos del rol a agregar:', rolActualizado);
     onSubmit(rolActualizado);
   };
 
@@ -169,9 +182,14 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
         </button>
         <button
           type="submit"
-          className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          disabled={!hasChanges}
+          className={`px-3 py-1.5 text-sm text-white rounded-md focus:outline-none focus:ring-1 ${
+            hasChanges 
+              ? "bg-green-500 hover:bg-green-600 focus:ring-blue-500" 
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
         >
-          {initialData ? "Actualizar Rol" : "Crear Rol"}
+          {initialData ? "Guardar Cambios" : "Añadir Rol"}
         </button>
       </div>
     </form>

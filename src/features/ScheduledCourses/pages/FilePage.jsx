@@ -26,7 +26,18 @@ const columns = [
     { key: "cantidadAprendices", label: "N° Aprendices" },
     { key: "fechaInicio", label: "Fecha de Inicio" },
     { key: "fechaFin", label: "Fecha de Fin" },
-    { key: "progreso", label: "Progreso" },
+    {
+        key: "progreso",
+        label: "Progreso",
+        render: (item) => (
+            <div className="flex items-center">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                    <div className="bg-green-500 h-2.5 rounded-full" style={{ width: item.progreso }}></div>
+                </div>
+                <span>{item.progreso}</span>
+            </div>
+        ),
+    },
 
 ]
 

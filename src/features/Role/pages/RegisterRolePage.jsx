@@ -1,47 +1,55 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
+import { ChevronDown } from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import RoleForm from "../components/RoleForm";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext"; // Importa el contexto
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 
 const RegistrarRolPage = () => {
   const navigate = useNavigate();
-  const { addRole } = useContext(RoleContext); // Obtén la función addRole del contexto
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const { logout } = useAuth()
-  const dropdownRef = useRef(null)
+  const { addRole } = useContext(RoleContext);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const { logout } = useAuth();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+    logout();
+    navigate("/login");
+  };
 
-  const handleFormSubmit = (nuevoRol) => {
-    console.log("Nuevo Rol:", nuevoRol);
-    addRole(nuevoRol); // Guarda el nuevo rol en el contexto
-    navigate("/configuracion/roles"); // Redirige de vuelta a la lista de roles
+  const handleFormSubmit = async (nuevoRol) => {
+    try {
+      await addRole(nuevoRol);
+      setSuccessMessage("Rol creado exitosamente");
+      setShowSuccessModal(true);
+    } catch (error) {
+      setSuccessMessage("Error al crear el rol: " + error.message);
+      setShowSuccessModal(true);
+    }
   };
 
   const handleCancel = () => {
-    navigate("/configuracion/roles"); // Redirige de vuelta a la lista de roles
+    navigate("/configuracion/roles");
   };
 
   return (
@@ -68,39 +76,6 @@ const RegistrarRolPage = () => {
                 </button>
               </div>
             )}
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                  <div className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-xl font-semibold text-[#1f384c]">
-                        Cerrar Sesión
-                      </h3>
-                      <p className="mt-2 text-[#627b87]">
-                        ¿Está seguro de que desea cerrar la sesión actual?
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3">
-                      <button
-                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                        onClick={() => setShowLogoutConfirm(false)}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                        onClick={handleLogout}
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -112,8 +87,32 @@ const RegistrarRolPage = () => {
           </div>
         </div>
       </div>
-    </div>
 
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
+
+      {/* Modal de éxito/error al crear rol */}
+      <ConfirmationModal
+        isOpen={showSuccessModal}
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          navigate("/configuracion/roles");
+        }}
+        title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
+        message={successMessage}
+        confirmText="Aceptar"
+        confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
+        showButtonCancel={false}
+      />
+    </div>
   );
 };
 

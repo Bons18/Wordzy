@@ -437,7 +437,6 @@ const ProgressView = () => {
   const navigate = useNavigate();
   const [learnerData, setLearnerData] = useState(null);
   const [progressData, setProgressData] = useState([]);
-  const [showProgressTable, setShowProgressTable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -496,12 +495,6 @@ const ProgressView = () => {
     return null;
   }
 
-  // Columnas para la tabla de atributos del aprendiz
-  const learnerColumns = [
-    { key: 'atributo', label: 'Atributo', width: '40%' },
-    { key: 'valor', label: 'Valor', width: '60%' }
-  ];
-
   // Datos formateados para la tabla de atributos
   const formattedLearnerData = [
     { id: 1, atributo: 'Nombre', valor: learnerData.nombre },
@@ -511,13 +504,7 @@ const ProgressView = () => {
     {
       id: 5,
       atributo: 'Actividades/Exámenes Realizados',
-      valor: (
-        <div className="flex items-center gap-2">
-          <div className="rounded-full w-5 h-5 flex items-center text-black justify-center text-sm">
-            {learnerData.actividadesRealizadas}
-          </div>
-        </div>
-      )
+      valor: learnerData.actividadesRealizadas
     },
   ];
 
@@ -527,7 +514,7 @@ const ProgressView = () => {
     { key: 'hora', label: 'Hora', width: '10%' },
     { key: 'tipo', label: 'Tipo', width: '10%' },
     { key: 'nombreEvaluacion', label: 'Nombre Evaluación', width: '20%' },
-    { key: 'puntajeObtenido', label: 'Puntaje Obtenido', width: '15%' },
+    { key: 'puntajeObtenido', label: 'Puntaje', width: '10%' },
     {
       key: 'estado',
       label: 'Estado',
@@ -543,11 +530,13 @@ const ProgressView = () => {
     { key: 'intentos', label: 'Intentos', width: '9%' }
   ];
 
-  // Funciones para manejar acciones (vacías por ahora)
-  const handleShow = (item) => console.log('Ver', item);
-  const handleEdit = (item) => console.log('Editar', item);
-  const handleDelete = (id) => console.log('Eliminar', id);
-  const handleAdd = () => console.log('Añadir');
+  // Función para manejar la retroalimentación
+  const handleFeedback = (evaluation) => {
+    // Aquí puedes navegar a la vista de retroalimentación o mostrar un modal
+    console.log('Retroalimentación para:', evaluation);
+    // Ejemplo de navegación:
+    // navigate(`/retroalimentacion/${evaluation.id}`);
+  };
 
   const handleBack = () => {
     navigate('/progreso/cursosProgramados/fichas/aprendices');
@@ -615,7 +604,7 @@ const ProgressView = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <div className="container mx-auto p-4 max-w-6xl">
+      <div className="container mx-auto p-4 max-w-7xl"> 
           <div className="flex items-center mb-3">
             <button
               onClick={handleBack}
@@ -631,22 +620,8 @@ const ProgressView = () => {
                 <tbody>
                   {formattedLearnerData.map((item) => (
                     <tr key={item.id} className="border-b border-gray-200 last:border-b-0">
-                      <td className="py-2 px-4 font-semibold bg-gray-50 w-[50%]">
-                        <div className="flex items-center justify-between">
-                          {item.atributo}
-                          {item.atributo === 'Actividades/Exámenes Realizados' && (
-                            <Tooltip text="Ver progreso detallado" position="top">
-                              <button
-                                onClick={() => setShowProgressTable(!showProgressTable)}
-                                className="p-1.5 text-white rounded-lg transition-colors ml-2"
-                                style={{ backgroundColor: '#1F384C' }}
-                                aria-label="Ver progreso"
-                              >
-                                <FiEye size={15} />
-                              </button>
-                            </Tooltip>
-                          )}
-                        </div>
+                      <td className="py-2 px-4 font-semibold text-[#1F384C] bg-gray-50 w-[50%]">
+                        {item.atributo}
                       </td>
                       <td className="py-2 px-4 w-[50%]">
                         {typeof item.valor === 'object' ? item.valor : item.valor || "N/A"}
@@ -658,24 +633,19 @@ const ProgressView = () => {
             </div>
           </div>
 
-          {showProgressTable && (
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-[#1F384C]">TABLA DE PROGRESO</h2>
-              </div>
-              <GenericTable
-                data={progressData}
-                columns={progressColumns}
-                onShow={handleShow}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onAdd={handleAdd}
-                showActions={{ show: false, edit: false, delete: false, add: false }}
-                defaultItemsPerPage={10}
-                tooltipText="Ver detalle"
-              />
+          <div className="mt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-[#1F384C]">TABLA DE PROGRESO</h2>
             </div>
-          )}
+            <GenericTable
+              data={progressData}
+              columns={progressColumns}
+              onShow={handleFeedback}
+              showActions={{ show: true, edit: false, delete: false, add: false }}
+              defaultItemsPerPage={10}
+              tooltipText="Retroalimentación"
+            />
+          </div>
         </div>
       </div>
     </div>
