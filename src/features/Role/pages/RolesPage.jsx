@@ -153,10 +153,10 @@ const RolesPage = () => {
       <ConfirmationModal
         isOpen={showSuccessModal}
         onConfirm={() => setShowSuccessModal(false)}
-        title={successMessage.includes("éxito") ? "Operación Exitosa" : "Error"}
+        title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
         message={successMessage}
         confirmText="Aceptar"
-        confirmColor={successMessage.includes("éxito") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
+        confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
         showButtonCancel={false}
       />
     </div>

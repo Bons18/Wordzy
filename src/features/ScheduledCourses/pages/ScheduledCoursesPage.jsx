@@ -6,20 +6,37 @@ import { useAuth } from "../../auth/hooks/useAuth"
 
 
 const scheduledCourses = [
-    { nivel: "Nivel 1", cantidadFichas: "25", cantidadInstructores: "3", progresoGeneral: "25%" },
-    { nivel: "Nivel 2", cantidadFichas: "30", cantidadInstructores: "4", progresoGeneral: "100%" },
-    { nivel: "Nivel 3", cantidadFichas: "29", cantidadInstructores: "1", progresoGeneral: "50%" },
-    { nivel: "Nivel 4", cantidadFichas: "10", cantidadInstructores: "5", progresoGeneral: "10%" },
-    { nivel: "Nivel 5", cantidadFichas: "13", cantidadInstructores: "2", progresoGeneral: "75%" },
-    { nivel: "Nivel 6", cantidadFichas: "8", cantidadInstructores: "3", progresoGeneral: "80%" },
+    { nivel: "Nivel 1", cantidadFichas: "25", cantidadInstructores: "3", progreso: "25%" },
+    { nivel: "Nivel 2", cantidadFichas: "30", cantidadInstructores: "4", progreso: "100%" },
+    { nivel: "Nivel 3", cantidadFichas: "29", cantidadInstructores: "1", progreso: "50%" },
+    { nivel: "Nivel 4", cantidadFichas: "10", cantidadInstructores: "5", progreso: "10%" },
+    { nivel: "Nivel 5", cantidadFichas: "13", cantidadInstructores: "2", progreso: "75%" },
+    { nivel: "Nivel 6", cantidadFichas: "8", cantidadInstructores: "3", progreso: "80%" },
 ]
 
 const columns = [
     { key: "nivel", label: "Nivel" },
     { key: "cantidadFichas", label: "Cantidad Fichas" },
     { key: "cantidadInstructores", label: "Cantidad Instructores" },
-    { key: "progresoGeneral", label: "Progreso General" },
-
+    {
+        key: "progreso",
+        label: "Progreso General",
+        render: (item) => (
+            <div className="flex items-center gap-2 w-full">
+                <div className="flex-1 min-w-[100px]">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                            className="bg-green-500 h-2 rounded-full" 
+                            style={{ width: item.progreso }}
+                        ></div>
+                    </div>
+                </div>
+                <span className="text-sm text-gray-600 w-13 text-right">
+                    {item.progreso}
+                </span>
+            </div>
+        ),
+    },
 ]
 
 const ScheduledCoursesPage = () => {
