@@ -1,38 +1,25 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import GenericTable from '../../../shared/components/Table'
+import { ChevronDown, ArrowLeft } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/hooks/useAuth'
 import ConfirmationModal from '../../../shared/components/ConfirmationModal'
 
-const Feedback = () => {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+const StudentDetails = () => {
+  // Existing state and variables remain the same
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const { id } = useParams()
   const dropdownRef = useRef(null)
   
-  // Sample feedback data
-  const feedbackData = [
-    { id: 1, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Daily Routine', actividad: 'Examen', ejecutada: 'No' },
-    { id: 2, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Giving Advice', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 3, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Past Experiences', actividad: 'Examen', ejecutada: 'No' },
-    { id: 4, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Future Plans', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 5, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Describing People', actividad: 'Examen', ejecutada: 'No' },
-    { id: 6, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Making Comparisons', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 7, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Ordering Food', actividad: 'Examen', ejecutada: 'No' },
-  ]
-  
-  // Define columns for the table
-  const columns = [
-    { key: 'programa', label: 'Programa', width: '15%' },
-    { key: 'nivel', label: 'Nivel', width: '15%' },
-    { key: 'tema', label: 'Tema', width: '25%' },
-    { key: 'actividad', label: 'Actividad', width: '20%' },
-    { key: 'ejecutada', label: 'Ejecutada', width: '15%' },
-  ]
+  // Sample student data
+  const studentData = {
+    id: id,
+    nombre: 'TO-DO',
+    estado: 'Aprobado',
+    calificacion: '90%'
+  }
   
   // Add click outside handler
   useEffect(() => {
@@ -56,25 +43,23 @@ const Feedback = () => {
     navigate("/login")
   }
   
-  // Handle actions
-  const handleShow = (item) => {
-    console.log('Ver detalles de:', item)
-    navigate('/progreso/retroalimentacion/detalles')
-  }
-  
-  const handleEdit = (item) => {
-    console.log('Editar:', item)
-  }
-  
-  const handleDelete = (id) => {
-    console.log('Eliminar ID:', id)
+  const handleGoBack = () => {
+    navigate(-1) // Go back to previous page
   }
   
   return (
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold text-[#1f384c]">Retroalimentación</h1>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleGoBack}
+              className="p-1 rounded-full hover:bg-gray-100"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#1f384c]" />
+            </button>
+            <h1 className="text-xl font-bold text-[#1f384c]">Detalle del Aprendiz</h1>
+          </div>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -99,16 +84,28 @@ const Feedback = () => {
       </header>
       
       <div className="container mx-auto px-6">
-        <GenericTable 
-          data={feedbackData}
-          columns={columns}
-          onShow={handleShow}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          defaultItemsPerPage={itemsPerPage}
-          showActions={{ show: true, edit: false, delete: false, add: false }}
-          tooltipText="Ver retroalimentación"
-        />
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p className="text-sm text-gray-500">Nombre</p>
+              <p className="font-medium">{studentData.nombre}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Estado</p>
+              <p className="font-medium">
+                <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                  studentData.estado === 'Aprobado' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {studentData.estado}
+                </span>
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Calificación</p>
+              <p className="font-medium">{studentData.calificacion}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modal de confirmación para cerrar sesión */}
@@ -125,6 +122,4 @@ const Feedback = () => {
   )
 }
 
-export default Feedback
-  
-  
+export default StudentDetails

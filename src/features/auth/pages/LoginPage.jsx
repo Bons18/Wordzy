@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
-import LoginForm from "../components/LoginForm"
+import LoginForm from "../components/loginform"
 import logo from "../../../assets/logo.png"
 
 const LoginPage = () => {
@@ -97,7 +97,7 @@ const LoginPage = () => {
         )}
       </div>
     </div>
-)
+  )
 }
 
 export default LoginPage

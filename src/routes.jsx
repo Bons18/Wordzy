@@ -6,6 +6,8 @@ import TopicsPage from "./features/Topics/pages/TopicsPage"
 import SupportMaterials from "./features/SupportMaterials/pages/SupportMaterials"
 import Evaluations from "./features/Evaluations/pages/Evaluations"
 import Feedback from "./features/Feedback/pages/Feedback"
+import FeedbackDetails from "./features/Feedback/pages/FeedbackDetails"
+import StudentDetails from "./features/Feedback/pages/StudentDetails"
 import CouseProgrammingPage from "./features/CourseProgramming/pages/CouseProgrammingPage"
 import ScheduledCoursesPage from "./features/ScheduledCourses/pages/ScheduledCoursesPage"
 import Scale from "./features/Scale/pages/Scale"
@@ -14,8 +16,8 @@ import Badges2 from "./features/Badges/pages/Badges2";
 import Badges3 from "./features/Badges/pages/Badges3";
 import Ranking from "./features/Ranking/pages/Ranking"
 import UsersPage from "./features/Users/pages/UsersPage"
-import Dashboard from "./features/dashboard/pages/Dashboard"
-import LoginPage from "./features/auth/pages/LoginPage"
+import Dashboard from "./features/Dashboard/pages/Dashboard"
+import LoginPage from "./features/Auth/pages/LoginPage"
 import CourseProgramming from "./features/CourseProgramming/components/CourseProgrammingForm"
 import FilePage from "./features/ScheduledCourses/pages/FilePage"
 import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
@@ -118,6 +120,14 @@ const routes = [
   {
     path: "/progreso/retroalimentacion",
     element: <Feedback />,
+  },
+  {
+    path: "/progreso/retroalimentacion/:id",
+    element: <FeedbackDetails />,
+  },
+  {
+    path: "/progreso/retroalimentacion/detallesaprendiz",
+    element: <StudentDetails />,
   },
   // Usuarios
   {

@@ -10,8 +10,8 @@ export const loginUser = async (credentials) => {
     throw new Error("Todos los campos son requeridos")
   }
 
-  // Email validation (basic format check)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  // Email validation (updated to allow soy.sena.edu.co domain)
+  const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(credentials.email)) {
     throw new Error("Formato de email inválido")
   }
@@ -26,6 +26,16 @@ export const loginUser = async (credentials) => {
       name: "Admin",
       email: credentials.email,
       role: "admin"
+    }
+  }
+
+  // Allow login with soy.sena.edu.co domain
+  if (credentials.email.endsWith("@soy.sena.edu.co") && credentials.password.length >= 4) {
+    return {
+      id: "2",
+      name: "Usuario SENA",
+      email: credentials.email,
+      role: "student"
     }
   }
 
