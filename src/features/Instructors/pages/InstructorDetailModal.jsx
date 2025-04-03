@@ -72,7 +72,10 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose, onViewFicha }) => 
               {instructor.fichas &&
                 instructor.fichas.map((ficha, index) => (
                   <div key={index} className="flex justify-between items-center">
-                    <div className="text-[14px] text-gray-500">{ficha.numero} :</div>
+                    <div className="text-[14px] text-gray-500">{ficha.numero}</div>
+                    <div className="text-[14px] text-gray-500">
+                      Nivel {ficha.nivel || Math.floor(Math.random() * 6) + 1}
+                    </div>
                     <button
                       onClick={() => onViewFicha(ficha)}
                       className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"

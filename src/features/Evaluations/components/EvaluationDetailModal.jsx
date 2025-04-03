@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { FiDownload, FiPlay, FiPause } from "react-icons/fi"
+import { FiDownload, FiPlay, FiPause, FiVolume2, FiVolumeX } from "react-icons/fi"
 
 const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
   const modalRef = useRef(null)
   const [audioPlaying, setAudioPlaying] = useState(null)
+  const [audioProgress, setAudioProgress] = useState({})
+  const [audioMuted, setAudioMuted] = useState({})
   const audioRefs = useRef({})
+  const progressIntervals = useRef({})
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -27,32 +30,81 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
           audio.pause()
         }
       })
+      // Clear all progress intervals
+      Object.values(progressIntervals.current).forEach((interval) => {
+        clearInterval(interval)
+      })
     }
   }, [isOpen, onClose])
 
   const handlePlayAudio = (id) => {
-    // Pause any currently playing audio
-    if (audioPlaying && audioPlaying !== id) {
-      const currentAudio = audioRefs.current[audioPlaying]
-      if (currentAudio && !currentAudio.paused) {
-        currentAudio.pause()
-      }
-    }
-
     const audio = audioRefs.current[id]
-    if (audio) {
-      if (audio.paused) {
-        audio.play()
-        setAudioPlaying(id)
-      } else {
-        audio.pause()
-        setAudioPlaying(null)
+    if (!audio) return
+
+    if (audioPlaying === id) {
+      // Si ya está reproduciéndose este audio, pausarlo
+      audio.pause()
+      setAudioPlaying(null)
+      clearInterval(progressIntervals.current[id])
+    } else {
+      // Si está reproduciéndose otro audio, pausarlo primero
+      if (audioPlaying && audioRefs.current[audioPlaying]) {
+        audioRefs.current[audioPlaying].pause()
+        clearInterval(progressIntervals.current[audioPlaying])
       }
+
+      // Reproducir el nuevo audio
+      audio.play().catch((e) => console.error("Error reproduciendo audio:", e))
+      setAudioPlaying(id)
+
+      // Configurar intervalo para actualizar el progreso
+      progressIntervals.current[id] = setInterval(() => {
+        if (audio.duration) {
+          setAudioProgress((prev) => ({
+            ...prev,
+            [id]: (audio.currentTime / audio.duration) * 100,
+          }))
+        }
+      }, 100)
     }
   }
 
-  const handleAudioEnded = () => {
+  const handleAudioEnded = (id) => {
     setAudioPlaying(null)
+    clearInterval(progressIntervals.current[id])
+    setAudioProgress((prev) => ({
+      ...prev,
+      [id]: 0,
+    }))
+  }
+
+  const handleProgressClick = (e, id) => {
+    const audio = audioRefs.current[id]
+    if (audio) {
+      const progressBar = e.currentTarget
+      const rect = progressBar.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const width = rect.width
+      const percentage = x / width
+
+      audio.currentTime = percentage * audio.duration
+      setAudioProgress((prev) => ({
+        ...prev,
+        [id]: percentage * 100,
+      }))
+    }
+  }
+
+  const toggleMute = (e, id) => {
+    e.stopPropagation()
+    const audio = audioRefs.current[id]
+    if (audio) {
+      audio.muted = !audio.muted
+      setAudioMuted((prev) => ({
+        ...prev,
+        [id]: audio.muted,
+      }))
+    }
   }
 
   const renderCompletarEspacios = (pregunta) => {
@@ -95,19 +147,19 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
-      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+      <div ref={modalRef} className="bg-white rounded-lg p-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          <h2 className="text-[18px] font-bold text-center mb-6">{evaluation.nombre}</h2>
+          <h2 className="text-[18px] font-bold text-center mb-4">{evaluation.nombre}</h2>
 
           {/* Descripción General */}
-          <div className="border border-gray-300 rounded-lg p-4 mb-4">
+          <div className="border border-gray-300 rounded-lg p-3 mb-3">
             <h3 className="text-[16px] font-bold mb-2">Descripción General</h3>
             <p className="text-[14px] text-gray-700">{evaluation.descripcion || "Sin descripción"}</p>
           </div>
 
           {/* Material */}
           {evaluation.material && (
-            <div className="border border-gray-300 rounded-lg p-4 mb-4">
+            <div className="border border-gray-300 rounded-lg p-3 mb-3">
               <h3 className="text-[16px] font-bold mb-2">Material</h3>
               <div className="flex items-center justify-between bg-gray-50 border border-gray-300 rounded p-2">
                 <div className="flex items-center">
@@ -139,13 +191,13 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
           )}
 
           {/* Preguntas */}
-          <div className="border border-gray-300 rounded-lg p-4">
+          <div className="border border-gray-300 rounded-lg p-3">
             <h3 className="text-[16px] font-bold mb-2">Preguntas</h3>
             <p className="text-[14px] text-gray-500 mb-4">Total preguntas: {evaluation.preguntas.length}</p>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {evaluation.preguntas.map((pregunta, index) => (
-                <div key={pregunta.id} className="border border-gray-300 rounded-lg p-4">
+                <div key={pregunta.id} className="border border-gray-300 rounded-lg p-3">
                   {/* Título de la pregunta según su tipo */}
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="text-[14px] font-bold">
@@ -176,24 +228,21 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                             src={pregunta.imagen || "/placeholder.svg"}
                             alt="Imagen de la pregunta"
                             className="max-h-48 object-contain"
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.src = "/placeholder.svg?height=200&width=200"
+                            }}
                           />
                         ) : (
-                          <div className="w-32 h-32 border border-gray-300 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-16 h-16 text-gray-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
+                          <img
+                            src={URL.createObjectURL(pregunta.imagen) || "/placeholder.svg"}
+                            alt="Imagen de la pregunta"
+                            className="max-h-48 object-contain"
+                            onError={(e) => {
+                              e.target.onerror = null
+                              e.target.src = "/placeholder.svg?height=200&width=200"
+                            }}
+                          />
                         )}
                       </div>
                     </div>
@@ -206,42 +255,37 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                       <div className="border border-gray-300 rounded-lg p-2 flex items-center">
                         <button
                           onClick={() => handlePlayAudio(pregunta.id)}
-                          className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 mr-2"
+                          className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 mr-2 flex-shrink-0"
                         >
-                          {audioPlaying === pregunta.id ? <FiPause /> : <FiPlay />}
+                          {audioPlaying === pregunta.id ? <FiPause size={18} /> : <FiPlay size={18} />}
                         </button>
 
-                        <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
+                          onClick={(e) => handleProgressClick(e, pregunta.id)}
+                        >
                           <div
-                            className={`h-full bg-gray-400 ${audioPlaying === pregunta.id ? "animate-pulse" : ""}`}
-                            style={{ width: audioPlaying === pregunta.id ? "100%" : "0%" }}
+                            className={`h-full bg-gray-400 ${audioPlaying === pregunta.id ? "transition-all duration-100" : ""}`}
+                            style={{ width: `${audioProgress[pregunta.id] || 0}%` }}
                           ></div>
                         </div>
 
                         <audio
-                          ref={(el) => (audioRefs.current[pregunta.id] = el)}
-                          src={
-                            typeof pregunta.audio === "string" ? pregunta.audio : URL.createObjectURL(pregunta.audio)
-                          }
-                          onEnded={handleAudioEnded}
+                          ref={(el) => {
+                            if (el) audioRefs.current[pregunta.id] = el
+                          }}
+                          src={typeof pregunta.audio === "string" ? pregunta.audio : undefined}
+                          onEnded={() => handleAudioEnded(pregunta.id)}
                           className="hidden"
-                        />
+                        >
+                          {typeof pregunta.audio !== "string" && <source src={URL.createObjectURL(pregunta.audio)} />}
+                        </audio>
 
-                        <button className="p-2 ml-2">
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 012.728-2.728"
-                            />
-                          </svg>
+                        <button
+                          className="p-2 ml-2 flex-shrink-0 text-gray-600 hover:text-gray-800"
+                          onClick={(e) => toggleMute(e, pregunta.id)}
+                        >
+                          {audioMuted[pregunta.id] ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
                         </button>
                       </div>
                     </div>
@@ -314,6 +358,26 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                           </div>
                         </div>
                       )}
+
+                      {/* Opciones de relleno */}
+                      {pregunta.opcionesRelleno && pregunta.opcionesRelleno.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-[14px] text-gray-500 mb-1">Opciones de relleno</p>
+                          <div className="flex flex-wrap gap-2">
+                            {pregunta.opcionesRelleno.map(
+                              (opcion, idx) =>
+                                opcion && (
+                                  <span
+                                    key={idx}
+                                    className="inline-block px-3 py-1 bg-blue-50 rounded border border-blue-200 text-[14px]"
+                                  >
+                                    {opcion}
+                                  </span>
+                                ),
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -321,7 +385,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center mt-4">
             <button
               onClick={onClose}
               className="px-8 py-2 bg-[#f44144] text-white rounded-md text-[14px] hover:bg-red-600 transition-colors"

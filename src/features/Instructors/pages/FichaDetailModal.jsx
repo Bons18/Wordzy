@@ -48,6 +48,11 @@ const FichaDetailModal = ({ ficha, isOpen, onClose }) => {
             <div className="w-1/2 font-bold text-[14px]">Fecha fin:</div>
             <div className="w-1/2 text-[14px] text-gray-500">{ficha.fechaFin}</div>
           </div>
+
+          <div className="flex items-center">
+            <div className="w-1/3 font-bold text-[14px]">Nivel:</div>
+            <div className="w-2/3 text-[14px] text-gray-500">Nivel {ficha.nivel || 1}</div>
+          </div>
         </div>
 
         <h3 className="text-[14px] font-bold mb-4">Listado de Estudiantes</h3>

@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FiUpload, FiX, FiChevronDown } from "react-icons/fi"
+import { FiUpload, FiX, FiChevronDown, FiPlus } from "react-icons/fi"
 
 const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
+  // Modificar el estado inicial para incluir un modo de edición de pregunta
   const [formData, setFormData] = useState({
     nombre: "",
     tipoEvaluacion: "Examen",
@@ -25,7 +26,9 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     audio: null,
     completarTexto: "",
     palabrasCompletar: ["", ""],
+    opcionesRelleno: ["", "", ""],
   })
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState(null)
 
   useEffect(() => {
     if (evaluation) {
@@ -93,11 +96,38 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }
   }
 
+  // Agregar función para editar una pregunta existente
+  const handleEditQuestion = (index) => {
+    const questionToEdit = formData.preguntas[index]
+    setQuestionData({
+      ...questionToEdit,
+      // Asegurarse de que las opciones de relleno existan
+      opcionesRelleno: questionToEdit.opcionesRelleno || ["", "", ""],
+    })
+    setCurrentQuestionType(questionToEdit.tipo)
+    setEditingQuestionIndex(index)
+  }
+
+  // Modificar la función addQuestion para manejar tanto agregar como actualizar
   const addQuestion = () => {
-    setFormData((prev) => ({
-      ...prev,
-      preguntas: [...prev.preguntas, { ...questionData, id: Date.now() }],
-    }))
+    if (editingQuestionIndex !== null) {
+      // Actualizar pregunta existente
+      setFormData((prev) => {
+        const updatedPreguntas = [...prev.preguntas]
+        updatedPreguntas[editingQuestionIndex] = { ...questionData, id: prev.preguntas[editingQuestionIndex].id }
+        return {
+          ...prev,
+          preguntas: updatedPreguntas,
+        }
+      })
+      setEditingQuestionIndex(null)
+    } else {
+      // Agregar nueva pregunta
+      setFormData((prev) => ({
+        ...prev,
+        preguntas: [...prev.preguntas, { ...questionData, id: Date.now() }],
+      }))
+    }
 
     // Reset question form
     setQuestionData({
@@ -110,6 +140,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       audio: null,
       completarTexto: "",
       palabrasCompletar: ["", ""],
+      opcionesRelleno: ["", "", ""],
     })
     setCurrentQuestionType(null)
   }
@@ -132,11 +163,37 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }))
   }
 
+  const handleOpcionRellenoChange = (index, value) => {
+    const newOpciones = [...questionData.opcionesRelleno]
+    newOpciones[index] = value
+    setQuestionData((prev) => ({
+      ...prev,
+      opcionesRelleno: newOpciones,
+    }))
+  }
+
   const addPalabraCompletar = () => {
     setQuestionData((prev) => ({
       ...prev,
       palabrasCompletar: [...prev.palabrasCompletar, ""],
     }))
+  }
+
+  const addOpcionRelleno = () => {
+    setQuestionData((prev) => ({
+      ...prev,
+      opcionesRelleno: [...prev.opcionesRelleno, ""],
+    }))
+  }
+
+  // Agregar función para eliminar una opción de relleno
+  const removeOpcionRelleno = (index) => {
+    if (questionData.opcionesRelleno.length > 1) {
+      setQuestionData((prev) => ({
+        ...prev,
+        opcionesRelleno: prev.opcionesRelleno.filter((_, i) => i !== index),
+      }))
+    }
   }
 
   const selectQuestionType = (tipo) => {
@@ -318,7 +375,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   <FiChevronDown className="ml-2" />
                 </button>
                 {showQuestionTypes && (
-                  <div className="absolute right-0 mt-1 w-64 bg-[#f3edf7] rounded-md shadow-lg z-10 p-2">
+                  <div className="absolute right-0 bottom-full mb-1 w-64 bg-[#f3edf7] rounded-md shadow-lg z-10 p-2">
                     <div className="space-y-2">
                       <button
                         type="button"
@@ -369,12 +426,21 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   {formData.preguntas.map((pregunta, index) => (
                     <div
                       key={pregunta.id}
-                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md"
+                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleEditQuestion(index)}
                     >
                       <div>
                         <p className="text-[14px]">
-                          {index + 1}. {pregunta.texto.substring(0, 30)}
-                          {pregunta.texto.length > 30 ? "..." : ""}
+                          {index + 1}.{" "}
+                          {pregunta.texto
+                            ? pregunta.texto.substring(0, 30)
+                            : pregunta.completarTexto
+                              ? pregunta.completarTexto.substring(0, 30)
+                              : ""}
+                          {(pregunta.texto && pregunta.texto.length > 30) ||
+                          (pregunta.completarTexto && pregunta.completarTexto.length > 30)
+                            ? "..."
+                            : ""}
                         </p>
                         <p className="text-[12px] text-gray-500">
                           Tipo: {pregunta.tipo} | Puntaje: {pregunta.puntaje}
@@ -382,7 +448,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation()
                           setFormData((prev) => ({
                             ...prev,
                             preguntas: prev.preguntas.filter((_, i) => i !== index),
@@ -476,7 +543,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     onClick={addQuestion}
                     className="w-full py-2 bg-[#46ae69] text-white rounded-md hover:bg-green-600 transition-colors text-[14px]"
                   >
-                    Agregar Pregunta
+                    {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
                 </div>
               </div>
@@ -538,7 +605,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     onClick={addQuestion}
                     className="w-full py-2 bg-[#46ae69] text-white rounded-md hover:bg-green-600 transition-colors text-[14px]"
                   >
-                    Agregar Pregunta
+                    {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
                 </div>
               </div>
@@ -602,7 +669,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     onClick={addQuestion}
                     className="w-full py-2 bg-[#46ae69] text-white rounded-md hover:bg-green-600 transition-colors text-[14px]"
                   >
-                    Agregar Pregunta
+                    {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
                 </div>
               </div>
@@ -686,7 +753,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     onClick={addQuestion}
                     className="w-full py-2 bg-[#46ae69] text-white rounded-md hover:bg-green-600 transition-colors text-[14px]"
                   >
-                    Agregar Pregunta
+                    {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
                 </div>
               </div>
@@ -745,48 +812,69 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     </div>
                   )}
 
+                  {/* Opciones de relleno para completar espacios */}
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-[14px] font-medium mb-2">Opciones de Relleno</h4>
+                      <button
+                        type="button"
+                        onClick={addOpcionRelleno}
+                        className="flex items-center text-[14px] text-blue-600 hover:text-blue-800"
+                      >
+                        <FiPlus className="mr-1" /> Agregar opción
+                      </button>
+                    </div>
+                    {questionData.opcionesRelleno.map((opcion, index) => (
+                      <div key={index} className="mb-2 flex items-center">
+                        <input
+                          type="text"
+                          value={opcion}
+                          onChange={(e) => handleOpcionRellenoChange(index, e.target.value)}
+                          className="flex-1 p-2 border border-gray-300 rounded-md text-[14px]"
+                          placeholder={`Opción de relleno ${index + 1}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeOpcionRelleno(index)}
+                          className="ml-2 p-1 text-red-500 hover:text-red-700"
+                          disabled={questionData.opcionesRelleno.length <= 1}
+                        >
+                          <FiX />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
                   <button
                     type="button"
                     onClick={addQuestion}
                     className="w-full py-2 bg-[#46ae69] text-white rounded-md hover:bg-green-600 transition-colors text-[14px]"
                   >
-                    Agregar Pregunta
+                    {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {formData.preguntas.length > 0 && (
+          {formData.preguntas.length > 0 && !isPuntajeValid() && (
             <div className="flex items-center mt-6 border-t border-gray-200 pt-4" id="puntaje-alert">
-              {isPuntajeValid() ? (
-                <div className="flex items-center bg-yellow-50 p-2 rounded-md">
-                  <span className="text-yellow-700 mr-2">⚠️</span>
-                  <div>
-                    <p className="text-[14px] font-medium">Total puntos de las Preguntas</p>
-                    <p className="text-[12px] text-gray-600">
-                      El total de puntos es: {getTotalPoints()}, el examen está listo para ser guardado
-                    </p>
-                  </div>
+              <div className="flex items-center p-2 w-full">
+                <div className="text-red-500 mr-3">
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 0L40 40H0L20 0Z" fill="#f44144" />
+                    <text x="20" y="30" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">
+                      !
+                    </text>
+                  </svg>
                 </div>
-              ) : (
-                <div className="flex items-center p-2 w-full">
-                  <div className="text-red-500 mr-3">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M20 0L40 40H0L20 0Z" fill="#f44144" />
-                      <text x="20" y="30" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">
-                        !
-                      </text>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[16px] font-bold">Total puntos de las Preguntas</p>
-                    <p className="text-[14px] text-gray-500">
-                      El total de puntos es {getTotalPoints()}. Debe sumar 100 para poder guardar el examen
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-[16px] font-bold">Total puntos de las Preguntas</p>
+                  <p className="text-[14px] text-gray-500">
+                    El total de puntos es {getTotalPoints()}. Debe sumar 100 para poder guardar el examen
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
