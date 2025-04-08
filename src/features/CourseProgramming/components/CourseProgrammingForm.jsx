@@ -306,7 +306,7 @@ export default function CourseProgramming() {
   // Componente para la sección de actividades
   const ActivitiesSection = ({ levelId, themeId }) => {
     const [selectedActivity, setSelectedActivity] = useState("")
-    const [activityValue, setActivityValue] = useState(0)
+    const [activityValue, setActivityValue] = useState("")
     const [localActiveTab, setLocalActiveTab] = useState("Actividades")
 
     // Encontrar el nivel y tema actual
@@ -449,17 +449,24 @@ export default function CourseProgramming() {
                         type="number"
                         min="0"
                         max="100"
-                        className="w-full rounded-l-md border border-gray-300 px-3 py-2"
+                        className="w-full rounded-l-md border border-gray-300 px-3 py-1.5"
                         value={activityValue}
-                        onChange={(e) => setActivityValue(Number(e.target.value) || 0)}
+                        onChange={(e) => setActivityValue(Number.parseInt(e.target.value) || 0)}
                       />
-                      <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-2 rounded-r-md">%</span>
+                      <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">%</span>
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="flex space-x-2 mb-4">
+                <button className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center">
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Crear{" "}
+                  {localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad"}
+                </button>
                 <button
                   className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center"
                   onClick={addNewActivity}
@@ -467,13 +474,7 @@ export default function CourseProgramming() {
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Agregar
-                </button>
-                <button className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center">
-                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Crear{" "}
+                  Añadir{" "}
                   {localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad"}
                 </button>
               </div>
@@ -584,7 +585,7 @@ export default function CourseProgramming() {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
           <header className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-800">Programación de los Cursos</h1>
+            <h1 className="text-2xl font-bold text-slate-800">Añadir Programación</h1>
           </header>
 
           <div className="space-y-4">
@@ -765,14 +766,14 @@ export default function CourseProgramming() {
                                       onChange={(value) => updateTheme(level.id, theme.id, value)}
                                     />
                                   </div>
-                                  <div className="flex items-end space-x-2">
+                                  <div className="flex items-end">
                                     <div className="flex-1">
                                       <label className="block mb-1 text-sm font-medium">Valor</label>
                                       <input
                                         type="number"
                                         min="0"
                                         max="100"
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2"
+                                        className="w-full rounded-l-md border border-gray-300 px-3 py-1.5"
                                         value={theme.progress || ""}
                                         onChange={(e) => {
                                           const value = Number.parseInt(e.target.value) || 0
@@ -789,7 +790,7 @@ export default function CourseProgramming() {
                                         }}
                                       />
                                     </div>
-                                    <span className="mb-2">%</span>
+                                    <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">%</span>
                                   </div>
                                 </div>
                                 <button

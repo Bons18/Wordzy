@@ -206,6 +206,8 @@ const TopicsPage = () => {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleSubmitTopic}
+            topic={currentTopic}
+            existingTopics={topicsList}
           />
 
           <EditTopicModal
@@ -213,6 +215,7 @@ const TopicsPage = () => {
             onClose={() => setIsEditModalOpen(false)}
             onSubmit={handleUpdateTopic}
             topic={currentTopic}
+            existingTopics={topicsList}
           />
 
           <ConfirmationModal

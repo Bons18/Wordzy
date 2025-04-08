@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { formatDate } from "../../../shared/utils/dateFormatter";
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
+
+// Función para normalizar texto (ignora tildes y mayúsculas)
+const normalizarTexto = (texto) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 const RoleForm = ({ onSubmit, onCancel, initialData }) => {
+  const { roles: existingRoles } = useContext(RoleContext);
   const [hasChanges, setHasChanges] = useState(false);
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -25,7 +31,8 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
     Roles: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
   });
 
-  // Efecto para cargar los datos iniciales si existen
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (initialData) {
       setNombre(initialData.nombre);
@@ -59,43 +66,77 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
     setHasChanges(true);
   };
 
+  const validarFormulario = () => {
+    const errores = {};
+  
+    if (!nombre.trim()) {
+      errores.nombre = "El nombre del rol es obligatorio.";
+    } else {
+      const nombreNormalizado = normalizarTexto(nombre);
+      const nombresExistentes = existingRoles
+        .filter(role => !initialData || role.id !== initialData.id)
+        .map(role => normalizarTexto(role.nombre));
+  
+      if (nombresExistentes.includes(nombreNormalizado)) {
+        errores.nombre = "El nombre del rol ya existe.";
+      }
+    }
+  
+    const tieneAlMenosUnPermiso = Object.values(permisos).some(modulo =>
+      Object.values(modulo).some(valor => valor)
+    );
+  
+    if (!tieneAlMenosUnPermiso) {
+      errores.permisos = "Debe seleccionar al menos un permiso.";
+    }
+  
+    setErrors(errores);
+    return Object.keys(errores).length === 0;
+  };
+  
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validarFormulario()) return;
+
     const rolActualizado = {
-      ...initialData, // Mantenemos todos los datos originales
+      ...initialData,
       nombre,
       descripcion,
       estado,
       permisos,
       fechaCreacion: formatDate(new Date()),
     };
-    // Agrega este console.log para mostrar los datos del rol
-    console.log('Datos del rol a agregar:', rolActualizado);
+
+    console.log("Datos del rol a agregar:", rolActualizado);
     onSubmit(rolActualizado);
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-1">
       <h2 className="text-xl font-bold mb-4">{initialData ? "EDITAR ROL" : "CREAR ROL"}</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nombre*</label>
           <input
             type="text"
+            name="nombre"
             value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            onChange={handleChange}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
           />
+          {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
           <input
             type="text"
+            name="descripcion"
             value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
+            onChange={handleChange}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
@@ -119,6 +160,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
       </div>
 
       <div className="mb-4">
+        {errors.permisos && <p className="text-red-500 text-xs mb-2">{errors.permisos}</p>}
         <div className="overflow-x-auto text-sm">
           <table className="w-full bg-white border border-gray-200">
             <thead>
@@ -176,14 +218,14 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-gray-500"
+          className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-[10px] hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-gray-500"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={!hasChanges}
-          className={`px-3 py-1.5 text-sm text-white rounded-md focus:outline-none focus:ring-1 ${
+          className={`px-3 py-1.5 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 ${
             hasChanges 
               ? "bg-green-500 hover:bg-green-600 focus:ring-blue-500" 
               : "bg-gray-400 cursor-not-allowed"

@@ -21,17 +21,17 @@ const ConfirmationModal = ({
             <p className="mt-2 text-[#627b87]">{message}</p>
           </div>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-6">
             {showButtonCancel && (
             <button
-              className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+              className="px-4 py-2 border border-[#d9d9d9] rounded-[10px] text-[#627b87] hover:bg-gray-50 focus:outline-none text-sm transition-colors"
               onClick={onClose}
             >
               Cancelar
             </button>
             )}
             <button
-              className={`px-6 py-2.5 ${confirmColor} text-white rounded-lg font-medium transition-colors`}
+              className={`px-4 py-2 ${confirmColor} text-white rounded-[10px] text-sm focus:outline-none transition-colors`}
               onClick={onConfirm}
             >
               {confirmText}

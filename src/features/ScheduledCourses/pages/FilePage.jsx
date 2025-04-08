@@ -3,6 +3,7 @@ import GenericTable from "../../../shared/components/Table"
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 
 
 const files = [
@@ -16,7 +17,7 @@ const files = [
     { fichas: "8765432", programa: "Programa 8", Instructor: "Instructor 8", cantidadAprendices: 25, fechaInicio: "01-01-2022", fechaFin: "01-01-2023", progreso: "80%" },
     { fichas: "9876543", programa: "Programa 9", Instructor: "Instructor 9", cantidadAprendices: 18, fechaInicio: "05-05-2022", fechaFin: "05-05-2023", progreso: "90%" },
     { fichas: "1234567", programa: "Programa 10", Instructor: "Instructor 10", cantidadAprendices: 35, fechaInicio: "07-07-2022", fechaFin: "07-07-2023", progreso: "100%" },
-    
+
 ]
 
 const columns = [
@@ -101,45 +102,12 @@ const FilePage = () => {
                                 </button>
                             </div>
                         )}
-
-                        {/* Logout Confirmation Modal */}
-                        {showLogoutConfirm && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                                    <div className="p-6">
-                                        <div className="text-center mb-6">
-                                            <h3 className="text-xl font-semibold text-[#1f384c]">
-                                                Cerrar Sesión
-                                            </h3>
-                                            <p className="mt-2 text-[#627b87]">
-                                                ¿Está seguro de que desea cerrar la sesión actual?
-                                            </p>
-                                        </div>
-
-                                        <div className="flex justify-center gap-3">
-                                            <button
-                                                className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                                                onClick={() => setShowLogoutConfirm(false)}
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button
-                                                className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                                                onClick={handleLogout}
-                                            >
-                                                Cerrar Sesión
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>
 
             <div className="container mx-auto px-6">
-            <div className="flex items-center mb-6">
+                <div className="flex items-center mb-6">
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-1 bg-gray-200 text-black px-3 py-1.5 text-sm rounded-lg hover:bg-gray-300 transition-colors"
@@ -153,6 +121,15 @@ const FilePage = () => {
                     onShow={handleShowTrainees}
                     tooltipText="Ver Aprendices"
                     showActions={{ show: true, edit: false, delete: false, add: false }}
+                />
+
+                <ConfirmationModal
+                    isOpen={showLogoutConfirm}
+                    onClose={() => setShowLogoutConfirm(false)}
+                    onConfirm={handleLogout}
+                    title="Cerrar Sesión"
+                    message="¿Está seguro de que desea cerrar la sesión actual?"
+                    confirmText="Cerrar Sesión"
                 />
             </div>
         </div>

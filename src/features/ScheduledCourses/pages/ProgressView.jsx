@@ -5,6 +5,7 @@ import { useAuth } from "../../auth/hooks/useAuth"
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiEye } from 'react-icons/fi';
 import Tooltip from '../../../shared/components/Tooltip';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 
 // Base de datos simulada con progreso para cada aprendiz
 const progressDatabase = {
@@ -544,7 +545,7 @@ const ProgressView = () => {
 
   return (
     <div className="min-h-screen">
-      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-2">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
           <div className="relative" ref={dropdownRef}>
@@ -566,49 +567,16 @@ const ProgressView = () => {
                 </button>
               </div>
             )}
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                  <div className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-xl font-semibold text-[#1f384c]">
-                        Cerrar Sesión
-                      </h3>
-                      <p className="mt-2 text-[#627b87]">
-                        ¿Está seguro de que desea cerrar la sesión actual?
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3">
-                      <button
-                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                        onClick={() => setShowLogoutConfirm(false)}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                        onClick={handleLogout}
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-6">
-      <div className="container mx-auto p-4 max-w-7xl"> 
-          <div className="flex items-center mb-3">
+        <div className="container mx-auto p-4 max-w-7xl">
+          <div className="flex items-center mb-6">
             <button
               onClick={handleBack}
-              className="mr-4 px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              className="flex items-center gap-1 bg-gray-200 text-black px-3 py-1.5 text-sm rounded-lg hover:bg-gray-300 transition-colors"
             >
               ← Volver
             </button>
@@ -644,6 +612,14 @@ const ProgressView = () => {
               showActions={{ show: true, edit: false, delete: false, add: false }}
               defaultItemsPerPage={10}
               tooltipText="Retroalimentación"
+            />
+            <ConfirmationModal
+              isOpen={showLogoutConfirm}
+              onClose={() => setShowLogoutConfirm(false)}
+              onConfirm={handleLogout}
+              title="Cerrar Sesión"
+              message="¿Está seguro de que desea cerrar la sesión actual?"
+              confirmText="Cerrar Sesión"
             />
           </div>
         </div>

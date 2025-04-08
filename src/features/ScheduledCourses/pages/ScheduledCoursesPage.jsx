@@ -3,6 +3,7 @@ import GenericTable from "../../../shared/components/Table"
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 
 
 const scheduledCourses = [
@@ -25,8 +26,8 @@ const columns = [
             <div className="flex items-center gap-2 w-full">
                 <div className="flex-1 min-w-[100px]">
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                            className="bg-green-500 h-2 rounded-full" 
+                        <div
+                            className="bg-green-500 h-2 rounded-full"
                             style={{ width: item.progreso }}
                         ></div>
                     </div>
@@ -95,39 +96,6 @@ const ScheduledCoursesPage = () => {
                                 </button>
                             </div>
                         )}
-
-                        {/* Logout Confirmation Modal */}
-                        {showLogoutConfirm && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                                    <div className="p-6">
-                                        <div className="text-center mb-6">
-                                            <h3 className="text-xl font-semibold text-[#1f384c]">
-                                                Cerrar Sesión
-                                            </h3>
-                                            <p className="mt-2 text-[#627b87]">
-                                                ¿Está seguro de que desea cerrar la sesión actual?
-                                            </p>
-                                        </div>
-
-                                        <div className="flex justify-center gap-3">
-                                            <button
-                                                className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                                                onClick={() => setShowLogoutConfirm(false)}
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button
-                                                className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                                                onClick={handleLogout}
-                                            >
-                                                Cerrar Sesión
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>
@@ -139,6 +107,15 @@ const ScheduledCoursesPage = () => {
                     onShow={handleShowProgramming}
                     tooltipText="Ver Fichas"
                     showActions={{ show: true, edit: false, delete: false, add: false }}
+                />
+
+                <ConfirmationModal
+                    isOpen={showLogoutConfirm}
+                    onClose={() => setShowLogoutConfirm(false)}
+                    onConfirm={handleLogout}
+                    title="Cerrar Sesión"
+                    message="¿Está seguro de que desea cerrar la sesión actual?"
+                    confirmText="Cerrar Sesión"
                 />
             </div>
         </div>
