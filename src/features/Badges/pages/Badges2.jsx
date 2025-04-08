@@ -119,10 +119,11 @@ const Badges = () => {
   // Renderizar la vista de lista de insignias
   const renderBadgesList = () => {
     return (
-      <div className="min-h-screen">
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1f384c]">INSIGNIAS</h1>
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">INSIGNIAS</h1>
             <button
               onClick={handleEditClick}
               className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
@@ -130,7 +131,10 @@ const Badges = () => {
               Editar insignias
             </button>
           </div>
+        </header>
 
+        {/* Main Content */}
+        <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
           <div className="grid gap-6">
             {badges.map((badge) => (
               <div key={badge.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-lg p-6 shadow-sm">
@@ -153,7 +157,7 @@ const Badges = () => {
               </div>
             ))}
           </div>
-        </main>
+        </div>
 
         {/* Edit Confirmation Modal */}
         {showEditConfirm && (
@@ -193,27 +197,20 @@ const Badges = () => {
 
   const renderBadgeForm = () => {
     return (
-      <div className="min-h-screen bg-[#f6f6fb]">
-        <header className="bg-white py-4 px-6 border-b border-[#d6dade]">
-          <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="relative w-full sm:w-[500px]">
-              <input
-                type="text"
-                placeholder="Buscar"
-                className="w-full py-2 px-4 bg-[#f6f6fb] rounded-md text-[#627b87] focus:outline-none"
-              />
-              <Search className="absolute right-3 top-2.5 text-[#98a0b4] w-5 h-5" />
-            </div>
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">CREAR INSIGNIAS</h1>
             <div className="flex items-center gap-2 text-[#1f384c] font-medium">
               <span>Administrador</span>
-              <ChevronDown className="w-5 h-5" />
+              <ChevronDown className="w-4 h-4" />
             </div>
           </div>
         </header>
 
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1f384c] mb-8">CREAR INSIGNIAS</h1>
-
+        {/* Main Content */}
+        <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
           <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 sm:p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Form fields remain the same but with adjusted spacing */}
@@ -236,7 +233,7 @@ const Badges = () => {
               </div>
             </form>
           </div>
-        </main>
+        </div>
       </div>
     )
   }

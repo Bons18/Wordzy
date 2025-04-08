@@ -51,59 +51,63 @@ const Ranking = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header con título y filtros */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1f384c]">Ranking</h1>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">RANKING</h1>
+        </div>
+      </header>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
-            <div className="flex items-center w-full sm:w-auto">
-              <span className="mr-3 text-sm font-medium text-[#1f384c] whitespace-nowrap">Año</span>
-              <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                {[2023, 2024, 2025].map((year) => (
-                  <button
-                    key={year}
-                    className={`px-4 py-1.5 flex-1 sm:flex-none ${
-                      selectedYear === year ? "bg-[#1f384c] text-white" : "bg-white text-[#1f384c]"
-                    } hover:bg-[#f0f0f0] hover:text-[#1f384c] rounded border border-[#d6dade] transition-colors`}
-                    onClick={() => handleYearSelect(year)}
-                  >
-                    {year}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center w-full sm:w-auto">
-              <span className="mr-3 text-sm font-medium text-[#1f384c]">Mes</span>
-              <div className="relative flex-1 sm:flex-none">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
+        {/* Filtros de año y mes */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-center w-full sm:w-auto">
+            <span className="mr-3 text-sm font-medium text-[#1f384c] whitespace-nowrap">Año</span>
+            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+              {[2023, 2024, 2025].map((year) => (
                 <button
-                  className="w-full sm:w-[160px] px-4 py-1.5 bg-white hover:bg-[#f0f0f0] text-[#1f384c] rounded border border-[#d6dade] flex items-center justify-between"
-                  onClick={toggleMonthDropdown}
+                  key={year}
+                  className={`px-4 py-1.5 flex-1 sm:flex-none ${
+                    selectedYear === year ? "bg-[#1f384c] text-white" : "bg-white text-[#1f384c]"
+                  } hover:bg-[#f0f0f0] hover:text-[#1f384c] rounded border border-[#d6dade] transition-colors`}
+                  onClick={() => handleYearSelect(year)}
                 >
-                  <span>{selectedMonth}</span>
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  {year}
                 </button>
+              ))}
+            </div>
+          </div>
 
-                {isMonthDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 sm:right-auto sm:w-[160px] mt-1 bg-white border border-[#d6dade] rounded-md shadow-lg z-20">
-                    <ul className="py-1 max-h-60 overflow-auto">
-                      {months.map((month) => (
-                        <li
-                          key={month}
-                          className={`px-4 py-2 cursor-pointer hover:bg-[#f0f0f0] ${
-                            selectedMonth === month ? "bg-[#f1f2f7] font-medium" : ""
-                          }`}
-                          onClick={() => handleMonthSelect(month)}
-                        >
-                          {month}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+          <div className="flex items-center w-full sm:w-auto">
+            <span className="mr-3 text-sm font-medium text-[#1f384c]">Mes</span>
+            <div className="relative flex-1 sm:flex-none">
+              <button
+                className="w-full sm:w-[160px] px-4 py-1.5 bg-white hover:bg-[#f0f0f0] text-[#1f384c] rounded border border-[#d6dade] flex items-center justify-between"
+                onClick={toggleMonthDropdown}
+              >
+                <span>{selectedMonth}</span>
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </button>
+
+              {isMonthDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 sm:right-auto sm:w-[160px] mt-1 bg-white border border-[#d6dade] rounded-md shadow-lg z-20">
+                  <ul className="py-1 max-h-60 overflow-auto">
+                    {months.map((month) => (
+                      <li
+                        key={month}
+                        className={`px-4 py-2 cursor-pointer hover:bg-[#f0f0f0] ${
+                          selectedMonth === month ? "bg-[#f1f2f7] font-medium" : ""
+                        }`}
+                        onClick={() => handleMonthSelect(month)}
+                      >
+                        {month}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

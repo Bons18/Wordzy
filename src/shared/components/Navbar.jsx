@@ -159,7 +159,7 @@ const Navbar = () => {
               />
               <NavSubItem
                 icon={<Award size={16} />}
-                text="Insigneas"
+                text="Insignias"
                 onClick={() => handleNavigation("/programacion/insigneas")}
               />
             </div>

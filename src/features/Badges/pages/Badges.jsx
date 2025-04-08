@@ -74,10 +74,16 @@ const Badges = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#1f384c] mb-8">CREAR INSIGNIAS</h1>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">CREAR INSIGNIAS</h1>
+        </div>
+      </header>
 
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
         <div className="max-w-xl mx-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Nombre de la insignia */}
