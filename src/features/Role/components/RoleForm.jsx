@@ -114,11 +114,11 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
 
   return (
     <form onSubmit={handleSubmit} className="p-1">
-      <h2 className="text-xl font-bold mb-4">{initialData ? "EDITAR ROL" : "CREAR ROL"}</h2>
+      <h2 className="text-xl font-bold text-[#1f384c] mb-4">{initialData ? "EDITAR ROL" : "AÑADIR ROL"}</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre*</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="nombre"
@@ -131,7 +131,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="descripcion"

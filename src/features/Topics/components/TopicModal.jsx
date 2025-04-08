@@ -59,11 +59,12 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
   }, [isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} title="AÑADIR TEMA">
+    <Modal isOpen={isOpen} onClose={handleCancel}>
+      <h1 className="text-xl font-bold text-[#1f384c]">AÑADIR TEMA</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mt-6">
-            Nombre*
+          <label className="block text-sm font-medium text-gray-700 mt-4">
+            Nombre <span className="text-red-500">*</span>
           </label>
           <input
             type="text"

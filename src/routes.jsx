@@ -8,7 +8,6 @@ import Evaluations from "./features/Evaluations/pages/Evaluations"
 import Feedback from "./features/Feedback/pages/Feedback"
 import FeedbackDetails from "./features/Feedback/pages/FeedbackDetails"
 import StudentDetails from "./features/Feedback/pages/StudentDetails"
-import CouseProgrammingPage from "./features/CourseProgramming/pages/CouseProgrammingPage"
 import ScheduledCoursesPage from "./features/ScheduledCourses/pages/ScheduledCoursesPage"
 import Scale from "./features/Scale/pages/Scale"
 import Badges from "./features/Badges/pages/Badges"
@@ -18,13 +17,16 @@ import Ranking from "./features/Ranking/pages/Ranking"
 import UsersPage from "./features/Users/pages/UsersPage"
 import Dashboard from "./features/Dashboard/pages/Dashboard"
 import LoginPage from "./features/Auth/pages/LoginPage"
-import CourseProgramming from "./features/CourseProgramming/components/CourseProgrammingForm"
 import FilePage from "./features/ScheduledCourses/pages/FilePage"
 import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
 import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
 import RolesPage from "./features/Role/pages/RolesPage"
 import EditarRolPage from "./features/Role/pages/EditarRolePage"
 import ProgressView from "./features/ScheduledCourses/pages/ProgressView"
+import CourseProgrammingPage from "./features/CourseProgramming/pages/course-programming-page"
+import CourseProgramming from "./features/CourseProgramming/components/course-programming"
+import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
+
 
 
 
@@ -74,11 +76,19 @@ const routes = [
   },
   {
     path: "/programacion/programacionCursos",
-    element: <CouseProgrammingPage />,
+    element: <CourseProgrammingPage />,
   },
   {
     path: "/programacion/programacionCursos/registrarProgramacion",
     element: <CourseProgramming />,
+  },
+  {
+    path: "/programacion/programacionCursos/editar/:id",
+    element: <CourseProgramming />,
+  },
+  {
+    path: "/programacion/programacionCursos/detalle/:id",
+    element: <CourseProgrammingDetail />,
   },
   {
     path: "/programacion/escala",
