@@ -3,8 +3,25 @@
 import { Trash } from "lucide-react"
 import Tooltip from "../../../../shared/components/Tooltip"
 import ThemesList from "./themes-list"
+import TopicModal from "../../../Topics/components/TopicModal";
+import ConfirmationModal from "../../../../shared/components/ConfirmationModal";
+import { useState } from "react";
 
 export default function LevelsList({ levels, setLevels, activeTabs, setActiveTabs }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleAddTopic = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleSubmitTopic = () => {
+    setIsModalOpen(false);
+    setSuccessMessage("Tema agregado exitosamente");
+    setShowSuccessModal(true);
+  };
+
   const toggleLevelExpand = (levelId) => {
     setLevels(levels.map((level) => (level.id === levelId ? { ...level, expanded: !level.expanded } : level)))
   }
@@ -94,7 +111,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                 <div className="flex space-x-2">
                   <button
                     className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
-                    onClick={() => {}} // Agregar modal de crear tema
+                    onClick={handleAddTopic} // Agregar modal de crear tema
                   >
                     <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -122,6 +139,21 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                 setLevels={setLevels}
                 activeTabs={activeTabs}
                 setActiveTabs={setActiveTabs}
+              />
+              <TopicModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleSubmitTopic}
+              />
+              {/* Modal de éxito */}
+              <ConfirmationModal
+                isOpen={showSuccessModal}
+                onConfirm={() => setShowSuccessModal(false)}
+                title="Operación Exitosa"
+                message={successMessage}
+                confirmText="Aceptar"
+                confirmColor="bg-green-500 hover:bg-green-600"
+                showButtonCancel={false}
               />
             </div>
           )}
