@@ -51,12 +51,12 @@ const CourseProgrammingPage = () => {
     const loadSchedules = () => {
         try {
             const savedSchedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
-            
+
             if (savedSchedules.length > 0) {
                 // Filtrar para evitar duplicados por ID
                 const existingIds = new Set(defaultSchedules.map(s => s.id));
                 const filteredSavedSchedules = savedSchedules.filter(s => !existingIds.has(s.id));
-                
+
                 // Combinar con las programaciones predeterminadas
                 setSchedules([...defaultSchedules, ...filteredSavedSchedules]);
             } else {
@@ -122,12 +122,12 @@ const CourseProgrammingPage = () => {
             // Eliminar de la lista local
             const updatedSchedules = schedules.filter(s => s.id !== itemToDelete);
             setSchedules(updatedSchedules);
-            
+
             // Actualizar localStorage
             const savedSchedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
             const updatedSavedSchedules = savedSchedules.filter(s => s.id !== itemToDelete);
             localStorage.setItem('courseSchedules', JSON.stringify(updatedSavedSchedules));
-            
+
             // Mostrar mensaje de éxito
             setSuccessMessage("Programación eliminada exitosamente");
             setShowSuccessModal(true);
@@ -179,40 +179,40 @@ const CourseProgrammingPage = () => {
                     onDelete={handleDeleteProgramming}
                     showActions={{ show: true, edit: true, delete: true, add: true }}
                 />
+
+                {/* Modal de confirmación para cerrar sesión */}
+                <ConfirmationModal
+                    isOpen={showLogoutConfirm}
+                    onClose={() => setShowLogoutConfirm(false)}
+                    onConfirm={handleLogout}
+                    title="Cerrar Sesión"
+                    message="¿Está seguro de que desea cerrar la sesión actual?"
+                    confirmText="Cerrar Sesión"
+                    confirmColor="bg-[#f44144] hover:bg-red-600"
+                />
+
+                {/* Modal de confirmación para eliminar programación */}
+                <ConfirmationModal
+                    isOpen={showDeleteConfirm}
+                    onClose={() => setShowDeleteConfirm(false)}
+                    onConfirm={confirmDeleteProgramming}
+                    title="Eliminar Programación"
+                    message="¿Está seguro que desea eliminar esta programación? Esta acción no se puede deshacer."
+                    confirmText="Eliminar"
+                    confirmColor="bg-[#f44144] hover:bg-red-600"
+                />
+
+                {/* Modal de éxito */}
+                <ConfirmationModal
+                    isOpen={showSuccessModal}
+                    onConfirm={() => setShowSuccessModal(false)}
+                    title="Operación Exitosa"
+                    message={successMessage}
+                    confirmText="Aceptar"
+                    confirmColor="bg-green-500 hover:bg-green-600"
+                    showButtonCancel={false}
+                />
             </div>
-
-            {/* Modal de confirmación para cerrar sesión */}
-            <ConfirmationModal
-                isOpen={showLogoutConfirm}
-                onClose={() => setShowLogoutConfirm(false)}
-                onConfirm={handleLogout}
-                title="Cerrar Sesión"
-                message="¿Está seguro de que desea cerrar la sesión actual?"
-                confirmText="Cerrar Sesión"
-                confirmColor="bg-[#f44144] hover:bg-red-600"
-            />
-
-            {/* Modal de confirmación para eliminar programación */}
-            <ConfirmationModal
-                isOpen={showDeleteConfirm}
-                onClose={() => setShowDeleteConfirm(false)}
-                onConfirm={confirmDeleteProgramming}
-                title="Eliminar Programación"
-                message="¿Está seguro que desea eliminar esta programación? Esta acción no se puede deshacer."
-                confirmText="Eliminar"
-                confirmColor="bg-[#f44144] hover:bg-red-600"
-            />
-
-            {/* Modal de éxito */}
-            <ConfirmationModal
-                isOpen={showSuccessModal}
-                onConfirm={() => setShowSuccessModal(false)}
-                title="Operación Exitosa"
-                message={successMessage}
-                confirmText="Aceptar"
-                confirmColor="bg-green-500 hover:bg-green-600"
-                showButtonCancel={false}
-            />
         </div>
     )
 }

@@ -1,11 +1,10 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { Eye, Trash } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
+import { formatDate } from "../../../shared/utils/dateFormatter"
 
 export default function CourseProgramming() {
   const navigate = useNavigate()
@@ -14,47 +13,45 @@ export default function CourseProgramming() {
   const [activeStatus, setActiveStatus] = useState(true)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(3)
   const [isFormDirty, setIsFormDirty] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
-   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-    const { logout } = useAuth()
-    const dropdownRef = useRef(null)
-  
-    useEffect(() => {
-      const handleClickOutside = (event) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-          setIsDropdownOpen(false)
-        }
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const { logout } = useAuth()
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
       }
-  
-      document.addEventListener("mousedown", handleClickOutside)
-      return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [])
-  
-    const handleLogoutClick = () => {
-      setIsDropdownOpen(false)
-      setShowLogoutConfirm(true)
-    }
-  
-    const handleLogout = () => {
-      logout()
-      navigate("/login")
     }
 
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
+
   const examOptions = [
-    { value: "examen1", label: "Seleccionar examen" },
+    { value: "examen1", label: "Examen" },
     { value: "examen2", label: "Examen Parcial" },
     { value: "examen3", label: "Examen Final" },
     { value: "examen4", label: "Quiz" },
   ]
 
   const materialOptions = [
-    { value: "material1", label: "Seleccionar material" },
+    { value: "material1", label: "Imagenes" },
     { value: "material2", label: "Documento PDF" },
     { value: "material3", label: "Video Tutorial" },
     { value: "material4", label: "Presentación" },
@@ -80,7 +77,7 @@ export default function CourseProgramming() {
   ]
 
   const activityOptions = [
-    { value: "actividad1", label: "Seleccionar actividad" },
+    { value: "actividad1", label: "Completación" },
     { value: "actividad2", label: "Selección Múltiple" },
     { value: "actividad3", label: "Relacionar" },
   ]
@@ -99,14 +96,21 @@ export default function CourseProgramming() {
   }
 
   const handleCreateProgramming = () => {
-    // Crear un objeto con la información de la programación
+    const formattedStartDate = startDate ? formatDate(new Date(startDate)) : formatDate(new Date());
+    const formattedEndDate = endDate ? formatDate(new Date(endDate)) : "";
+
     const newProgramming = {
-      id: Math.floor(Math.random() * 1000) + 6, // Generar un ID aleatorio mayor que los existentes
-      nombre: selectedProgram ? programOptions.find((p) => p.value === selectedProgram)?.label : "Nueva Programación",
-      fechaInicio: startDate || "01-01-2023",
-      fechaFin: endDate || "01-06-2025",
+      id: Math.floor(Math.random() * 1000) + 6,
+      nombre: selectedProgram
+        ? programOptions.find((p) => p.value === selectedProgram)?.label
+        : "Nueva Programación",
+      fechaInicio: formattedStartDate,
+      fechaFin: formattedEndDate,
       estado: activeStatus ? "Activo" : "Inactivo",
-    }
+    };
+
+    // Aquí iría la lógica para guardar/agregar `newProgramming`
+    console.log(newProgramming); // Solo para ver el resultado por ahora
 
     // En un caso real, aquí se haría una llamada a una API
     // Para simular, guardamos en localStorage
@@ -258,7 +262,7 @@ export default function CourseProgramming() {
               {options.map((option) => (
                 <li
                   key={option.value}
-                  className={`cursor-pointer select-none px-3 py-2 hover:bg-gray-100 ${value === option.value ? "bg-gray-100" : ""}`}
+                  className={`cursor-pointer select-none text-sm px-3 py-2 hover:bg-gray-100 ${value === option.value ? "bg-gray-100" : ""}`}
                   onClick={() => {
                     onChange(option.value)
                     setIsOpen(false)
@@ -402,19 +406,19 @@ export default function CourseProgramming() {
         <div className="border rounded-md">
           <div className="flex border-b">
             <button
-              className={`px-4 py-2 ${localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
+              className={`px-4 py-2 text-sm font-medium ${localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
               onClick={() => setLocalActiveTab("Actividades")}
             >
               Actividades
             </button>
             <button
-              className={`px-4 py-2 ${localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
+              className={`px-4 py-2 text-sm font-medium ${localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
               onClick={() => setLocalActiveTab("Exámenes")}
             >
               Exámenes
             </button>
             <button
-              className={`px-4 py-2 ${localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
+              className={`px-4 py-2 text-sm font-medium ${localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""}`}
               onClick={() => setLocalActiveTab("Material")}
             >
               Material de Apoyo
@@ -423,8 +427,6 @@ export default function CourseProgramming() {
 
           <div className="p-4">
             <div>
-              <h3 className="font-medium mb-4">{localActiveTab}</h3>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className={localActiveTab === "Material" ? "col-span-3" : "col-span-2"}>
                   <label className="block mb-1 text-sm font-medium">
@@ -460,7 +462,7 @@ export default function CourseProgramming() {
               </div>
 
               <div className="flex space-x-2 mb-4">
-                <button className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center">
+                <button className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center">
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
@@ -468,7 +470,7 @@ export default function CourseProgramming() {
                   {localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad"}
                 </button>
                 <button
-                  className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md flex items-center"
+                  className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center"
                   onClick={addNewActivity}
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -517,35 +519,7 @@ export default function CourseProgramming() {
                   </tbody>
                 </table>
 
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
-                  <div className="text-sm text-gray-700">
-                    <span className="font-medium">100%</span> por página
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-700">{currentPage}</span>
-                    <span className="text-sm text-gray-700">de</span>
-                    <span className="text-sm text-gray-700">{totalPages}</span>
-                    <span className="text-sm text-gray-700">páginas</span>
-                    <button
-                      className="p-1 rounded-md hover:bg-gray-200"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button
-                      className="p-1 rounded-md hover:bg-gray-200"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -585,12 +559,12 @@ export default function CourseProgramming() {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
           <header className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-800">Añadir Programación</h1>
+            <h1 className="text-xl font-bold text-slate-800">Añadir Programación</h1>
           </header>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="font-medium">Programa</label>
+              <label className="text-sm font-medium">Programa</label>
               <CustomSelect
                 placeholder="Selecciona un Programa"
                 options={programOptions}
@@ -601,7 +575,7 @@ export default function CourseProgramming() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="font-medium">Fecha de Inicio</label>
+                <label className="text-sm font-medium">Fecha de Inicio</label>
                 <input
                   type="date"
                   className="w-full rounded-md border border-gray-300 px-3 py-2"
@@ -610,7 +584,7 @@ export default function CourseProgramming() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-medium">Fecha de Fin</label>
+                <label className="text-sm font-medium">Fecha de Fin</label>
                 <input
                   type="date"
                   className="w-full rounded-md border border-gray-300 px-3 py-2"
@@ -619,7 +593,7 @@ export default function CourseProgramming() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-medium">Estado</label>
+                <label className="text-sm font-medium">Estado</label>
                 <div className="flex items-center pt-2">
                   <ToggleSwitch checked={activeStatus} onChange={setActiveStatus} />
                 </div>
@@ -628,7 +602,7 @@ export default function CourseProgramming() {
 
             <button
               onClick={addLevel}
-              className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
+              className="flex items-center px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -643,7 +617,7 @@ export default function CourseProgramming() {
                     className="flex items-center justify-between p-3 cursor-pointer"
                     onClick={() => toggleLevelExpand(level.id)}
                   >
-                    <h3 className="font-medium">{getLevelDisplayName(level)}</h3>
+                    <h3 className="text-sm font-medium">{getLevelDisplayName(level)}</h3>
                     <div className="flex items-center">
                       <button
                         className="p-1 hover:bg-gray-100 rounded-full"
@@ -680,7 +654,7 @@ export default function CourseProgramming() {
                         <input
                           type="text"
                           placeholder="Nombre del nivel"
-                          className="w-full rounded-md border border-gray-300 px-3 py-2"
+                          className="w-full text-sm rounded-md border border-gray-300 px-3 py-2"
                           value={level.name}
                           onChange={(e) => updateLevelName(level.id, e.target.value)}
                         />
@@ -688,7 +662,7 @@ export default function CourseProgramming() {
 
                       <div className="flex space-x-2 mb-4">
                         <button
-                          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
+                          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
                           onClick={() => { }} // Agregar modal de crear tema
                         >
                           <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -697,7 +671,7 @@ export default function CourseProgramming() {
                           Crear Tema
                         </button>
                         <button
-                          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
+                          className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
                           onClick={() => addTheme(level.id)}
                         >
                           <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -715,7 +689,7 @@ export default function CourseProgramming() {
                               onClick={() => toggleThemeExpand(level.id, theme.id)}
                             >
                               <div className="flex items-center">
-                                <h4 className="font-medium">{getThemeDisplayName(theme)}</h4>
+                                <h4 className="text-sm font-medium">{getThemeDisplayName(theme)}</h4>
                                 {theme.progress > 0 && (
                                   <span className="ml-2 text-sm text-gray-500">{theme.progress}%</span>
                                 )}
@@ -794,7 +768,7 @@ export default function CourseProgramming() {
                                   </div>
                                 </div>
                                 <button
-                                  className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
+                                  className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
                                   onClick={() => toggleActivitiesSection(level.id, theme.id)}
                                 >
                                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -820,13 +794,13 @@ export default function CourseProgramming() {
             <div className="sticky bottom-0 bg-white py-4 border-t mt-8 flex justify-between">
               <button
                 onClick={handleCancel}
-                className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCreateProgramming}
-                className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
               >
                 Crear Programación
               </button>
