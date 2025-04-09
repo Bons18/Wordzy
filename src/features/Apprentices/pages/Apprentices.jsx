@@ -7,7 +7,9 @@ import GenericTable from "../../../shared/components/Table"
 import ApprenticeDetailModal from "./ApprenticeDetailModal"
 import ApprenticeProgressModal from "./ApprenticeProgressModal"
 import { useAuth } from "../../auth/hooks/useAuth"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
+// Datos de ejemplo con campos adicionales
 // Datos de ejemplo con campos adicionales
 const aprendices = [
   {
@@ -54,7 +56,7 @@ const aprendices = [
     apellido: "Martínez",
     documento: "1034567890",
     tipoDocumento: "PEP",
-    ficha: [2889927],
+    ficha: [2889927, 2996778],
     nivel: 3,
     estado: "En formación",
     telefono: "3209876543",
@@ -115,6 +117,7 @@ const Apprentices = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
@@ -150,6 +153,11 @@ const Apprentices = () => {
     setIsDetailModalOpen(true) // Volver a abrir el modal de detalle del aprendiz
   }
 
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
   const handleLogout = () => {
     logout()
     navigate("/login")
@@ -172,7 +180,7 @@ const Apprentices = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
                 >
                   Cerrar Sesión
@@ -188,7 +196,7 @@ const Apprentices = () => {
           data={aprendices}
           columns={columns}
           onShow={handleShowApprentice}
-          title=""
+          title="LISTA DE APRENDICES"
           showActions={{ show: true }}
         />
 
@@ -209,9 +217,19 @@ const Apprentices = () => {
           </>
         )}
       </div>
+
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
     </div>
   )
 }
 
 export default Apprentices
-

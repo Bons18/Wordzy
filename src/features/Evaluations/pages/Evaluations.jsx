@@ -9,8 +9,59 @@ import EvaluationForm from "../components/EvaluationForm"
 import EvaluationDetailModal from "../components/EvaluationDetailModal"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
+
 // Datos iniciales de ejemplo
 const initialEvaluationsData = [
+  {
+    id: 1,
+    nombre: "Evaluación 1",
+    tema: "Matemáticas",
+    estado: "Activo",
+    tipoEvaluacion: "Examen",
+    descripcion: "This is an example of a general description",
+    preguntas: [
+      {
+        id: 101,
+        tipo: "seleccion",
+        texto: "This is an example of a general question",
+        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
+        respuestaCorrecta: 1,
+        puntaje: 20,
+      },
+      {
+        id: 102,
+        tipo: "verdaderoFalso",
+        texto: "This is an example of a general question",
+        respuestaCorrecta: 1, // Falso
+        puntaje: 20,
+      },
+      {
+        id: 103,
+        tipo: "imagen",
+        texto: "This is an example of a general question",
+        imagen: "/placeholder.svg?height=200&width=200",
+        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
+        respuestaCorrecta: 1,
+        puntaje: 20,
+      },
+      {
+        id: 104,
+        tipo: "audio",
+        texto: "This is an example of a general question",
+        audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
+        respuestaCorrecta: 1,
+        puntaje: 20,
+      },
+      {
+        id: 105,
+        tipo: "completar",
+        completarTexto: "This [] an example of a general []",
+        palabrasCompletar: ["is", "question"],
+        puntaje: 10,
+      },
+    ],
+  },
   {
     id: 2,
     nombre: "Evaluación 2",
@@ -88,6 +139,7 @@ const Evaluations = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [successTitle, setSuccessTitle] = useState("")
   const [currentEvaluation, setCurrentEvaluation] = useState(null)
@@ -171,6 +223,11 @@ const Evaluations = () => {
     }
   }
 
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
   const handleLogout = () => {
     logout()
     navigate("/login")
@@ -193,7 +250,7 @@ const Evaluations = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
                 >
                   Cerrar Sesión
@@ -263,9 +320,19 @@ const Evaluations = () => {
         confirmColor="bg-[#f44144] hover:bg-red-600"
         showButtonCancel={false}
       />
+
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
     </div>
   )
 }
 
 export default Evaluations
-

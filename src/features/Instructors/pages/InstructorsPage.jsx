@@ -7,6 +7,7 @@ import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
 import FichaDetailModal from "./FichaDetailModal"
 import { useAuth } from "../../auth/hooks/useAuth"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 const instructorsData = [
   {
@@ -22,6 +23,7 @@ const instructorsData = [
       {
         id: 1,
         numero: "2889927",
+        nivel: 3,
         programa: "Desarrollo de Software",
         fechaInicio: "23/01/2024",
         fechaFin: "30/01/2025",
@@ -66,6 +68,7 @@ const instructorsData = [
       {
         id: 2,
         numero: "2829397",
+        nivel: 2,
         programa: "Diseño Gráfico",
         fechaInicio: "15/02/2024",
         fechaFin: "15/02/2025",
@@ -96,6 +99,7 @@ const instructorsData = [
       {
         id: 3,
         numero: "2978765",
+        nivel: 1,
         programa: "Redes de Computadores",
         fechaInicio: "10/03/2024",
         fechaFin: "10/03/2025",
@@ -131,6 +135,7 @@ const instructorsData = [
       {
         id: 4,
         numero: "2889927",
+        nivel: 4,
         programa: "Contabilidad",
         fechaInicio: "05/01/2024",
         fechaFin: "05/01/2025",
@@ -154,6 +159,7 @@ const instructorsData = [
       {
         id: 5,
         numero: "2978765",
+        nivel: 5,
         programa: "Administración de Empresas",
         fechaInicio: "20/02/2024",
         fechaFin: "20/02/2025",
@@ -196,6 +202,7 @@ const instructorsData = [
       {
         id: 6,
         numero: "2829397",
+        nivel: 6,
         programa: "Mecánica Automotriz",
         fechaInicio: "12/03/2024",
         fechaFin: "12/03/2025",
@@ -219,6 +226,7 @@ const instructorsData = [
       {
         id: 7,
         numero: "2978765",
+        nivel: 2,
         programa: "Electrónica",
         fechaInicio: "01/04/2024",
         fechaFin: "01/04/2025",
@@ -255,6 +263,7 @@ const instructorsData = [
       {
         id: 8,
         numero: "2889927",
+        nivel: 3,
         programa: "Cocina Internacional",
         fechaInicio: "15/01/2024",
         fechaFin: "15/01/2025",
@@ -304,6 +313,7 @@ const instructorsData = [
       {
         id: 9,
         numero: "2889927",
+        nivel: 1,
         programa: "Desarrollo Web",
         fechaInicio: "10/02/2024",
         fechaFin: "10/02/2025",
@@ -327,6 +337,7 @@ const instructorsData = [
       {
         id: 10,
         numero: "2829397",
+        nivel: 4,
         programa: "Diseño UX/UI",
         fechaInicio: "05/03/2024",
         fechaFin: "05/03/2025",
@@ -384,6 +395,7 @@ const InstructorsPage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
@@ -417,6 +429,11 @@ const InstructorsPage = () => {
     setIsFichaModalOpen(false)
   }
 
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
   const handleLogout = () => {
     logout()
     navigate("/login")
@@ -439,7 +456,7 @@ const InstructorsPage = () => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
                 >
                   Cerrar Sesión
@@ -455,7 +472,7 @@ const InstructorsPage = () => {
           data={instructorsData}
           columns={columns}
           onShow={handleShowInstructor}
-          title=""
+          title="LISTA DE INSTRUCTORES"
           showActions={{ show: true }}
         />
 
@@ -472,6 +489,17 @@ const InstructorsPage = () => {
           <FichaDetailModal ficha={selectedFicha} isOpen={isFichaModalOpen} onClose={handleCloseFichaModal} />
         )}
       </div>
+
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
     </div>
   )
 }

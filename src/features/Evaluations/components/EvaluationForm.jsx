@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FiUpload, FiX, FiChevronDown, FiPlus } from "react-icons/fi"
+import { FiUpload, FiChevronDown, FiPlus } from "react-icons/fi"
+import { Trash } from "lucide-react"
 
 const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   // Modificar el estado inicial para incluir un modo de edición de pregunta
@@ -29,6 +30,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     opcionesRelleno: ["", "", ""],
   })
   const [editingQuestionIndex, setEditingQuestionIndex] = useState(null)
+  // Agregar un nuevo estado para manejar errores de validación
+  const [validationError, setValidationError] = useState("")
 
   useEffect(() => {
     if (evaluation) {
@@ -110,6 +113,62 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
 
   // Modificar la función addQuestion para manejar tanto agregar como actualizar
   const addQuestion = () => {
+    // Validar que el enunciado no esté vacío
+    if (
+      (currentQuestionType !== "completar" && (!questionData.texto || questionData.texto.trim() === "")) ||
+      (currentQuestionType === "completar" &&
+        (!questionData.completarTexto || questionData.completarTexto.trim() === ""))
+    ) {
+      setValidationError("El enunciado de la pregunta no puede estar vacío")
+      return
+    }
+
+    // Validar opciones según el tipo de pregunta
+    if (currentQuestionType === "seleccion" || currentQuestionType === "imagen" || currentQuestionType === "audio") {
+      // Verificar que todas las opciones tengan contenido
+      if (questionData.opciones.some((opcion) => !opcion || opcion.trim() === "")) {
+        setValidationError("Todas las opciones deben tener contenido")
+        return
+      }
+    }
+
+    // Validaciones adicionales para preguntas de completar espacios
+    if (currentQuestionType === "completar") {
+      // Verificar que haya al menos un espacio para completar
+      const matches = questionData.completarTexto.match(/\[\s*\]/g) || []
+      if (matches.length === 0) {
+        setValidationError("Debe incluir al menos un espacio para completar usando []")
+        return
+      }
+
+      // Verificar que todas las palabras a completar tengan contenido
+      if (questionData.palabrasCompletar.some((palabra) => !palabra || palabra.trim() === "")) {
+        setValidationError("Todas las palabras a completar deben tener contenido")
+        return
+      }
+
+      // Verificar que las opciones de relleno no estén vacías
+      if (questionData.opcionesRelleno.some((opcion) => !opcion || opcion.trim() === "")) {
+        setValidationError("Todas las opciones de relleno deben tener contenido")
+        return
+      }
+    }
+
+    // Validar que se haya seleccionado un archivo para preguntas con imagen
+    if (currentQuestionType === "imagen" && !questionData.imagen) {
+      setValidationError("Debe seleccionar una imagen para este tipo de pregunta")
+      return
+    }
+
+    // Validar que se haya seleccionado un archivo para preguntas con audio
+    if (currentQuestionType === "audio" && !questionData.audio) {
+      setValidationError("Debe seleccionar un archivo de audio para este tipo de pregunta")
+      return
+    }
+
+    // Si pasa todas las validaciones, limpiar el error
+    setValidationError("")
+
     if (editingQuestionIndex !== null) {
       // Actualizar pregunta existente
       setFormData((prev) => {
@@ -457,7 +516,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                         }}
                         className="text-red-500"
                       >
-                        <FiX />
+                        <Trash className="h-4 w-6 text-red-500" />
                       </button>
                     </div>
                   ))}
@@ -481,7 +540,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       min="1"
                     />
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
-                      <FiX />
+                      <Trash className="h-4 w-6 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -545,6 +604,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   >
                     {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
+
+                  {validationError && <p className="mt-2 text-red-500 text-[14px]">{validationError}</p>}
                 </div>
               </div>
             )}
@@ -565,7 +626,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       min="1"
                     />
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
-                      <FiX />
+                      <Trash className="h-4 w-6 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -607,6 +668,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   >
                     {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
+
+                  {validationError && <p className="mt-2 text-red-500 text-[14px]">{validationError}</p>}
                 </div>
               </div>
             )}
@@ -627,7 +690,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       min="1"
                     />
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
-                      <FiX />
+                      <Trash className="h-4 w-6 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -671,6 +734,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   >
                     {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
+
+                  {validationError && <p className="mt-2 text-red-500 text-[14px]">{validationError}</p>}
                 </div>
               </div>
             )}
@@ -691,7 +756,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       min="1"
                     />
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
-                      <FiX />
+                      <Trash className="h-4 w-6 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -755,6 +820,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   >
                     {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
+
+                  {validationError && <p className="mt-2 text-red-500 text-[14px]">{validationError}</p>}
                 </div>
               </div>
             )}
@@ -774,7 +841,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       min="1"
                     />
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
-                      <FiX />
+                      <Trash className="h-4 w-6 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -839,7 +906,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                           className="ml-2 p-1 text-red-500 hover:text-red-700"
                           disabled={questionData.opcionesRelleno.length <= 1}
                         >
-                          <FiX />
+                          <Trash className="h-4 w-6 text-red-500" />
                         </button>
                       </div>
                     ))}
@@ -852,6 +919,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   >
                     {editingQuestionIndex !== null ? "Actualizar Pregunta" : "Agregar Pregunta"}
                   </button>
+
+                  {validationError && <p className="mt-2 text-red-500 text-[14px]">{validationError}</p>}
                 </div>
               </div>
             )}
@@ -901,4 +970,3 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
 }
 
 export default EvaluationForm
-

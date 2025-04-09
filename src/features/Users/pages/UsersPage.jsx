@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../auth/hooks/useAuth"
 import GenericTable from "../../../shared/components/Table"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 // Datos de ejemplo
 const users = [
@@ -31,8 +32,9 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}
       >
         {item.estado}
       </span>
@@ -93,39 +95,6 @@ const Usuarios = () => {
                 </button>
               </div>
             )}
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
-                  <div className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-xl font-semibold text-[#1f384c]">
-                        Cerrar Sesión
-                      </h3>
-                      <p className="mt-2 text-[#627b87]">
-                        ¿Está seguro de que desea cerrar la sesión actual?
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center gap-3">
-                      <button
-                        className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
-                        onClick={() => setShowLogoutConfirm(false)}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
-                        onClick={handleLogout}
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -134,11 +103,22 @@ const Usuarios = () => {
         <GenericTable
           data={users}
           columns={columns}
+          title="LISTA DE USUARIOS"
           showActions={{ show: false, edit: false, delete: false, add: false }}
         />
       </div>
-    </div>
 
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
+    </div>
   )
 }
 
