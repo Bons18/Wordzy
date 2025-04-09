@@ -71,8 +71,8 @@ const Dashboard = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed": return "bg-blue-500";
-      case "in-progress": return "bg-purple-500";
-      case "intermediate": return "bg-yellow-400";
+      case "in-progress": return "bg-yellow-300";
+      case "intermediate": return "bg-red-500";
       case "problematic": return "bg-red-500";
       default: return "bg-gray-300";
     }
@@ -374,24 +374,24 @@ const Dashboard = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 h-[420px] flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-[#1f384c]">Progreso de niveles</h2>
-                <div className="text-sm text-gray-500">TRIMESTRE</div>
+                <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm font-medium">TRIMESTRE</div>
               </div>
               
               <div className="flex-grow">
                 <table className="min-w-full">
                   <thead>
                     <tr>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Nivel</th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Cantidad de fichas</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center py-2">Nivel</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center py-2">Cantidad de fichas</th>
                       <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">Progreso</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lessonsData.map((lesson) => (
                       <tr key={lesson.id} className="border-t border-gray-100">
-                        <td className="py-2 text-sm text-gray-700">{lesson.name}</td>
-                        <td className="py-2 text-sm text-gray-700">{lesson.attempts}</td>
-                        <td className="py-2">
+                        <td className="py-2 text-sm text-gray-700 text-center">{lesson.name}</td>
+                        <td className="py-2 text-sm text-gray-700 text-center">{lesson.attempts}</td>
+                        <td className="py-2 text-center">
                           <div className="w-full bg-gray-100 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full ${getStatusColor(lesson.status)}`} 

@@ -62,10 +62,11 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="EDITAR TEMA">
+    <Modal isOpen={isOpen} onClose={onClose}>
+       <h1 className="text-xl font-bold text-[#1f384c]">EDITAR TEMA</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mt-6">Nombre*</label>
+          <label className="block text-sm font-medium text-gray-700 mt-4">Nombre <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="nombre"
