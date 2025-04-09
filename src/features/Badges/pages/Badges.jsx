@@ -119,9 +119,9 @@ const Badges = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">Insignias</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">Insignias</h1>
         </div>
       </header>
 

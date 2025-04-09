@@ -53,23 +53,23 @@ const Ranking = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
+      <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">RANKING</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">Ranking</h1>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
         {/* Filtros de año y mes */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
           <div className="flex items-center w-full sm:w-auto">
-            <span className="mr-3 text-sm font-medium text-[#1f384c] whitespace-nowrap">Año</span>
-            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+            <span className="mr-2 text-xs font-medium text-[#1f384c] whitespace-nowrap">Año</span>
+            <div className="flex gap-1 flex-wrap sm:flex-nowrap">
               {[2023, 2024, 2025].map((year) => (
                 <button
                   key={year}
-                  className={`px-4 py-1.5 flex-1 sm:flex-none ${
+                  className={`px-3 py-1 flex-1 sm:flex-none text-xs ${
                     selectedYear === year ? "bg-[#1f384c] text-white" : "bg-white text-[#1f384c]"
                   } hover:bg-[#f0f0f0] hover:text-[#1f384c] rounded border border-[#d6dade] transition-colors`}
                   onClick={() => handleYearSelect(year)}
@@ -81,23 +81,23 @@ const Ranking = () => {
           </div>
 
           <div className="flex items-center w-full sm:w-auto">
-            <span className="mr-3 text-sm font-medium text-[#1f384c]">Mes</span>
+            <span className="mr-2 text-xs font-medium text-[#1f384c]">Mes</span>
             <div className="relative flex-1 sm:flex-none">
               <button
-                className="w-full sm:w-[160px] px-4 py-1.5 bg-white hover:bg-[#f0f0f0] text-[#1f384c] rounded border border-[#d6dade] flex items-center justify-between"
+                className="w-full sm:w-[120px] px-3 py-1 bg-white hover:bg-[#f0f0f0] text-[#1f384c] text-xs rounded border border-[#d6dade] flex items-center justify-between"
                 onClick={toggleMonthDropdown}
               >
                 <span>{selectedMonth}</span>
-                <ChevronDown className="h-4 w-4 ml-2" />
+                <ChevronDown className="h-3 w-3 ml-1" />
               </button>
 
               {isMonthDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 sm:right-auto sm:w-[160px] mt-1 bg-white border border-[#d6dade] rounded-md shadow-lg z-20">
-                  <ul className="py-1 max-h-60 overflow-auto">
+                <div className="absolute top-full left-0 right-0 sm:right-auto sm:w-[120px] mt-1 bg-white border border-[#d6dade] rounded-md shadow-lg z-20">
+                  <ul className="py-1 max-h-40 overflow-auto">
                     {months.map((month) => (
                       <li
                         key={month}
-                        className={`px-4 py-2 cursor-pointer hover:bg-[#f0f0f0] ${
+                        className={`px-2 py-1 text-xs cursor-pointer hover:bg-[#f0f0f0] ${
                           selectedMonth === month ? "bg-[#f1f2f7] font-medium" : ""
                         }`}
                         onClick={() => handleMonthSelect(month)}
@@ -156,45 +156,45 @@ const Ranking = () => {
 
         {/* Sección de tablas */}
         <div className="bg-white rounded-lg shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3">
             {[
               { 
                 title: "Aprendices", 
                 data: rankingData,
                 color: "blue",
-                icon: <Globe className="h-5 w-5" />
+                icon: <Globe className="h-4 w-4" />
               },
               { 
                 title: "Ficha", 
                 data: rankingData,
                 color: "purple",
-                icon: <FileText className="h-5 w-5" />
+                icon: <FileText className="h-4 w-4" />
               },
               { 
                 title: "Programa", 
                 data: rankingData,
                 color: "green",
-                icon: <Calendar className="h-5 w-5" />
+                icon: <Calendar className="h-4 w-4" />
               },
             ].map((section) => (
-              <div key={section.title} className={`bg-white rounded-lg border-t-4 border-t-${section.color}-500 p-6`}>
-                <div className="flex items-center gap-2 mb-6">
-                  <div className={`bg-${section.color}-50 p-2 rounded-full text-${section.color}-500`}>
+              <div key={section.title} className={`bg-white rounded-lg border-t-4 border-t-${section.color}-500 p-3`}>
+                <div className="flex items-center gap-1 mb-3">
+                  <div className={`bg-${section.color}-50 p-1 rounded-full text-${section.color}-500`}>
                     {section.icon}
                   </div>
-                  <h2 className="text-xl font-bold text-[#1f384c]">{section.title}</h2>
+                  <h2 className="text-sm font-bold text-[#1f384c]">{section.title}</h2>
                 </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 pb-2 border-b border-[#d6dade]">
-                    <div className="text-sm font-medium text-[#1f384c]">Top</div>
-                    <div className="text-sm font-medium text-[#1f384c]">Nombre</div>
-                    <div className="text-sm font-medium text-[#1f384c] text-right">Puntos</div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 pb-1 border-b border-[#d6dade]">
+                    <div className="text-xs font-medium text-[#1f384c]">Top</div>
+                    <div className="text-xs font-medium text-[#1f384c]">Nombre</div>
+                    <div className="text-xs font-medium text-[#1f384c] text-right">Puntos</div>
                   </div>
                   {section.data.map((item) => (
-                    <div key={item.top} className="grid grid-cols-3 py-2">
-                      <div className={`text-${section.color}-500 font-bold`}>{item.top}</div>
-                      <div className="text-[#1f384c] font-medium truncate">{item.nombre}</div>
-                      <div className={`text-${section.color}-500 font-bold text-right`}>{item.puntos}</div>
+                    <div key={item.top} className="grid grid-cols-3 py-1">
+                      <div className={`text-${section.color}-500 text-xs font-bold`}>{item.top}</div>
+                      <div className="text-[#1f384c] text-xs font-medium truncate">{item.nombre}</div>
+                      <div className={`text-${section.color}-500 text-xs font-bold text-right`}>{item.puntos}</div>
                     </div>
                   ))}
                 </div>
