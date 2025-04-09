@@ -71,7 +71,7 @@ const Ranking = () => {
                   key={year}
                   className={`px-3 py-1 flex-1 sm:flex-none text-xs ${
                     selectedYear === year ? "bg-[#1f384c] text-white" : "bg-white text-[#1f384c]"
-                  } hover:bg-[#f0f0f0] hover:text-[#1f384c] rounded border border-[#d6dade] transition-colors`}
+                  } hover:bg-[#f0f0f0] hover:text-[#1f384c] rounded border border-[#d6dade] transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
                   onClick={() => handleYearSelect(year)}
                 >
                   {year}
@@ -84,11 +84,11 @@ const Ranking = () => {
             <span className="mr-2 text-xs font-medium text-[#1f384c]">Mes</span>
             <div className="relative flex-1 sm:flex-none">
               <button
-                className="w-full sm:w-[120px] px-3 py-1 bg-white hover:bg-[#f0f0f0] text-[#1f384c] text-xs rounded border border-[#d6dade] flex items-center justify-between"
+                className="w-full sm:w-[120px] px-3 py-1 bg-white hover:bg-[#f0f0f0] text-[#1f384c] text-xs rounded border border-[#d6dade] flex items-center justify-between transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                 onClick={toggleMonthDropdown}
               >
                 <span>{selectedMonth}</span>
-                <ChevronDown className="h-3 w-3 ml-1" />
+                <ChevronDown className="h-3 w-3 ml-1 transition-transform duration-200" />
               </button>
 
               {isMonthDropdownOpen && (
@@ -115,9 +115,9 @@ const Ranking = () => {
         {/* Tarjetas de métricas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Tarjeta Aprendices */}
-          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-blue-500">
+          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-blue-500 transition-all duration-300 hover:shadow-md hover:bg-blue-50/30 cursor-pointer">
             <div className="flex items-center">
-              <div className="bg-blue-50 p-3 rounded-full mr-4">
+              <div className="bg-blue-50 p-3 rounded-full mr-4 transition-transform duration-300 group-hover:scale-110">
                 <Globe className="h-6 w-6 text-blue-500" />
               </div>
               <div>
@@ -128,9 +128,9 @@ const Ranking = () => {
           </div>
 
           {/* Tarjeta Ficha */}
-          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-purple-500">
+          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-purple-500 transition-all duration-300 hover:shadow-md hover:bg-purple-50/30 cursor-pointer">
             <div className="flex items-center">
-              <div className="bg-purple-50 p-3 rounded-full mr-4">
+              <div className="bg-purple-50 p-3 rounded-full mr-4 transition-transform duration-300 group-hover:scale-110">
                 <FileText className="h-6 w-6 text-purple-500" />
               </div>
               <div>
@@ -141,9 +141,9 @@ const Ranking = () => {
           </div>
 
           {/* Tarjeta Programa */}
-          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-green-500">
+          <div className="p-6 flex items-center justify-between bg-white rounded-lg shadow-sm border-l-4 border-l-green-500 transition-all duration-300 hover:shadow-md hover:bg-green-50/30 cursor-pointer">
             <div className="flex items-center">
-              <div className="bg-green-50 p-3 rounded-full mr-4">
+              <div className="bg-green-50 p-3 rounded-full mr-4 transition-transform duration-300 group-hover:scale-110">
                 <Calendar className="h-6 w-6 text-green-500" />
               </div>
               <div>
@@ -177,9 +177,9 @@ const Ranking = () => {
                 icon: <Calendar className="h-4 w-4" />
               },
             ].map((section) => (
-              <div key={section.title} className={`bg-white rounded-lg border-t-4 border-t-${section.color}-500 p-3`}>
+              <div key={section.title} className={`bg-white rounded-lg border-t-4 border-t-${section.color}-500 p-3 transition-all duration-300 hover:shadow-md`}>
                 <div className="flex items-center gap-1 mb-3">
-                  <div className={`bg-${section.color}-50 p-1 rounded-full text-${section.color}-500`}>
+                  <div className={`bg-${section.color}-50 p-1 rounded-full text-${section.color}-500 transition-transform duration-200 hover:scale-110`}>
                     {section.icon}
                   </div>
                   <h2 className="text-sm font-bold text-[#1f384c]">{section.title}</h2>
@@ -191,7 +191,7 @@ const Ranking = () => {
                     <div className="text-xs font-medium text-[#1f384c] text-right">Puntos</div>
                   </div>
                   {section.data.map((item) => (
-                    <div key={item.top} className="grid grid-cols-3 py-1">
+                    <div key={item.top} className="grid grid-cols-3 py-1 transition-colors duration-200 hover:bg-gray-50 rounded">
                       <div className={`text-${section.color}-500 text-xs font-bold`}>{item.top}</div>
                       <div className="text-[#1f384c] text-xs font-medium truncate">{item.nombre}</div>
                       <div className={`text-${section.color}-500 text-xs font-bold text-right`}>{item.puntos}</div>

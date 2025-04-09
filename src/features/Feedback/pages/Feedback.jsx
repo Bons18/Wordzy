@@ -75,7 +75,7 @@ const Feedback = () => {
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold text-[#1f384c]">Retroalimentación</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">Retroalimentación</h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
