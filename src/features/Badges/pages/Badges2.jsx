@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Upload, X, ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import GenericTable from "../../../shared/components/Table"
 
 const Badges = () => {
   // Hook de navegación de React Router
@@ -11,6 +12,14 @@ const Badges = () => {
   // Estado para controlar la vista (formulario o lista)
   const [view, setView] = useState("list") // "list" o "form"
   const [showEditConfirm, setShowEditConfirm] = useState(false)
+  
+  // Estado para el modal de confirmación de eliminación
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [badgeToDelete, setBadgeToDelete] = useState(null)
+  
+  // Estado para las alertas de éxito
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
 
   // Estado para los campos del formulario
   const [badgeName, setBadgeName] = useState("")
@@ -21,33 +30,161 @@ const Badges = () => {
   const [fileSize, setFileSize] = useState(null)
 
   // Estado para almacenar las insignias creadas
-  const [badges, setBadges] = useState([
-    {
-      id: 1,
-      name: "Insignia Experto",
-      points: 5000,
-      description:
-        "¡El máximo reconocimiento! Otorgado al reunir 5,000 puntos. ¡Felicidades por ser un experto indiscutible!",
-      color: "#ff5a87",
-      image: "/public/experto.png",
+  const [badges, setBadges] = useState(() => {
+    // Get badges from localStorage or use default badges if none exist
+    const savedBadges = JSON.parse(localStorage.getItem('badges') || '[]')
+    
+    // If there are no saved badges, use the default ones
+    if (savedBadges.length === 0) {
+      return [
+        {
+          id: 1,
+          name: "Insignia Experto",
+          points: 5000,
+          description:
+            "¡El máximo reconocimiento! Otorgado al reunir 5,000 puntos. ¡Felicidades por ser un experto indiscutible!",
+          color: "#ff5a87",
+          image: "/public/experto.png",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+        {
+          id: 2,
+          name: "Insignia Intermedio",
+          points: 3000,
+          description: "¡Excelente progreso! Has alcanzado 3,000 puntos. Representa un nivel avanzado de logros.",
+          color: "#9747ff",
+          image: "/public/intermedia.png",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+        {
+          id: 3,
+          name: "Insignia Principiante",
+          points: 1000,
+          description: "Se obtiene al alcanzar 1,000 puntos en tu progreso. ¡Es el primer paso para destacar!",
+          color: "#ffcc33",
+          image: "/public/principiante.png",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+      ]
+    }
+    
+    return savedBadges
+  })
+
+  // Define columns for the table
+  const columns = [
+    { 
+      key: 'name', 
+      label: 'Nombre', 
+      width: '15%',
+      render: (item) => (
+        <div className="py-2 pl-4">
+          {item.name}
+        </div>
+      )
     },
-    {
-      id: 2,
-      name: "Insignia Intermedio",
-      points: 3000,
-      description: "¡Excelente progreso! Has alcanzado 3,000 puntos. Representa un nivel avanzado de logros.",
-      color: "#9747ff",
-      image: "/public/intermedia.png",
+    { 
+      key: 'points', 
+      label: 'Puntos', 
+      width: '10%',
+      render: (item) => (
+        <div className="py-2 pl-4">
+          {item.points}
+        </div>
+      )
     },
-    {
-      id: 3,
-      name: "Insignia Principiante",
-      points: 1000,
-      description: "Se obtiene al alcanzar 1,000 puntos en tu progreso. ¡Es el primer paso para destacar!",
-      color: "#ffcc33",
-      image: "/public/principiante.png",
+    { 
+      key: 'startDate', 
+      label: 'Fecha inicio', 
+      width: '15%',
+      render: (item) => (
+        <div className="py-2 pl-4">
+          {item.startDate || 'N/A'}
+        </div>
+      )
     },
-  ])
+    { 
+      key: 'endDate', 
+      label: 'Fecha fin', 
+      width: '15%',
+      render: (item) => (
+        <div className="py-2 pl-4">
+          {item.endDate || 'N/A'}
+        </div>
+      )
+    },
+    { 
+      key: 'description', 
+      label: 'Descripción', 
+      width: '25%',
+      render: (item) => (
+        <div className="py-2 pl-4 truncate max-w-xs" title={item.description}>
+          {item.description}
+        </div>
+      )
+    },
+    { 
+      key: 'image', 
+      label: 'Imagen', 
+      width: '20%',
+      align: 'center',
+      headerAlign: 'center',
+      render: (item) => (
+        <div className="flex justify-center items-center w-full py-2">
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img 
+              src={item.image} 
+              alt={item.name} 
+              className="max-w-full max-h-full object-contain" 
+            />
+          </div>
+        </div>
+      )
+    },
+  ]
+
+  // Handle actions
+  const handleShowBadge = (item) => {
+    console.log('Ver detalles de:', item)
+    // You could implement a modal to show badge details
+  }
+  
+  const handleEditBadge = (item) => {
+    console.log('Editar:', item)
+    // Mostrar alerta de confirmación en lugar de redirección inmediata
+    setSuccessMessage("¿Está seguro de que desea editar esta insignia?")
+    setShowEditConfirm(true)
+  }
+  
+  const handleDeleteClick = (id) => {
+    setBadgeToDelete(id)
+    setShowDeleteConfirm(true)
+  }
+  
+  const handleDeleteBadge = () => {
+    console.log('Eliminar ID:', badgeToDelete)
+    const updatedBadges = badges.filter(badge => badge.id !== badgeToDelete)
+    setBadges(updatedBadges)
+    localStorage.setItem('badges', JSON.stringify(updatedBadges))
+    setShowDeleteConfirm(false)
+    
+    // Mostrar alerta de éxito
+    setSuccessMessage("Insignia eliminada exitosamente")
+    setShowSuccessAlert(true)
+    
+    // Ocultar la alerta después de 3 segundos
+    setTimeout(() => {
+      setShowSuccessAlert(false)
+    }, 3000)
+  }
+  
+  const handleAddBadge = () => {
+    // Navegar directamente sin mostrar alerta
+    navigate("/programacion/insigneas")
+  }
 
   // Función para manejar el cambio de archivo
   const handleFileChange = (e) => {
@@ -108,13 +245,10 @@ const Badges = () => {
 
   const handleEditConfirm = () => {
     setShowEditConfirm(false)
+    
+    // Navegar directamente sin mostrar alerta
     navigate("/programacion/insigneas3")
   }
-
-  // Remove or comment out the old handleEditBadges function since we're not using it anymore
-  // const handleEditBadges = () => {
-  //   navigate("/programacion/insigneas3")
-  // }
 
   // Renderizar la vista de lista de insignias
   const renderBadgesList = () => {
@@ -123,40 +257,25 @@ const Badges = () => {
         {/* Header */}
         <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">INSIGNIAS</h1>
-            <button
-              onClick={handleEditClick}
-              className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-            >
-              Editar insignias
-            </button>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">Insignias</h1>
           </div>
         </header>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
-          <div className="grid gap-6">
-            {badges.map((badge) => (
-              <div key={badge.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white rounded-lg p-6 shadow-sm">
-                <div className="w-16 h-16 flex-shrink-0">
-                  <img
-                    src={badge.image}
-                    alt={badge.name}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="flex-grow min-w-0">
-                  <h3 className="font-semibold text-[#1f384c] text-lg mb-2">{badge.name}</h3>
-                  <div className="p-4 rounded-lg" style={{ backgroundColor: badge.color }}>
-                    <p className="text-white text-sm">{badge.description}</p>
-                  </div>
-                </div>
-                <div className="text-3xl font-bold sm:ml-4" style={{ color: badge.color }}>
-                  {badge.points.toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
+          <GenericTable 
+            data={badges}
+            columns={columns}
+            onShow={handleShowBadge}
+            onEdit={handleEditBadge}
+            onDelete={handleDeleteClick}
+            onAdd={handleAddBadge}
+            defaultItemsPerPage={5}
+            showActions={{ show: false, edit: true, delete: true, add: true }}
+            tooltipText="Ver insignia"
+            showSearch={true}
+            showPagination={true}
+          />
         </div>
 
         {/* Edit Confirmation Modal */}
@@ -191,49 +310,61 @@ const Badges = () => {
             </div>
           </div>
         )}
-      </div>
-    )
-  }
 
-  const renderBadgeForm = () => {
-    return (
-      <div className="min-h-screen bg-white">
-        {/* Header */}
-        <header className="bg-white py-3 px-4 sm:px-6 border-b border-[#d6dade] shadow-sm">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1f384c]">CREAR INSIGNIAS</h1>
-            <div className="flex items-center gap-2 text-[#1f384c] font-medium">
-              <span>Administrador</span>
-              <ChevronDown className="w-4 h-4" />
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-semibold text-[#1f384c]">
+                    Eliminar Insignia
+                  </h3>
+                  <p className="mt-2 text-[#627b87]">
+                    ¿Está seguro de que desea eliminar esta insignia?
+                  </p>
+                </div>
+                
+                <div className="flex justify-center gap-3">
+                  <button
+                    className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="px-6 py-2.5 bg-[#f44144] text-white rounded-lg hover:bg-red-600 font-medium transition-colors"
+                    onClick={handleDeleteBadge}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </header>
+        )}
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
-          <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 sm:p-8 shadow-sm">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Form fields remain the same but with adjusted spacing */}
-              {/* ... existing form fields ... */}
-
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setView("list")}
-                  className="bg-[#ee4848] text-white py-3 px-6 rounded-md hover:bg-opacity-90 transition-colors font-medium w-full sm:w-1/2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#0ead69] text-white py-3 px-6 rounded-md hover:bg-opacity-90 transition-colors font-medium w-full sm:w-1/2"
-                >
-                  Guardar Cambios
-                </button>
+        {/* Success Alert */}
+        {showSuccessAlert && (
+          <div className="fixed bottom-4 right-4 bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all z-50">
+            <div className="p-4 flex items-center">
+              <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-3">
+                <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
               </div>
-            </form>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">{successMessage}</p>
+              </div>
+              <button 
+                onClick={() => setShowSuccessAlert(false)}
+                className="ml-4 text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     )
   }

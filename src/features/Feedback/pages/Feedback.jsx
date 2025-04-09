@@ -16,21 +16,22 @@ const Feedback = () => {
   
   // Sample feedback data
   const feedbackData = [
-    { id: 1, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Daily Routine', actividad: 'Examen', ejecutada: 'No' },
-    { id: 2, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Giving Advice', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 3, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Past Experiences', actividad: 'Examen', ejecutada: 'No' },
-    { id: 4, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Future Plans', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 5, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Describing People', actividad: 'Examen', ejecutada: 'No' },
-    { id: 6, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Making Comparisons', actividad: 'Actividad', ejecutada: 'Si' },
-    { id: 7, programa: 'ADSO', nivel: 'Nivel 1', tema: 'Ordering Food', actividad: 'Examen', ejecutada: 'No' },
+    { id: 1, programa: 'ADSO', ficha: '2453267', nivel: 'Nivel 1', tema: 'Daily Routine', actividad: 'Examen', ejecutada: 'Si' },
+    { id: 2, programa: 'ADSO', ficha: '2453267', nivel: 'Nivel 1', tema: 'Giving Advice', actividad: 'Actividad', ejecutada: 'Si' },
+    { id: 3, programa: 'ADSO', ficha: '2453268', nivel: 'Nivel 1', tema: 'Past Experiences', actividad: 'Examen', ejecutada: 'No' },
+    { id: 4, programa: 'ADSO', ficha: '2453268', nivel: 'Nivel 1', tema: 'Future Plans', actividad: 'Actividad', ejecutada: 'Si' },
+    { id: 5, programa: 'ADSO', ficha: '2453269', nivel: 'Nivel 1', tema: 'Describing People', actividad: 'Examen', ejecutada: 'No' },
+    { id: 6, programa: 'ADSO', ficha: '2453269', nivel: 'Nivel 1', tema: 'Making Comparisons', actividad: 'Actividad', ejecutada: 'Si' },
+    { id: 7, programa: 'ADSO', ficha: '2453270', nivel: 'Nivel 1', tema: 'Ordering Food', actividad: 'Examen', ejecutada: 'No' },
   ]
   
   // Define columns for the table
   const columns = [
-    { key: 'programa', label: 'Programa', width: '15%' },
-    { key: 'nivel', label: 'Nivel', width: '15%' },
-    { key: 'tema', label: 'Tema', width: '25%' },
-    { key: 'actividad', label: 'Actividad', width: '20%' },
+    { key: 'programa', label: 'Programa', width: '12%' },
+    { key: 'ficha', label: 'Ficha', width: '12%' },
+    { key: 'nivel', label: 'Nivel', width: '12%' },
+    { key: 'tema', label: 'Tema', width: '24%' },
+    { key: 'actividad', label: 'Actividad', width: '15%' },
     { key: 'ejecutada', label: 'Ejecutada', width: '15%' },
   ]
   

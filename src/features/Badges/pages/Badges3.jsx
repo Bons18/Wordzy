@@ -1,43 +1,121 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { X } from "lucide-react"
+import { FiTrash } from "react-icons/fi"
 
 const Ranking = () => {
   const navigate = useNavigate()
-  const [badges, setBadges] = useState([
-    {
-      id: 1,
-      name: "Insignia experto",
-      points: 5000,
-      description: "El máximo...",
-      icon: "/public/experto.png",
-      color: "rgba(255, 215, 0, 0.1)",
-    },
-    {
-      id: 2,
-      name: "Insignia intermedia",
-      points: 3000,
-      description: "Conseguiste...",
-      icon: "/public/intermedia.png",
-      color: "rgba(192, 192, 192, 0.1)",
-    },
-    {
-      id: 3,
-      name: "Insignia principiante",
-      points: 1000,
-      description: "Se obtiene...",
-      icon: "/public/principiante.png",
-      color: "rgba(205, 127, 50, 0.1)",
-    },
-  ])
+  const [badges, setBadges] = useState([])
+  
+  // Estado para las alertas de éxito
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  // Load badges from localStorage on component mount
+  useEffect(() => {
+    const savedBadges = JSON.parse(localStorage.getItem('badges') || '[]')
+    
+    // If there are no saved badges, use default ones
+    if (savedBadges.length === 0) {
+      const defaultBadges = [
+        {
+          id: 1,
+          name: "Insignia experto",
+          points: 5000,
+          description: "El máximo...",
+          icon: "/public/experto.png",
+          color: "rgba(255, 215, 0, 0.1)",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+        {
+          id: 2,
+          name: "Insignia intermedia",
+          points: 3000,
+          description: "Conseguiste...",
+          icon: "/public/intermedia.png",
+          color: "rgba(192, 192, 192, 0.1)",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+        {
+          id: 3,
+          name: "Insignia principiante",
+          points: 1000,
+          description: "Se obtiene...",
+          icon: "/public/principiante.png",
+          color: "rgba(205, 127, 50, 0.1)",
+          startDate: "2023-01-01",
+          endDate: "2023-12-31"
+        },
+      ]
+      setBadges(defaultBadges)
+    } else {
+      // Map saved badges to match the expected format
+      const formattedBadges = savedBadges.map(badge => ({
+        id: badge.id,
+        name: badge.name,
+        points: badge.points,
+        description: badge.description,
+        icon: badge.image || "/placeholder.svg",
+        color: badge.color || "rgba(205, 127, 50, 0.1)",
+        startDate: badge.startDate || "",
+        endDate: badge.endDate || ""
+      }))
+      setBadges(formattedBadges)
+    }
+  }, [])
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showSaveConfirm, setShowSaveConfirm] = useState(false)
   const [badgeToDelete, setBadgeToDelete] = useState(null)
+  const [formErrors, setFormErrors] = useState({})
 
   const handleInputChange = (id, field, value) => {
     setBadges(badges.map((badge) => (badge.id === id ? { ...badge, [field]: value } : badge)))
+    
+    // Clear error when user types
+    if (formErrors[`${id}-${field}`]) {
+      setFormErrors(prev => {
+        const newErrors = {...prev}
+        delete newErrors[`${id}-${field}`]
+        return newErrors
+      })
+    }
+  }
+
+  const validateBadges = () => {
+    const errors = {}
+    
+    badges.forEach(badge => {
+      if (!badge.name.trim()) {
+        errors[`${badge.id}-name`] = "El nombre es requerido"
+      }
+      
+      if (!badge.points) {
+        errors[`${badge.id}-points`] = "Los puntos son requeridos"
+      }
+      
+      if (!badge.description.trim()) {
+        errors[`${badge.id}-description`] = "La descripción es requerida"
+      }
+      
+      if (!badge.startDate) {
+        errors[`${badge.id}-startDate`] = "La fecha de inicio es requerida"
+      }
+      
+      if (!badge.endDate) {
+        errors[`${badge.id}-endDate`] = "La fecha de fin es requerida"
+      }
+      
+      if (badge.startDate && badge.endDate && new Date(badge.startDate) > new Date(badge.endDate)) {
+        errors[`${badge.id}-endDate`] = "La fecha de fin debe ser posterior a la fecha de inicio"
+      }
+    })
+    
+    return errors
   }
 
   const handleDeleteClick = (id) => {
@@ -46,17 +124,69 @@ const Ranking = () => {
   }
 
   const handleDelete = () => {
-    setBadges(badges.filter((badge) => badge.id !== badgeToDelete))
+    const updatedBadges = badges.filter((badge) => badge.id !== badgeToDelete)
+    setBadges(updatedBadges)
+    
+    // Update localStorage
+    localStorage.setItem('badges', JSON.stringify(updatedBadges.map(badge => ({
+      id: badge.id,
+      name: badge.name,
+      points: badge.points,
+      description: badge.description,
+      image: badge.icon,
+      color: badge.color,
+      startDate: badge.startDate,
+      endDate: badge.endDate
+    }))))
+    
     setShowDeleteConfirm(false)
+    
+    // Mostrar alerta de éxito personalizada en lugar del alert del navegador
+    setSuccessMessage("Insignia eliminada exitosamente")
+    setShowSuccessAlert(true)
+    
+    // Ocultar la alerta después de 3 segundos
+    setTimeout(() => {
+      setShowSuccessAlert(false)
+    }, 3000)
   }
 
   const handleSaveClick = () => {
+    const errors = validateBadges()
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      
+      // Mostrar alerta de error personalizada en lugar del alert del navegador
+      setSuccessMessage("Por favor corrija los errores antes de guardar")
+      setShowSuccessAlert(true)
+      
+      // Ocultar la alerta después de 3 segundos
+      setTimeout(() => {
+        setShowSuccessAlert(false)
+      }, 3000)
+      return
+    }
+    
     setShowSaveConfirm(true)
   }
 
   const handleSave = () => {
-    // Here you would make your API call
+    // Save updated badges to localStorage
+    localStorage.setItem('badges', JSON.stringify(badges.map(badge => ({
+      id: badge.id,
+      name: badge.name,
+      points: badge.points,
+      description: badge.description,
+      image: badge.icon,
+      color: badge.color,
+      startDate: badge.startDate,
+      endDate: badge.endDate
+    }))))
+    
     setShowSaveConfirm(false)
+    
+    // Navegar directamente sin mostrar alerta
+    navigate("/programacion/insigneas2")
   }
 
   const handleCancel = () => {
@@ -92,9 +222,9 @@ const Ranking = () => {
               </div>
 
               {/* Badge Name */}
-              <div className="sm:col-span-3">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-[#1f384c] mb-1">
-                  Nombre de la insignia:
+                  Nombre:
                 </label>
                 <input
                   type="text"
@@ -105,7 +235,7 @@ const Ranking = () => {
               </div>
 
               {/* Points */}
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-1">
                 <label className="block text-sm font-medium text-[#1f384c] mb-1">
                   Puntos:
                 </label>
@@ -117,10 +247,36 @@ const Ranking = () => {
                 />
               </div>
 
-              {/* Description */}
-              <div className="sm:col-span-5">
+              {/* Start Date */}
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-[#1f384c] mb-1">
-                  Descripción
+                  Fecha inicio:
+                </label>
+                <input
+                  type="date"
+                  value={badge.startDate || ""}
+                  onChange={(e) => handleInputChange(badge.id, "startDate", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* End Date */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-[#1f384c] mb-1">
+                  Fecha fin:
+                </label>
+                <input
+                  type="date"
+                  value={badge.endDate || ""}
+                  onChange={(e) => handleInputChange(badge.id, "endDate", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="sm:col-span-3">
+                <label className="block text-sm font-medium text-[#1f384c] mb-1">
+                  Descripción:
                 </label>
                 <textarea
                   value={badge.description}
@@ -129,20 +285,26 @@ const Ranking = () => {
                 />
               </div>
 
-              {/* Updated Delete Button */}
-              <div className="sm:col-span-1 flex items-center justify-center sm:justify-end">
-                <button
-                  onClick={() => handleDeleteClick(badge.id)}
-                  className="px-3 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors w-full sm:w-auto"
-                >
-                  Eliminar
-                </button>
+              {/* Delete Button - replaced with icon */}
+              <div className="sm:col-span-1 flex flex-col">
+                <label className="block text-sm font-medium text-[#1f384c] mb-1">
+                  Acciones:
+                </label>
+                <div className="flex h-10 items-center">
+                  <button
+                    onClick={() => handleDeleteClick(badge.id)}
+                    className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    aria-label="Eliminar"
+                  >
+                    <FiTrash size={15} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Updated Action Buttons */}
+        {/* Action Buttons */}
         <div className="flex justify-end gap-4">
           <button 
             onClick={handleCancel}
@@ -159,7 +321,7 @@ const Ranking = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Modals remain unchanged */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
@@ -192,7 +354,6 @@ const Ranking = () => {
         </div>
       )}
 
-      {/* Save Confirmation Modal */}
       {showSaveConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all">
