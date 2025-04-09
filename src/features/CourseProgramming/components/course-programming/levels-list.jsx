@@ -3,24 +3,71 @@
 import { Trash } from "lucide-react"
 import Tooltip from "../../../../shared/components/Tooltip"
 import ThemesList from "./themes-list"
-import TopicModal from "../../../Topics/components/TopicModal";
-import ConfirmationModal from "../../../../shared/components/ConfirmationModal";
-import { useState } from "react";
+import TopicModal from "../../../Topics/components/TopicModal"
+import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
+import { useState, useEffect } from "react"
 
 export default function LevelsList({ levels, setLevels, activeTabs, setActiveTabs }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [selectedLevelId, setSelectedLevelId] = useState(null)
+  const [createdTopics, setCreatedTopics] = useState([])
 
-  const handleAddTopic = () => {
-    setIsModalOpen(true);
-  };
+  // Cargar temas guardados al iniciar
+  useEffect(() => {
+    try {
+      const savedTopics = JSON.parse(localStorage.getItem("createdTopics") || "[]")
+      if (savedTopics.length > 0) {
+        setCreatedTopics(savedTopics)
+      }
+    } catch (error) {
+      console.error("Error al cargar temas:", error)
+    }
+  }, [])
 
-  const handleSubmitTopic = () => {
-    setIsModalOpen(false);
-    setSuccessMessage("Tema agregado exitosamente");
-    setShowSuccessModal(true);
-  };
+  // Guardar temas creados en localStorage cuando cambian
+  useEffect(() => {
+    if (createdTopics.length > 0) {
+      localStorage.setItem("createdTopics", JSON.stringify(createdTopics))
+    }
+  }, [createdTopics])
+
+  const handleAddTopic = (levelId) => {
+    setSelectedLevelId(levelId)
+    setIsModalOpen(true)
+  }
+
+  // Modificar la función handleSubmitTopic para adaptarse al formato del TopicModal
+  const handleSubmitTopic = (topicData) => {
+    console.log("Datos recibidos del TopicModal:", topicData)
+
+    // Crear un nuevo tema con los datos del modal
+    const newTopic = {
+      id: `topic-${Date.now()}`,
+      value: `topic-${Date.now()}`, // Asegurarnos de que value sea único
+      label: topicData.nombre || "Nuevo tema", // Usar nombre del TopicModal como label
+      description: topicData.descripcion || "", // Usar descripción del TopicModal
+    }
+
+    console.log("Nuevo tema creado:", newTopic)
+
+    // Agregar el tema a la lista de temas creados
+    const updatedTopics = [...createdTopics, newTopic]
+    setCreatedTopics(updatedTopics)
+
+    // Guardar inmediatamente en localStorage para asegurar persistencia
+    localStorage.setItem("createdTopics", JSON.stringify(updatedTopics))
+
+    // Si se seleccionó un nivel, agregar el tema automáticamente
+    if (selectedLevelId) {
+      addThemeWithTopic(selectedLevelId, newTopic.value)
+    }
+
+    setIsModalOpen(false)
+    setSuccessMessage(`Tema "${newTopic.label}" creado exitosamente`)
+    setShowSuccessModal(true)
+  }
 
   const toggleLevelExpand = (levelId) => {
     setLevels(levels.map((level) => (level.id === levelId ? { ...level, expanded: !level.expanded } : level)))
@@ -50,6 +97,29 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     )
   }
 
+  // Función para agregar un tema con un tópico ya seleccionado
+  const addThemeWithTopic = (levelId, topicValue) => {
+    console.log("Agregando tema con tópico:", topicValue, "al nivel:", levelId)
+
+    setLevels(
+      levels.map((level) => {
+        if (level.id === levelId) {
+          const newTheme = {
+            id: level.themes.length + 1,
+            name: "",
+            selectedTheme: topicValue,
+            expanded: true,
+            progress: 0,
+            activities: [],
+            showActivities: false,
+          }
+          return { ...level, themes: [...level.themes, newTheme] }
+        }
+        return level
+      }),
+    )
+  }
+
   const deleteLevel = (levelId) => {
     setLevels(levels.filter((level) => level.id !== levelId))
   }
@@ -57,6 +127,14 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   // Get level display name
   const getLevelDisplayName = (level) => {
     return level.name ? level.name : `Nivel ${level.id}`
+  }
+
+  // Obtener temas existentes para validación
+  const getExistingTopics = () => {
+    return createdTopics.map((topic) => ({
+      nombre: topic.label,
+      descripcion: topic.description || "",
+    }))
   }
 
   return (
@@ -111,7 +189,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                 <div className="flex space-x-2">
                   <button
                     className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
-                    onClick={handleAddTopic} // Agregar modal de crear tema
+                    onClick={() => handleAddTopic(level.id)}
                   >
                     <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -139,26 +217,36 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                 setLevels={setLevels}
                 activeTabs={activeTabs}
                 setActiveTabs={setActiveTabs}
-              />
-              <TopicModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmitTopic}
-              />
-              {/* Modal de éxito */}
-              <ConfirmationModal
-                isOpen={showSuccessModal}
-                onConfirm={() => setShowSuccessModal(false)}
-                title="Operación Exitosa"
-                message={successMessage}
-                confirmText="Aceptar"
-                confirmColor="bg-green-500 hover:bg-green-600"
-                showButtonCancel={false}
+                createdTopics={createdTopics}
               />
             </div>
           )}
         </div>
       ))}
+
+      {/* Versión modificada del TopicModal para depuración */}
+      {isModalOpen && (
+        <TopicModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={(data) => {
+            console.log("TopicModal submit:", data)
+            handleSubmitTopic(data)
+          }}
+          existingTopics={getExistingTopics()}
+        />
+      )}
+
+      {/* Modal de éxito */}
+      <ConfirmationModal
+        isOpen={showSuccessModal}
+        onConfirm={() => setShowSuccessModal(false)}
+        title="Operación Exitosa"
+        message={successMessage}
+        confirmText="Aceptar"
+        confirmColor="bg-green-500 hover:bg-green-600"
+        showButtonCancel={false}
+      />
     </div>
   )
 }

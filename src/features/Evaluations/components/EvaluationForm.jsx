@@ -261,7 +261,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   return (
     <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-auto">
       <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-4">
-        {evaluation ? "EDITAR EVALUACIÓN" : "CREAR EVALUACION"}
+        {evaluation && evaluation.id ? "EDITAR EVALUACIÓN" : "CREAR EVALUACION"}
       </h2>
 
       <form onSubmit={handleSubmit}>

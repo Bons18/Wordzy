@@ -57,6 +57,9 @@ export default function CourseProgrammingForm() {
           { value: "programa1", label: "Programa 1" },
           { value: "programa2", label: "Programa 2" },
           { value: "programa3", label: "Programa 3" },
+          { value: "programa4", label: "Programa 4" },
+          { value: "programa5", label: "Programa 5" },
+          { value: "programa6", label: "Programa 6" }
         ]
 
         const programOption = programOptions.find((p) => p.label === programming.nombre)
@@ -99,6 +102,9 @@ export default function CourseProgrammingForm() {
     { value: "programa1", label: "Programa 1" },
     { value: "programa2", label: "Programa 2" },
     { value: "programa3", label: "Programa 3" },
+    { value: "programa4", label: "Programa 4" },
+    { value: "programa5", label: "Programa 5" },
+    { value: "programa6", label: "Programa 6" }
   ]
 
   const handleCancel = () => {

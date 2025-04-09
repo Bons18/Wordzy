@@ -5,12 +5,20 @@ import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
 import ActivitiesSection from "./activities-section"
 
-export default function ThemesList({ level, levels, setLevels, activeTabs, setActiveTabs }) {
+export default function ThemesList({ level, levels, setLevels, activeTabs, setActiveTabs, createdTopics = [] }) {
+  // Combinar temas predeterminados con los creados por el usuario
   const themeOptions = [
     { value: "tema1", label: "Tema 1" },
     { value: "tema2", label: "Tema 2" },
     { value: "tema3", label: "Tema 3" },
+    ...(Array.isArray(createdTopics) ? createdTopics : []), // Verificar que createdTopics sea un array
   ]
+
+  // Función para depuración
+  const logThemeOptions = () => {
+    console.log("Opciones de temas disponibles:", themeOptions)
+    console.log("Temas creados:", createdTopics)
+  }
 
   const toggleThemeExpand = (levelId, themeId) => {
     setLevels(
@@ -27,6 +35,13 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   }
 
   const updateTheme = (levelId, themeId, selectedTheme) => {
+    // Log para depuración
+    console.log("Actualizando tema:", selectedTheme)
+    console.log(
+      "Tema seleccionado:",
+      themeOptions.find((opt) => opt.value === selectedTheme),
+    )
+
     setLevels(
       levels.map((level) => {
         if (level.id === levelId) {
@@ -69,8 +84,11 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   // Get theme display name
   const getThemeDisplayName = (theme) => {
     if (theme.selectedTheme) {
+      // Buscar primero en los temas creados
       const selectedOption = themeOptions.find((option) => option.value === theme.selectedTheme)
-      return selectedOption ? selectedOption.label : `Tema ${theme.id}`
+      if (selectedOption) {
+        return selectedOption.label
+      }
     }
     return `Tema ${theme.id}`
   }
@@ -93,6 +111,9 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
 
   const totalThemeValue = calculateTotalThemeValue()
   const isValueValid = totalThemeValue === 100
+
+  // Llamar a la función de depuración
+  logThemeOptions()
 
   return (
     <div className="space-y-3">

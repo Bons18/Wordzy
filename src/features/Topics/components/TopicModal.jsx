@@ -1,62 +1,82 @@
-import React, { useState, useEffect } from "react";
-import Modal from "../../../shared/components/Modal";
+"use client"
+
+import { useState, useEffect } from "react"
+import Modal from "../../../shared/components/Modal"
 
 const normalizeText = (text) =>
-  text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
 
 const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [hasChanges, setHasChanges] = useState(false);
-  const [error, setError] = useState("");
+  const [nombre, setNombre] = useState("")
+  const [descripcion, setDescripcion] = useState("")
+  const [hasChanges, setHasChanges] = useState(false)
+  const [error, setError] = useState("")
 
   const handleInputChange = (setter) => (e) => {
-    setter(e.target.value);
-    setHasChanges(true);
-    if (error) setError(""); // Limpiar error al escribir
-  };
+    setter(e.target.value)
+    setHasChanges(true)
+    if (error) setError("") // Limpiar error al escribir
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    const trimmedNombre = nombre.trim();
+    e.preventDefault()
+    const trimmedNombre = nombre.trim()
 
-    if (!trimmedNombre) return;
-
-    const normalizedNombre = normalizeText(trimmedNombre);
-
-    const exists = existingTopics.some(
-      (t) => normalizeText(t.nombre) === normalizedNombre
-    );
-
-    if (exists) {
-      setError("El tema ya existe");
-      return;
+    if (!trimmedNombre) {
+      setError("El nombre es requerido")
+      return
     }
 
-    onSubmit({ nombre: trimmedNombre, descripcion: descripcion.trim() });
-    setNombre("");
-    setDescripcion("");
-    setHasChanges(false);
-    onClose();
-  };
+    const normalizedNombre = normalizeText(trimmedNombre)
+
+    // Verificar si existingTopics es un array antes de usar some
+    const exists =
+      Array.isArray(existingTopics) && existingTopics.some((t) => normalizeText(t.nombre) === normalizedNombre)
+
+    if (exists) {
+      setError("El tema ya existe")
+      return
+    }
+
+    // Log para depuración
+    console.log("Enviando datos del tema:", {
+      nombre: trimmedNombre,
+      descripcion: descripcion.trim(),
+    })
+
+    // Llamar a onSubmit con los datos del tema
+    onSubmit({
+      nombre: trimmedNombre,
+      descripcion: descripcion.trim(),
+    })
+
+    // Limpiar el formulario
+    setNombre("")
+    setDescripcion("")
+    setHasChanges(false)
+    onClose()
+  }
 
   const handleCancel = () => {
-    setNombre("");
-    setDescripcion("");
-    setHasChanges(false);
-    setError(""); // Limpiar error al cerrar
-    onClose();
-  };
+    setNombre("")
+    setDescripcion("")
+    setHasChanges(false)
+    setError("") // Limpiar error al cerrar
+    onClose()
+  }
 
   useEffect(() => {
     if (!isOpen) {
       // Resetear estado al cerrar
-      setNombre("");
-      setDescripcion("");
-      setHasChanges(false);
-      setError("");
+      setNombre("")
+      setDescripcion("")
+      setHasChanges(false)
+      setError("")
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   return (
     <Modal isOpen={isOpen} onClose={handleCancel}>
@@ -71,15 +91,11 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
             value={nombre}
             onChange={handleInputChange(setNombre)}
             className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
-              error
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             }`}
             required
           />
-          {error && (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Descripción</label>
@@ -102,9 +118,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
             type="submit"
             disabled={!hasChanges}
             className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
-              hasChanges
-                ? "bg-green-500 hover:bg-green-600"
-                : "bg-gray-400 cursor-not-allowed"
+              hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
             }`}
           >
             Añadir Tema
@@ -112,7 +126,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
         </div>
       </form>
     </Modal>
-  );
-};
+  )
+}
 
-export default TopicModal;
+export default TopicModal

@@ -1,16 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function CustomSelect({ placeholder, options = [], value, onChange }) {
   const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // Cerrar el dropdown cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Log para depuración
+  useEffect(() => {
+    console.log("CustomSelect - Opciones:", options)
+    console.log("CustomSelect - Valor seleccionado:", value)
+    console.log(
+      "CustomSelect - Opción seleccionada:",
+      options.find((opt) => opt.value === value),
+    )
+  }, [options, value])
 
   // Find the selected option label
   const selectedOption = options.find((option) => option.value === value)
   const displayText = selectedOption ? selectedOption.label : placeholder
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         className="w-full flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
@@ -25,18 +48,23 @@ export default function CustomSelect({ placeholder, options = [], value, onChang
       {isOpen && (
         <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg">
           <ul className="max-h-60 overflow-auto rounded-md py-1 text-base">
-            {options.map((option) => (
-              <li
-                key={option.value}
-                className={`cursor-pointer select-none text-sm px-3 py-2 hover:bg-gray-100 ${value === option.value ? "bg-gray-100" : ""}`}
-                onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
-                }}
-              >
-                {option.label}
-              </li>
-            ))}
+            {options && options.length > 0 ? (
+              options.map((option) => (
+                <li
+                  key={option.value}
+                  className={`cursor-pointer select-none text-sm px-3 py-2 hover:bg-gray-100 ${value === option.value ? "bg-gray-100" : ""}`}
+                  onClick={() => {
+                    console.log("Seleccionando opción:", option)
+                    onChange(option.value)
+                    setIsOpen(false)
+                  }}
+                >
+                  {option.label}
+                </li>
+              ))
+            ) : (
+              <li className="text-sm px-3 py-2 text-gray-500">No hay opciones disponibles</li>
+            )}
           </ul>
         </div>
       )}
