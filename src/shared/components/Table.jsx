@@ -1,7 +1,9 @@
-import React from "react";
-import { FiSearch, FiEdit, FiTrash, FiChevronLeft, FiChevronRight, FiEye } from "react-icons/fi";
-import { MdAddCircleOutline } from "react-icons/md";
-import Tooltip from "../components/Tooltip";
+"use client"
+
+import React from "react"
+import { FiSearch, FiEdit, FiTrash, FiChevronLeft, FiChevronRight, FiEye, FiDownload } from "react-icons/fi"
+import { MdAddCircleOutline } from "react-icons/md"
+import Tooltip from "../components/Tooltip"
 
 const GenericTable = ({
   data = [],
@@ -15,48 +17,62 @@ const GenericTable = ({
   tooltipText = "Ver detalle",
   showSearch = true,
   showPagination = true, // Nueva prop para controlar la visibilidad del paginador
+  exportToExcel = { enabled: false, filename: "datos", exportFunction: null }, // Nueva prop para exportar a Excel
 }) => {
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [itemsPerPage] = React.useState(defaultItemsPerPage);
+  const [searchTerm, setSearchTerm] = React.useState("")
+  const [currentPage, setCurrentPage] = React.useState(1)
+  const [itemsPerPage] = React.useState(defaultItemsPerPage)
 
   const filteredData = showSearch
     ? data.filter((item) =>
-      columns.some((column) =>
-        String(item[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
+        columns.some((column) => String(item[column.key]).toLowerCase().includes(searchTerm.toLowerCase())),
       )
-    )
-    : data;
+    : data
 
   // Si no hay paginación, mostramos todos los datos
   const currentData = showPagination
-    ? filteredData.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    )
-    : filteredData;
+    ? filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filteredData
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+    setCurrentPage(pageNumber)
+  }
+
+  const handleExportToExcel = () => {
+    if (exportToExcel.exportFunction) {
+      exportToExcel.exportFunction(filteredData)
+    }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-2">
       <div className="flex justify-between items-center mb-4">
-        {showSearch && (
-          <div className="relative w-64">
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="w-full pl-3 pr-8 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <FiSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {showSearch && (
+            <div className="relative w-64">
+              <input
+                type="text"
+                placeholder="Buscar..."
+                className="w-full pl-3 pr-8 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FiSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+            </div>
+          )}
+
+          {exportToExcel.enabled && (
+            <button
+              onClick={handleExportToExcel}
+              className="flex items-center gap-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <FiDownload size={16} />
+              <span>Exportar a Excel</span>
+            </button>
+          )}
+        </div>
 
         {showActions.add && (
           <button
@@ -77,7 +93,7 @@ const GenericTable = ({
                 <th
                   key={column.key}
                   className="px-2 py-2 text-left text-sm font-semibold text-gray-600 truncate"
-                  style={{ width: column.width || 'auto' }}
+                  style={{ width: column.width || "auto" }}
                 >
                   {column.label}
                 </th>
@@ -107,7 +123,7 @@ const GenericTable = ({
                           <button
                             onClick={() => onShow(item)}
                             className="p-1.5 text-white rounded-lg transition-colors"
-                            style={{ backgroundColor: '#1F384C' }}
+                            style={{ backgroundColor: "#1F384C" }}
                             aria-label="Detalle"
                           >
                             <FiEye size={15} />
@@ -148,7 +164,6 @@ const GenericTable = ({
         <div className="flex justify-between items-center text-xs text-gray-600">
           <div>{filteredData.length} elementos</div>
 
-
           <div className="flex items-center gap-2">
             <span>
               Página {currentPage} de {totalPages || 1}
@@ -173,11 +188,10 @@ const GenericTable = ({
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default GenericTable;
+export default GenericTable

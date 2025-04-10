@@ -57,9 +57,6 @@ export default function CourseProgrammingForm() {
           { value: "programa1", label: "Programa 1" },
           { value: "programa2", label: "Programa 2" },
           { value: "programa3", label: "Programa 3" },
-          { value: "programa4", label: "Programa 4" },
-          { value: "programa5", label: "Programa 5" },
-          { value: "programa6", label: "Programa 6" }
         ]
 
         const programOption = programOptions.find((p) => p.label === programming.nombre)
@@ -102,9 +99,6 @@ export default function CourseProgrammingForm() {
     { value: "programa1", label: "Programa 1" },
     { value: "programa2", label: "Programa 2" },
     { value: "programa3", label: "Programa 3" },
-    { value: "programa4", label: "Programa 4" },
-    { value: "programa5", label: "Programa 5" },
-    { value: "programa6", label: "Programa 6" }
   ]
 
   const handleCancel = () => {
@@ -227,10 +221,13 @@ export default function CourseProgrammingForm() {
     const examsNotSum100 = []
 
     levels.forEach((level, levelIndex) => {
-      // 4. Validar que cada nivel tenga al menos un tema
-      if (!level.themes || level.themes.length === 0) {
+      // Determinar si es el primer nivel
+      const isFirstLevel = levelIndex === 0
+
+      // 4. Validar que cada nivel tenga al menos un tema (solo obligatorio para el primer nivel)
+      if (isFirstLevel && (!level.themes || level.themes.length === 0)) {
         levelsWithoutThemes.push(`Nivel ${level.name || levelIndex + 1}`)
-      } else {
+      } else if (level.themes && level.themes.length > 0) {
         let levelThemeValue = 0
 
         level.themes.forEach((theme, themeIndex) => {
@@ -241,13 +238,15 @@ export default function CourseProgrammingForm() {
             levelThemeValue += theme.progress
           }
 
-          // 7. Validar que cada tema tenga material y evaluaciones
-          if (!theme.activities || !theme.activities.some((a) => a.type === "Material")) {
-            themesWithoutMaterial.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
-          }
+          // 7. Validar que cada tema tenga material y evaluaciones (solo obligatorio para el primer nivel)
+          if (isFirstLevel) {
+            if (!theme.activities || !theme.activities.some((a) => a.type === "Material")) {
+              themesWithoutMaterial.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
+            }
 
-          if (!theme.activities || !theme.activities.some((a) => a.type === "Actividades" || a.type === "Exámenes")) {
-            themesWithoutEvaluations.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
+            if (!theme.activities || !theme.activities.some((a) => a.type === "Actividades" || a.type === "Exámenes")) {
+              themesWithoutEvaluations.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
+            }
           }
 
           // 8, 9, 10. Validar valores de actividades y exámenes
@@ -435,7 +434,7 @@ export default function CourseProgrammingForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-2 p-6 bg-white rounded-lg shadow">
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
       <header className="mb-6">
         <h1 className="text-xl font-bold text-[#1f384c] mb-4">
           {isEditMode ? "EDITAR PROGRAMACIÓN" : "AÑADIR PROGRAMACIÓN"}
@@ -500,16 +499,16 @@ export default function CourseProgrammingForm() {
         <LevelsList levels={levels} setLevels={setLevels} activeTabs={activeTabs} setActiveTabs={setActiveTabs} />
 
         {/* Botones fijos en la parte inferior */}
-        <div className="bg-white py-5 border-t flex justify-between">
+        <div className="sticky bottom-0 bg-white py-4 border-t mt-8 flex justify-between">
           <button
             onClick={handleCancel}
-            className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+            className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSaveProgramming}
-            className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
+            className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
           >
             {isEditMode ? "Guardar Cambios" : "Añadir Programación"}
           </button>

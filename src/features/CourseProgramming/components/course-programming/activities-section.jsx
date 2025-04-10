@@ -236,7 +236,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       setShowDetailModal(true)
     } else {
       // Si no tiene datos de evaluación, mostrar un mensaje
-      alert("No hay detalles disponibles para esta actividad")
+      alert("No hay detalles disponibles para esta evaluación")
     }
   }
 
@@ -372,7 +372,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                               className="p-1 hover:bg-gray-100 rounded-full"
                               onClick={() => handleViewDetail(activity)}
                             >
-                              <Eye className="h-5 w-6 text-gray-500" />
+                              <Eye className="h-5 w-6 text-blue-500" />
                             </button>
                           </Tooltip>
                           <Tooltip text="Eliminar" position="top">

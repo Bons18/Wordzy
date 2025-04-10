@@ -326,14 +326,14 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       <form onSubmit={handleSubmit}>
         <div className="space-y-3">
           <div>
-            <label className="block text-[14px] font-medium mb-1">Nombre de la Actividad</label>
+            <label className="block text-[14px] font-medium mb-1">Nombre de la Evaluación</label>
             <input
               type="text"
               name="nombre"
               value={formData.nombre}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-              placeholder="Ingrese el nombre de la actividad"
+              placeholder="Ingrese el nombre de la evaluación"
               required
             />
           </div>
