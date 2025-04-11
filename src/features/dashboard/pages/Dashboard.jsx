@@ -706,6 +706,7 @@ const Dashboard = () => {
                   <span className="text-sm text-gray-600">Bajo</span>
                 </div>
               </div>
+              <br></br>
 
               {/* Gráfica con escala porcentual */}
               <div className="relative mt-4">
@@ -890,4 +891,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
