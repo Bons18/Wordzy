@@ -9,6 +9,8 @@ export default function ProgrammingDetails({ programming }) {
   const [expandedLevels, setExpandedLevels] = useState({})
   const [expandedThemes, setExpandedThemes] = useState({})
   const [activeTabsByTheme, setActiveTabsByTheme] = useState({})
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedActivity, setSelectedActivity] = useState(null)
 
   const toggleLevelExpand = (levelId) => {
     setExpandedLevels((prev) => ({
@@ -58,6 +60,16 @@ export default function ProgrammingDetails({ programming }) {
   const getFilteredActivities = (activities, type) => {
     if (!activities) return []
     return activities.filter((activity) => activity.type === type)
+  }
+
+  const handleViewActivityDetail = (activity) => {
+    if (activity.evaluationData) {
+      setSelectedActivity(activity.evaluationData)
+      setShowDetailModal(true)
+    } else {
+      // Para actividades sin datos detallados
+      alert(`Detalles de ${activity.name}: ${activity.type} - ${activity.value}`)
+    }
   }
 
   return (
@@ -213,7 +225,10 @@ export default function ProgrammingDetails({ programming }) {
                                                   </td>
                                                   <td className="px-2 py-2 border-b border-gray-200">
                                                     <Tooltip text="Detalle" position="top">
-                                                      <button className="p-1 hover:bg-gray-100 rounded-full">
+                                                      <button
+                                                        className="p-1 hover:bg-gray-100 rounded-full"
+                                                        onClick={() => handleViewActivityDetail(activity)}
+                                                      >
                                                         <Eye className="h-5 w-6 text-gray-500" />
                                                       </button>
                                                     </Tooltip>
@@ -261,6 +276,66 @@ export default function ProgrammingDetails({ programming }) {
           )}
         </div>
       </div>
+      {/* Modal de detalles de evaluación */}
+      {showDetailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-[18px] font-bold text-center mb-4">
+                {selectedActivity?.nombre || "Detalles de la actividad"}
+              </h2>
+
+              {/* Descripción */}
+              <div className="border border-gray-300 rounded-lg p-3 mb-3">
+                <h3 className="text-[16px] font-bold mb-2">Descripción</h3>
+                <p className="text-[14px] text-gray-700">{selectedActivity?.descripcion || "Sin descripción"}</p>
+              </div>
+
+              {/* Tipo y estado */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <h3 className="text-[16px] font-bold mb-2">Tipo</h3>
+                  <p className="text-[14px] text-gray-700">{selectedActivity?.tipoEvaluacion || "No especificado"}</p>
+                </div>
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <h3 className="text-[16px] font-bold mb-2">Estado</h3>
+                  <p className="text-[14px] text-gray-700">{selectedActivity?.estado || "No especificado"}</p>
+                </div>
+              </div>
+
+              {/* Preguntas si existen */}
+              {selectedActivity?.preguntas && selectedActivity.preguntas.length > 0 && (
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <h3 className="text-[16px] font-bold mb-2">Preguntas</h3>
+                  <p className="text-[14px] text-gray-500 mb-2">Total: {selectedActivity.preguntas.length}</p>
+
+                  <div className="space-y-2">
+                    {selectedActivity.preguntas.map((pregunta, index) => (
+                      <div key={index} className="border border-gray-200 rounded p-2">
+                        <p className="text-[14px] font-medium">
+                          {index + 1}. {pregunta.texto || pregunta.completarTexto || "Sin texto"}
+                        </p>
+                        <p className="text-[12px] text-gray-500">
+                          Tipo: {pregunta.tipo} | Puntaje: {pregunta.puntaje}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-8 py-2 bg-[#f44144] text-white rounded-md text-[14px] hover:bg-red-600 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
