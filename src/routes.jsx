@@ -27,9 +27,6 @@ import CourseProgrammingPage from "./features/CourseProgramming/pages/course-pro
 import CourseProgramming from "./features/CourseProgramming/components/course-programming"
 import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
 
-
-
-
 // Definición de rutas
 const routes = [
   {
