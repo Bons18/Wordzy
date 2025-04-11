@@ -184,7 +184,7 @@ const Dashboard = () => {
 
   const studentPoints = 862;
   const completionRate = 20.79;
-  
+
   // Datos de lecciones por nivel
   const lessonsStatsByLevel = {
     1: { won: 60, lost: 40 },
@@ -194,7 +194,7 @@ const Dashboard = () => {
     5: { won: 30, lost: 70 },
     6: { won: 65, lost: 35 },
   };
-  
+
   // Estado para las estadísticas de lecciones actuales
   const [lessonsStats, setLessonsStats] = useState(lessonsStatsByLevel[1]);
 
@@ -553,7 +553,14 @@ const Dashboard = () => {
                   {/* Círculo base */}
                   <svg className="w-full h-full" viewBox="0 0 200 200">
                     {/* Círculo de fondo */}
-                    <circle cx="100" cy="100" r="70" fill="none" stroke="#e6e6e6" strokeWidth="20" />
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r="70"
+                      fill="none"
+                      stroke="#e6e6e6"
+                      strokeWidth="20"
+                    />
 
                     {/* Segmento verde (ganadas) */}
                     <circle
@@ -564,7 +571,10 @@ const Dashboard = () => {
                       stroke="#22c55e"
                       strokeWidth="20"
                       strokeDasharray={2 * Math.PI * 70}
-                      strokeDashoffset={(2 * Math.PI * 70) - ((2 * Math.PI * 70) * lessonsStats.won / 100)}
+                      strokeDashoffset={
+                        2 * Math.PI * 70 -
+                        (2 * Math.PI * 70 * lessonsStats.won) / 100
+                      }
                       transform="rotate(-90 100 100)"
                     />
 
@@ -576,8 +586,16 @@ const Dashboard = () => {
                       fill="none"
                       stroke="#ef4444"
                       strokeWidth="20"
-                      strokeDasharray={`${(2 * Math.PI * 70) * lessonsStats.lost / 100} ${(2 * Math.PI * 70) - ((2 * Math.PI * 70) * lessonsStats.lost / 100)}`}
-                      strokeDashoffset={(2 * Math.PI * 70) - ((2 * Math.PI * 70) * lessonsStats.won / 100)}
+                      strokeDasharray={`${
+                        (2 * Math.PI * 70 * lessonsStats.lost) / 100
+                      } ${
+                        2 * Math.PI * 70 -
+                        (2 * Math.PI * 70 * lessonsStats.lost) / 100
+                      }`}
+                      strokeDashoffset={
+                        2 * Math.PI * 70 -
+                        (2 * Math.PI * 70 * lessonsStats.won) / 100
+                      }
                       transform="rotate(-90 100 100)"
                     />
 
@@ -585,22 +603,22 @@ const Dashboard = () => {
                     <circle cx="100" cy="100" r="50" fill="white" />
 
                     {/* Texto central con la fuente del dashboard */}
-                    <text 
-                      x="100" 
-                      y="90" 
-                      textAnchor="middle" 
-                      fontSize="14" 
+                    <text
+                      x="100"
+                      y="90"
+                      textAnchor="middle"
+                      fontSize="14"
                       fill="#627b87"
                       fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
                     >
                       Total
                     </text>
-                    <text 
-                      x="100" 
-                      y="120" 
-                      textAnchor="middle" 
-                      fontSize="28" 
-                      fontWeight="bold" 
+                    <text
+                      x="100"
+                      y="120"
+                      textAnchor="middle"
+                      fontSize="28"
+                      fontWeight="bold"
                       fill="#1f384c"
                       fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
                     >
@@ -614,12 +632,16 @@ const Dashboard = () => {
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-green-500"></div>
                     <span className="text-gray-700">Ganadas</span>
-                    <span className="font-bold text-green-600 text-xl ml-2">{lessonsStats.won}%</span>
+                    <span className="font-bold text-green-600 text-xl ml-2">
+                      {lessonsStats.won}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-red-500"></div>
                     <span className="text-gray-700">Perdidas</span>
-                    <span className="font-bold text-red-600 text-xl ml-2">{lessonsStats.lost}%</span>
+                    <span className="font-bold text-red-600 text-xl ml-2">
+                      {lessonsStats.lost}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -868,3 +890,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
