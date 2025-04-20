@@ -499,7 +499,7 @@ export default function CourseProgrammingForm() {
         <LevelsList levels={levels} setLevels={setLevels} activeTabs={activeTabs} setActiveTabs={setActiveTabs} />
 
         {/* Botones fijos en la parte inferior */}
-        <div className="sticky bottom-0 bg-white py-4 border-t mt-8 flex justify-between">
+        <div className="bg-white py-4 border-t mt-8 flex justify-between">
           <button
             onClick={handleCancel}
             className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"

@@ -11,6 +11,9 @@ export default function ProgrammingDetails({ programming }) {
   const [activeTabsByTheme, setActiveTabsByTheme] = useState({})
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState(null)
+  // Nuevo estado para el modal de detalle de material
+  const [showMaterialDetailModal, setShowMaterialDetailModal] = useState(false)
+  const [selectedMaterial, setSelectedMaterial] = useState(null)
 
   const toggleLevelExpand = (levelId) => {
     setExpandedLevels((prev) => ({
@@ -64,8 +67,14 @@ export default function ProgrammingDetails({ programming }) {
 
   const handleViewActivityDetail = (activity) => {
     if (activity.evaluationData) {
-      setSelectedActivity(activity.evaluationData)
-      setShowDetailModal(true)
+      // Verificar si es un material de apoyo o una actividad/examen
+      if (activity.type === "Material") {
+        setSelectedMaterial(activity.evaluationData)
+        setShowMaterialDetailModal(true)
+      } else {
+        setSelectedActivity(activity.evaluationData)
+        setShowDetailModal(true)
+      }
     } else {
       // Para actividades sin datos detallados
       alert(`Detalles de ${activity.name}: ${activity.type} - ${activity.value}`)
@@ -276,6 +285,7 @@ export default function ProgrammingDetails({ programming }) {
           )}
         </div>
       </div>
+
       {/* Modal de detalles de evaluación */}
       {showDetailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
@@ -327,6 +337,48 @@ export default function ProgrammingDetails({ programming }) {
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => setShowDetailModal(false)}
+                  className="px-8 py-2 bg-[#f44144] text-white rounded-md text-[14px] hover:bg-red-600 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalles de material de apoyo */}
+      {showMaterialDetailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-[18px] font-bold text-center mb-4">
+                {selectedMaterial?.nombre || "Detalles del material de apoyo"}
+              </h2>
+
+              {/* Contenido */}
+              <div className="border border-gray-300 rounded-lg p-3 mb-3">
+                <h3 className="text-[16px] font-bold mb-2">Contenido</h3>
+                <div
+                  className="text-[14px] text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: selectedMaterial?.contenido }}
+                />
+              </div>
+              {/* Creado por y fecha */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <h3 className="text-[16px] font-bold mb-2">Creado por</h3>
+                  <p className="text-[14px] text-gray-700">{selectedMaterial?.creadoPor || "No especificado"}</p>
+                </div>
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <h3 className="text-[16px] font-bold mb-2">Fecha</h3>
+                  <p className="text-[14px] text-gray-700">{selectedMaterial?.fecha || "No especificado"}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowMaterialDetailModal(false)}
                   className="px-8 py-2 bg-[#f44144] text-white rounded-md text-[14px] hover:bg-red-600 transition-colors"
                 >
                   Cerrar

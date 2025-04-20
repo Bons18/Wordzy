@@ -7,7 +7,9 @@ import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
 import EvaluationModal from "./evaluation-modal"
 import EvaluationDetailModal from "../../../Evaluations/components/EvaluationDetailModal"
-
+import SupportMaterialModal from "../../../SupportMaterials/pages/support-material-modal" // Importamos el nuevo componente
+// Importar el nuevo componente MaterialDetailModal
+import MaterialDetailModal from "../../../SupportMaterials/pages/material-detail-modal"
 
 export default function ActivitiesSection({ levelId, themeId, localActiveTab, setLocalActiveTab, levels, setLevels }) {
   const [selectedActivity, setSelectedActivity] = useState("")
@@ -19,10 +21,15 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const [evaluationType, setEvaluationType] = useState("")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedDetail, setSelectedDetail] = useState(null)
+  const [showSupportMaterialModal, setShowSupportMaterialModal] = useState(false) // Estado para mostrar el modal de material de apoyo
+  // Añadir un nuevo estado para el modal de detalle de material
+  const [showMaterialDetailModal, setShowMaterialDetailModal] = useState(false)
+  const [selectedMaterial, setSelectedMaterial] = useState(null)
 
   // Estado para almacenar las actividades y exámenes creados pero no agregados a la tabla
   const [createdActivities, setCreatedActivities] = useState([])
   const [createdExams, setCreatedExams] = useState([])
+  const [createdMaterials, setCreatedMaterials] = useState([]) // Nuevo estado para materiales creados
 
   // Opciones predeterminadas
   const defaultActivityOptions = [
@@ -38,7 +45,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     { value: "examen4", label: "Quiz" },
   ]
 
-  const materialOptions = [
+  const defaultMaterialOptions = [
     { value: "material1", label: "Imagenes" },
     { value: "material2", label: "Documento PDF" },
     { value: "material3", label: "Video Tutorial" },
@@ -65,6 +72,15 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       value: `custom-${exam.id}`,
       label: exam.nombre,
       customData: exam,
+    })),
+  ]
+
+  const materialOptions = [
+    ...defaultMaterialOptions,
+    ...createdMaterials.map((material) => ({
+      value: `custom-${material.id}`,
+      label: material.nombre,
+      customData: material,
     })),
   ]
 
@@ -136,6 +152,8 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         setCreatedActivities((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
       } else if (localActiveTab === "Exámenes") {
         setCreatedExams((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
+      } else if (localActiveTab === "Material") {
+        setCreatedMaterials((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
       }
     }
 
@@ -200,8 +218,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const handleCreateEvaluation = (type) => {
     // Solo abrir el modal para Actividad o Examen, no para Material
     if (type === "Material") {
-      // Aquí podría ir otra lógica para el material, por ahora solo mostramos un mensaje
-      alert("Funcionalidad de creación de material en desarrollo")
+      setShowSupportMaterialModal(true)
       return
     }
 
@@ -229,11 +246,33 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     setShowEvaluationModal(false)
   }
 
+  // Función para manejar la creación de un nuevo material de apoyo
+  const handleSupportMaterialSubmit = (materialData) => {
+    const newMaterial = {
+      ...materialData,
+      id: Date.now(),
+    }
+
+    setCreatedMaterials((prev) => [...prev, newMaterial])
+    setShowSupportMaterialModal(false)
+
+    // Asegurarse de que estamos en la pestaña de Material
+    setLocalActiveTab("Material")
+  }
+
+  // Modificar la función handleViewDetail para mostrar los detalles de los materiales
   const handleViewDetail = (activity) => {
     // Si la actividad tiene datos de evaluación, mostrarlos
     if (activity.evaluationData) {
-      setSelectedDetail(activity.evaluationData)
-      setShowDetailModal(true)
+      if (activity.type === "Material") {
+        // Si es un material, mostrar el modal de detalle de material
+        setSelectedMaterial(activity.evaluationData)
+        setShowMaterialDetailModal(true)
+      } else {
+        // Si es una actividad o examen, mostrar el modal de detalle de evaluación
+        setSelectedDetail(activity.evaluationData)
+        setShowDetailModal(true)
+      }
     } else {
       // Si no tiene datos de evaluación, mostrar un mensaje
       alert("No hay detalles disponibles para esta evaluación")
@@ -450,6 +489,20 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
         evaluation={selectedDetail}
+      />
+
+      {/* Modal para crear material de apoyo */}
+      <SupportMaterialModal
+        isOpen={showSupportMaterialModal}
+        onClose={() => setShowSupportMaterialModal(false)}
+        onSubmit={handleSupportMaterialSubmit}
+      />
+
+      {/* Modal para ver detalles del material */}
+      <MaterialDetailModal
+        isOpen={showMaterialDetailModal}
+        onClose={() => setShowMaterialDetailModal(false)}
+        material={selectedMaterial}
       />
     </div>
   )
