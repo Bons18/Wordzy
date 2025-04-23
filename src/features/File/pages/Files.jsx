@@ -1294,6 +1294,7 @@ import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import Tooltip from "../../../shared/components/Tooltip"
 
 // Datos de ejemplo
 const fichasData = [
@@ -1429,7 +1430,7 @@ const Files = () => {
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1f384c]">Fichas</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">FICHAS</h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -1481,11 +1482,11 @@ const Files = () => {
                     </div>
                     <div>
                       <div className="text-sm text-[#6c757d]">Fecha Inicio:</div>
-                      <div className="font-medium">23/01/2024</div>
+                      <div className="font-medium">23-01-2024</div>
                     </div>
                     <div>
                       <div className="text-sm text-[#6c757d]">Fecha fin:</div>
-                      <div className="font-medium">30/01/2025</div>
+                      <div className="font-medium">30-01-2025</div>
                     </div>
                   </div>
                 </div>
@@ -1493,7 +1494,7 @@ const Files = () => {
 
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-[#eaeaea]">
-                  <thead className="bg-[#f6f6fb]">
+                  <thead className="bg-white">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#627b87] uppercase tracking-wider">
                         Nivel
@@ -1514,7 +1515,7 @@ const Files = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-[#eaeaea]">
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">nivel 1</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Nivel 1</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Yaritza Ortiz</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">20</td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1523,13 +1524,28 @@ const Files = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="bg-[#1f384c] text-white text-xs px-3 py-1 rounded" onClick={verEstudiantes}>
-                          Ver Aprendices
-                        </button>
+                        <Tooltip text="Ver Aprendices" position="top">
+                        <button className="bg-[#1f384c] text-white rounded-lg p-1.5" onClick={verEstudiantes}>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </button>
+                          </Tooltip>
                       </td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">nivel 2</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Nivel 2</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Yaritza Ortiz</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">30</td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1538,11 +1554,28 @@ const Files = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="bg-[#1f384c] text-white text-xs px-3 py-1 rounded">Ver Aprendices</button>
-                      </td>
+                      <Tooltip text="Ver Aprendices" position="top">
+                      <button className="bg-[#1f384c] text-white rounded-lg p-1.5" onClick={verEstudiantes}>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </button>     
+                          </Tooltip>                 
+                          </td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">nivel 3</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Nivel 3</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">Yaritza Ortiz</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#333333]">15</td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1551,15 +1584,32 @@ const Files = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button className="bg-[#1f384c] text-white text-xs px-3 py-1 rounded">Ver Aprendices</button>
-                      </td>
+                      <Tooltip text="Ver Aprendices" position="top">
+                      <button className="bg-[#1f384c] text-white rounded-lg p-1.5" onClick={verEstudiantes}>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </button>
+                          </Tooltip>           
+                          </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
               <div className="mt-6 flex justify-end">
-                <button className="bg-[#dc3545] text-white px-4 py-2 rounded" onClick={() => setShowFichaModal(false)}>
+                <button className="bg-[#f44144] text-white text-sm py-2 px-2 rounded-lg  font-medium hover:bg-red-600 transition-colors" onClick={() => setShowFichaModal(false)}>
                   Cerrar
                 </button>
               </div>
@@ -1571,11 +1621,11 @@ const Files = () => {
       {/* Estudiantes Modal - Mantenido del original pero con mejor espaciado */}
       {showEstudiantesModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-4 max-h-[80vh] overflow-auto">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-4 max-h-[80vh] ">
             <div className="p-4">
               <h2 className="text-xl font-bold text-center text-[#1f384c] mb-4">Listado de Estudiantes Nivel 1</h2>
 
-              <div className="overflow-x-auto mb-4">
+              <div className="mb-4">
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
                   <thead className="bg-white">
                     <tr className="border-b">
