@@ -1,4 +1,3 @@
-// src/features/topics/pages/TopicsPage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import GenericTable from "../../../shared/components/Table";
 import TopicModal from "../components/TopicModal";
@@ -7,49 +6,50 @@ import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-
-const topics = [
-  { id: 1, nombre: "Verbo to be", descripcion: "Explicación del verbo to be", estado: "Activo" },
-  { id: 2, nombre: "Artículos", descripcion: "Uso de artículos definidos e indefinidos", estado: "Inactivo" },
-  { id: 3, nombre: "Presente simple", descripcion: "Estructura y uso del presente simple", estado: "Activo" },
-  { id: 4, nombre: "Pronombres", descripcion: "Tipos y uso de pronombres en inglés", estado: "Inactivo" },
-  { id: 5, nombre: "Pasado simple", descripcion: "Estructura y uso del pasado simple", estado: "Activo" },
-  { id: 6, nombre: "Adjetivos", descripcion: "Uso y posición de adjetivos en oraciones", estado: "Inactivo" }
-];
+import { useGetTopics } from "../hooks/useGetTopics";
+import { usePostTopic } from "../hooks/usePostTopic";
+import { usePutTopic } from "../hooks/usePutTopic";
+import { useDeleteTopic } from "../hooks/useDeleteTopic";
 
 const columns = [
-  { key: "id", label: "Id" },
-  { key: "nombre", label: "Nombre" },
+  { key: "name", label: "Nombre" },
   {
-    key: "descripcion",
+    key: "description",
     label: "Descripción",
     render: (item) => (
       <span className="text-gray-600">
-        {item.descripcion || "Sin descripción"}
+        {item.description || "Sin descripción"}
       </span>
     )
   },
   {
-    key: "estado",
+    key: "status",
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo"
-          ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800"
-          }`}
-      >
-        {item.estado}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true 
+          ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        {item.status ? "Activo" : "Inactivo"}
       </span>
     ),
   },
 ];
 
 const TopicsPage = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  //HOOKS
+  const { topics, loading, error, refetch } = useGetTopics();
+  const [topicsList, setTopicsList] = useState([]);
+  const { postTopic } = usePostTopic();
+  const { putTopic } = usePutTopic()
+  const { deleteTopic } = useDeleteTopic()
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentTopic, setCurrentTopic] = useState(null);
-  const [topicsList, setTopicsList] = useState(topics);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -59,10 +59,11 @@ const TopicsPage = () => {
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(null);
 
-
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const dropdownRef = useRef(null);
+  useEffect(() => {
+    if (topics.length > 0) {
+      setTopicsList(topics);
+    }
+  }, [topics]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -89,21 +90,21 @@ const TopicsPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmitTopic = (newTopic) => {
-    // Generar el nuevo ID y crear el tema (igual que antes)
-    const newId = topicsList.length + 1;
-    const newTema = { ...newTopic, id: newId, estado: "Activo" };
-
-    // Actualizar el estado (igual que antes)
-    setTopicsList([...topicsList, newTema]);
-
-    // Cerrar el modal de creación
+  const handleSubmitTopic = async (newTopic) => {
+  try {
+    await postTopic(newTopic);
     setIsModalOpen(false);
 
-    // Mostrar confirmación de éxito
+    await refetch(); // Refresca la lista de temas
+
     setSuccessMessage("Tema agregado exitosamente");
     setShowSuccessModal(true);
-  };
+  } catch (error) {
+    console.error("Error al agregar el tema:", error);
+    setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
+    setShowSuccessModal(true);
+  }
+};
 
   const handleEditTopic = (topic) => {
     setCurrentTopic(topic);
