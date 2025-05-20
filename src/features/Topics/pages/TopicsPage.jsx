@@ -27,7 +27,7 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true 
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true
           ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
         {item.status ? "Activo" : "Inactivo"}
       </span>
@@ -91,43 +91,54 @@ const TopicsPage = () => {
   };
 
   const handleSubmitTopic = async (newTopic) => {
-  try {
-    await postTopic(newTopic);
-    setIsModalOpen(false);
+    try {
+      await postTopic(newTopic);
+      setIsModalOpen(false);
 
-    await refetch(); // Refresca la lista de temas
+      await refetch(); // Refresca la lista de temas
 
-    setSuccessMessage("Tema agregado exitosamente");
-    setShowSuccessModal(true);
-  } catch (error) {
-    console.error("Error al agregar el tema:", error);
-    setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
-    setShowSuccessModal(true);
-  }
-};
+      setSuccessMessage("Tema agregado exitosamente");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error al agregar el tema:", error);
+      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
+      setShowSuccessModal(true);
+    }
+  };
 
   const handleEditTopic = (topic) => {
     setCurrentTopic(topic);
     setIsEditModalOpen(true);
   };
 
-  // Modifica handleUpdateTopic
-  const handleUpdateTopic = (updatedTopic) => {
+  const handleUpdateTopic = async (updatedTopic) => {
     setPendingChanges(updatedTopic);
     setShowSaveConfirm(true);
   };
 
-  // Agrega esta función para confirmar los cambios
-  const confirmSaveChanges = () => {
+  const confirmSaveChanges = async () => {
     try {
-      if (!currentTopic) {
+      if (!currentTopic || !pendingChanges) {
         throw new Error("No hay tema seleccionado para editar");
       }
 
-      setTopicsList(topicsList.map(topic =>
-        topic.id === currentTopic.id ? { ...topic, ...pendingChanges } : topic
-      ));
+      // Prepara los datos para la API
+      const topicToUpdate = {
+        name: pendingChanges.name,
+        description: pendingChanges.description,
+        status: pendingChanges.status // Ya es boolean
+      };
+
+      // Llama a la API para actualizar
+      await putTopic(currentTopic._id, topicToUpdate);
+
+      // Refresca la lista
+      await refetch();
+
+      // Cierra modales
       setIsEditModalOpen(false);
+      setShowSaveConfirm(false);
+      setPendingChanges(null);
 
       setSuccessMessage("Tema actualizado exitosamente");
       setShowSuccessModal(true);
@@ -135,29 +146,30 @@ const TopicsPage = () => {
       console.error("Error al actualizar el tema:", error);
       setSuccessMessage(error.message || "Ocurrió un error al actualizar el tema");
       setShowSuccessModal(true);
-    } finally {
-      setShowSaveConfirm(false);
-      setPendingChanges(null);
     }
   };
 
+  // Maneja la eliminación de un tema
   const handleDeleteTopic = (id) => {
     setItemToDelete(id);
     setShowDeleteConfirm(true);
   };
 
-  const confirmDeleteTopic = () => {
-    try {
-      // Eliminar de la lista local
-      const updatedTopics = topicsList.filter(t => t.id !== itemToDelete);
-      setTopicsList(updatedTopics);
+  const confirmDeleteTopic = async () => {
+    if (!itemToDelete) {
+      setSuccessMessage("Error interno: no se encontró el tema a eliminar");
+      setShowSuccessModal(true);
+      setShowDeleteConfirm(false);
+      return;
+    }
 
-      // Mostrar mensaje de éxito
+    try {
+      await deleteTopic(itemToDelete);
+      await refetch();
       setSuccessMessage("Tema eliminado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
-      console.error("Error al eliminar el tema:", error);
-      setSuccessMessage("Ocurrió un error al eliminar el tema");
+      setSuccessMessage(error.message || "Error al eliminar el tema");
       setShowSuccessModal(true);
     } finally {
       setShowDeleteConfirm(false);
