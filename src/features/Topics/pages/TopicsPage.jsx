@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import GenericTable from "../../../shared/components/Table";
 import TopicModal from "../components/TopicModal";
 import EditTopicModal from "../components/EditTopicModal";
@@ -156,13 +156,6 @@ const TopicsPage = () => {
   };
 
   const confirmDeleteTopic = async () => {
-    if (!itemToDelete) {
-      setSuccessMessage("Error interno: no se encontró el tema a eliminar");
-      setShowSuccessModal(true);
-      setShowDeleteConfirm(false);
-      return;
-    }
-
     try {
       await deleteTopic(itemToDelete);
       await refetch();
