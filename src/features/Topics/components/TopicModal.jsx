@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react"
 import Modal from "../../../shared/components/Modal"
-
-const normalizeText = (text) =>
-  text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
+import { normalizeText } from "../../../shared/utils/normalizeText"
 
 const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
   const [name, setName] = useState("")
@@ -21,6 +16,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (error) return // No enviar si hay error
     const trimmedName = name.trim()
 
     if (!trimmedName) {
@@ -38,12 +34,6 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
       setError("El tema ya existe")
       return
     }
-
-    // Log para depuración
-    console.log("Enviando datos del tema:", {
-      name: trimmedName,
-      description: description.trim(),
-    })
 
     // Llamar a onSubmit con los datos del tema
     onSubmit({
@@ -67,15 +57,32 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
     onClose()
   }
 
+  // Resetear estado al cerrar
   useEffect(() => {
     if (!isOpen) {
-      // Resetear estado al cerrar
       setName("")
       setDescription("")
       setHasChanges(false)
       setError("")
     }
   }, [isOpen])
+
+  // Validar si el nombre ya existe mientras se escribe
+  useEffect(() => {
+    const trimmed = name.trim()
+    const normalized = normalizeText(trimmed)
+
+    const exists = existingTopics.some(
+      (t) => normalizeText(t.name) === normalized
+    )
+
+    if (exists) {
+      setError("El tema ya existe")
+    } else {
+      setError("") // Limpia el error si el nombre ya no está duplicado
+    }
+  }, [name, existingTopics])
+
 
   return (
     <Modal isOpen={isOpen} onClose={handleCancel}>
@@ -89,9 +96,8 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
             type="text"
             value={name}
             onChange={handleInputChange(setName)}
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
-              error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            }`}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              }`}
             required
           />
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -116,9 +122,8 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
           <button
             type="submit"
             disabled={!hasChanges}
-            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
-              hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
-            }`}
+            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
+              }`}
           >
             Añadir Tema
           </button>

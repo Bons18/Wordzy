@@ -10,16 +10,15 @@ export function useGetTopics() {
     setError(null);
     try {
       const response = await fetch("http://localhost:3000/api/topic");
+      const data = await response.json();
 
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.message || "Error al obtener los temas");
       }
 
-      const data = await response.json();
-      setTopics(data);
+      setTopics(data || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Error desconocido al obtener los temas");
     } finally {
       setLoading(false);
     }

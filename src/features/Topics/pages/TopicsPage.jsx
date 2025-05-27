@@ -36,34 +36,12 @@ const columns = [
 ];
 
 const TopicsPage = () => {
+  // Cerrar sesión
+  const dropdownRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const dropdownRef = useRef(null);
-
-  //HOOKS
-  const { topics, loading, error, refetch } = useGetTopics();
-  const [topicsList, setTopicsList] = useState([]);
-  const { postTopic } = usePostTopic();
-  const { putTopic } = usePutTopic()
-  const { deleteTopic } = useDeleteTopic()
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentTopic, setCurrentTopic] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-  const [pendingChanges, setPendingChanges] = useState(null);
-
-  useEffect(() => {
-    if (topics.length > 0) {
-      setTopicsList(topics);
-    }
-  }, [topics]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -85,18 +63,37 @@ const TopicsPage = () => {
     logout();
     navigate("/login");
   };
+  ////////////////////////////////
 
+  //HOOKS
+  const { topics, loading, error, refetch } = useGetTopics();
+  const { postTopic } = usePostTopic();
+  const { putTopic } = usePutTopic()
+  const { deleteTopic } = useDeleteTopic()
+  // Estados
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState(null);
+
+
+
+  // Maneja la apertura del modal para agregar un nuevo tema
   const handleAddTopic = () => {
     setIsModalOpen(true);
   };
 
+  // Maneja el envío del nuevo tema
   const handleSubmitTopic = async (newTopic) => {
     try {
       await postTopic(newTopic);
       setIsModalOpen(false);
-
       await refetch(); // Refresca la lista de temas
-
       setSuccessMessage("Tema agregado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
@@ -106,11 +103,13 @@ const TopicsPage = () => {
     }
   };
 
+  // Maneja la edición de un tema
   const handleEditTopic = (topic) => {
     setCurrentTopic(topic);
     setIsEditModalOpen(true);
   };
 
+  // Maneja la actualización de un tema
   const handleUpdateTopic = async (updatedTopic) => {
     setPendingChanges(updatedTopic);
     setShowSaveConfirm(true);
@@ -139,7 +138,6 @@ const TopicsPage = () => {
       setIsEditModalOpen(false);
       setShowSaveConfirm(false);
       setPendingChanges(null);
-
       setSuccessMessage("Tema actualizado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
@@ -199,75 +197,95 @@ const TopicsPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <div>
-          <GenericTable
-            data={topicsList}
-            columns={columns}
-            onAdd={handleAddTopic}
-            onEdit={handleEditTopic}
-            onDelete={handleDeleteTopic}
-          />
+        {/* Estado de carga */}
+        {loading ? (
+          <div className="text-center py-10 text-gray-500 text-lg">
+            Cargando temas...
+          </div>
+        ) : (
+          <>
+            {topics.length === 0 ? (
+              <div className="text-center py-10 text-gray-500 text-lg">
+                No hay temas registrados.
+                <div className="mt-4">
+                  <button
+                    onClick={handleAddTopic}
+                    className="px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors bg-green-500 hover:bg-green-600"
+                  >
+                    Registrar Tema
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <GenericTable
+                data={topics}
+                columns={columns}
+                onAdd={handleAddTopic}
+                onEdit={handleEditTopic}
+                onDelete={handleDeleteTopic}
+              />
+            )}
+          </>
+        )}
+        <TopicModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleSubmitTopic}
+          topic={currentTopic}
+          existingTopics={topics}
+        />
 
-          <TopicModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleSubmitTopic}
-            topic={currentTopic}
-            existingTopics={topicsList}
-          />
+        <EditTopicModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdateTopic}
+          topic={currentTopic}
+          existingTopics={topics}
+        />
 
-          <EditTopicModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSubmit={handleUpdateTopic}
-            topic={currentTopic}
-            existingTopics={topicsList}
-          />
+        <ConfirmationModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={handleLogout}
+          title="Cerrar Sesión"
+          message="¿Está seguro de que desea cerrar la sesión actual?"
+          confirmText="Cerrar Sesión"
+        />
 
-          <ConfirmationModal
-            isOpen={showLogoutConfirm}
-            onClose={() => setShowLogoutConfirm(false)}
-            onConfirm={handleLogout}
-            title="Cerrar Sesión"
-            message="¿Está seguro de que desea cerrar la sesión actual?"
-            confirmText="Cerrar Sesión"
-          />
+        {/* Modal de confirmación para eliminar tema */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDeleteTopic}
+          title="Eliminar Tema"
+          message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          confirmColor="bg-[#f44144] hover:bg-red-600"
+        />
 
-          {/* Modal de confirmación para eliminar tema */}
-          <ConfirmationModal
-            isOpen={showDeleteConfirm}
-            onClose={() => setShowDeleteConfirm(false)}
-            onConfirm={confirmDeleteTopic}
-            title="Eliminar Tema"
-            message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
-            confirmText="Eliminar"
-            confirmColor="bg-[#f44144] hover:bg-red-600"
-          />
+        <ConfirmationModal
+          isOpen={showSaveConfirm}
+          onClose={() => {
+            setShowSaveConfirm(false);
+            setIsEditModalOpen(false);
+          }}
+          onConfirm={confirmSaveChanges}
+          title="Confirmar Cambios"
+          message="¿Estás seguro que deseas guardar los cambios del tema?"
+          confirmText="Guardar"
+          confirmColor="bg-green-500 hover:bg-green-600"
+        />
 
-          <ConfirmationModal
-            isOpen={showSaveConfirm}
-            onClose={() => {
-              setShowSaveConfirm(false);
-              setIsEditModalOpen(false);
-            }}
-            onConfirm={confirmSaveChanges}
-            title="Confirmar Cambios"
-            message="¿Estás seguro que deseas guardar los cambios del tema?"
-            confirmText="Guardar"
-            confirmColor="bg-green-500 hover:bg-green-600"
-          />
-
-          {/* Modal de éxito */}
-          <ConfirmationModal
-            isOpen={showSuccessModal}
-            onConfirm={() => setShowSuccessModal(false)}
-            title="Operación Exitosa"
-            message={successMessage}
-            confirmText="Aceptar"
-            confirmColor="bg-green-500 hover:bg-green-600"
-            showButtonCancel={false}
-          />
-        </div>
+        {/* Modal de éxito */}
+        <ConfirmationModal
+          isOpen={showSuccessModal}
+          onConfirm={() => setShowSuccessModal(false)}
+          title="Operación Exitosa"
+          message={successMessage}
+          confirmText="Aceptar"
+          confirmColor="bg-green-500 hover:bg-green-600"
+          showButtonCancel={false}
+        />
       </div>
     </div>
   );

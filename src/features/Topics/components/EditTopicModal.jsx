@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Modal from "../../../shared/components/Modal";
-
-const normalizeText = (text) =>
-  text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+import { normalizeText } from "../../../shared/utils/normalizeText";
 
 const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) => {
   const [name, setName] = useState("");
@@ -21,6 +19,23 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
     }
   }, [topic, isOpen]);
 
+  // Validar en tiempo real si el nombre ya existe
+  useEffect(() => {
+    const trimmed = name.trim();
+    const normalized = normalizeText(trimmed);
+
+    const exists = existingTopics.some(
+      (t) =>
+        normalizeText(t.name) === normalized && t._id !== topic._id
+    );
+
+    if (exists) {
+      setError("El tema ya existe");
+    } else {
+      setError(""); // Limpia el error si ya no hay duplicado
+    }
+  }, [name, existingTopics]);
+
   const toggleStatus = () => {
     setStatus(prevStatus => !prevStatus); // Cambia directamente el boolean
     setHasChanges(true);
@@ -38,35 +53,32 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+    if (error) return;
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
-  
+
     if (!trimmedName) return;
-  
-    const normalizedName = normalizeText(trimmedName);
-  
+
     const exists = existingTopics.some(
       (t) =>
-        normalizeText(t.name) === normalizedName &&
-        t._id !== topic._id
+        normalizeText(t.name) === normalizeText(trimmedName) && t._id !== topic._id
     );
-  
+
     if (exists) {
       setError("El tema ya existe");
       return;
     }
-  
-    onSubmit({ 
-      name: trimmedName, 
-      description: trimmedDescription, 
-      status 
+
+    onSubmit({
+      name: trimmedName,
+      description: trimmedDescription,
+      status
     });
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-       <h1 className="text-xl font-bold text-[#1f384c]">EDITAR TEMA</h1>
+      <h1 className="text-xl font-bold text-[#1f384c]">EDITAR TEMA</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mt-4">Nombre <span className="text-red-500">*</span></label>
@@ -75,9 +87,8 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
             name="name"
             value={name}
             onChange={handleChange}
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-              error ? "border-red-500" : "border-gray-300"
-            }`}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${error ? "border-red-500" : "border-gray-300"
+              }`}
             required
           />
           {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
@@ -95,22 +106,22 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
         </div>
 
         <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-        <div className="flex items-center">
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={status}
-              onChange={toggleStatus}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-            <span className="ml-2 text-sm font-medium text-gray-700">
-              {status ? "Activo" : "Inactivo"}
-            </span>
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+          <div className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={status}
+                onChange={toggleStatus}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                {status ? "Activo" : "Inactivo"}
+              </span>
+            </label>
+          </div>
         </div>
-      </div>
 
         <div className="flex justify-between space-x-4 mt-4">
           <button
@@ -123,9 +134,8 @@ const EditTopicModal = ({ isOpen, onClose, onSubmit, topic, existingTopics }) =>
           <button
             type="submit"
             disabled={!hasChanges}
-            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
-              hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
-            }`}
+            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
+              }`}
           >
             Guardar Cambios
           </button>
