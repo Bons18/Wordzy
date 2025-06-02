@@ -9,104 +9,12 @@ import EvaluationForm from "../components/EvaluationForm"
 import EvaluationDetailModal from "../components/EvaluationDetailModal"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
-// Datos iniciales de ejemplo
-const initialEvaluationsData = [
-  {
-    id: 1,
-    nombre: "Evaluación 1",
-    tematica: "grammar",
-    estado: "Activo",
-    tipoEvaluacion: "Examen",
-    descripcion: "This is an example of a general description",
-    preguntas: [
-      {
-        id: 101,
-        tipo: "seleccion",
-        texto: "This is an example of a general question",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 102,
-        tipo: "verdaderoFalso",
-        texto: "This is an example of a general question",
-        respuestaCorrecta: 1, // Falso
-        puntaje: 20,
-      },
-      {
-        id: 103,
-        tipo: "imagen",
-        texto: "This is an example of a general question",
-        imagen: "/placeholder.svg?height=200&width=200",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 104,
-        tipo: "audio",
-        texto: "This is an example of a general question",
-        audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        opciones: ["Opcion 1", "Opcion 2", "Opcion 3", "Opcion 4"],
-        respuestaCorrecta: 1,
-        puntaje: 20,
-      },
-      {
-        id: 105,
-        tipo: "completar",
-        completarTexto: "This [] an example of a general []",
-        palabrasCompletar: ["is", "question"],
-        puntaje: 10,
-      },
-    ],
-  },
-  {
-    id: 2,
-    nombre: "Evaluación 2",
-    tematica: "reading",
-    estado: "Inactivo",
-    tipoEvaluacion: "Examen",
-    descripcion: "Evaluación sobre historia antigua",
-    preguntas: [],
-  },
-  {
-    id: 3,
-    nombre: "Evaluación 3",
-    tematica: "listening",
-    estado: "Activo",
-    tipoEvaluacion: "Examen",
-    descripcion: "Evaluación sobre biología celular",
-    preguntas: [],
-  },
-  {
-    id: 4,
-    nombre: "Actividad 1",
-    tematica: "vocabulary",
-    estado: "Activo",
-    tipoEvaluacion: "Actividad",
-    descripcion: "Actividad práctica de geometría",
-    preguntas: [],
-  },
-  {
-    id: 5,
-    nombre: "Actividad 2",
-    tematica: "writing",
-    estado: "Inactivo",
-    tipoEvaluacion: "Actividad",
-    descripcion: "Actividad sobre la revolución industrial",
-    preguntas: [],
-  },
-  {
-    id: 6,
-    nombre: "Actividad 3",
-    tematica: "grammar",
-    estado: "Activo",
-    tipoEvaluacion: "Actividad",
-    descripcion: "Actividad sobre el método científico",
-    preguntas: [],
-  },
-]
+// Importar los hooks
+import useGetEvaluations from "../hooks/useGetEvaluations"
+import usePostEvaluation from "../hooks/usePostEvaluation"
+import usePutEvaluation from "../hooks/usePutEvaluation"
+import useDeleteEvaluation from "../hooks/useDeleteEvaluation"
+import { normalizeEvaluations } from "../services/evaluationService"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -136,7 +44,15 @@ const columns = [
 ]
 
 const Evaluations = () => {
-  const [evaluationsData, setEvaluationsData] = useState(initialEvaluationsData)
+  // Usar los hooks personalizados
+  const { evaluations: rawEvaluations, loading: fetchLoading, error: fetchError, refetch } = useGetEvaluations()
+  const { createEvaluation, loading: createLoading, error: createError } = usePostEvaluation()
+  const { updateEvaluation, loading: updateLoading, error: updateError } = usePutEvaluation()
+  const { deleteEvaluation, loading: deleteLoading, error: deleteError } = useDeleteEvaluation()
+
+  // Normalizar las evaluaciones para la UI (asegurar que tengan id)
+  const evaluationsData = normalizeEvaluations(rawEvaluations)
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -148,9 +64,24 @@ const Evaluations = () => {
   const [currentEvaluation, setCurrentEvaluation] = useState(null)
   const [evaluationToDelete, setEvaluationToDelete] = useState(null)
 
+  // Estado para controlar carga y errores en la UI
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
+
+  // Actualizar el estado de carga y error cuando cambien los hooks
+  useEffect(() => {
+    setIsLoading(fetchLoading || createLoading || updateLoading || deleteLoading)
+  }, [fetchLoading, createLoading, updateLoading, deleteLoading])
+
+  // Consolidar errores de los diferentes hooks
+  useEffect(() => {
+    const error = fetchError || createError || updateError || deleteError
+    setErrorMessage(error ? `Error: ${error}` : "")
+  }, [fetchError, createError, updateError, deleteError])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -184,41 +115,115 @@ const Evaluations = () => {
     setIsDetailModalOpen(true)
   }
 
-  const handleFormSubmit = (formData) => {
-    if (currentEvaluation) {
-      // Editar evaluación existente
-      setEvaluationsData((prev) =>
-        prev.map((item) => (item.id === currentEvaluation.id ? { ...formData, id: currentEvaluation.id } : item)),
-      )
-      setSuccessTitle("Evaluación Editada")
-      setSuccessMessage("La evaluación ha sido editada con éxito")
-    } else {
-      // Crear nueva evaluación
-      const newId = Math.max(...evaluationsData.map((item) => item.id)) + 1
-      setEvaluationsData((prev) => [
-        ...prev,
-        {
-          ...formData,
-          id: newId,
-          tema: formData.tematica, // Usar la temática seleccionada
-        },
-      ])
-      setSuccessTitle("Evaluación Creada")
-      setSuccessMessage("La evaluación ha sido creada con éxito")
-    }
+  const handleFormSubmit = async (formData) => {
+    try {
+      setIsLoading(true)
+      setErrorMessage("")
 
-    setIsFormOpen(false)
-    setIsSuccessModalOpen(true)
+      // Verificar si formData es una instancia de FormData
+      if (formData instanceof FormData) {
+        console.log("Recibido FormData válido")
+
+        // Si es una edición, añadir el ID
+        if (currentEvaluation) {
+          formData.append("id", currentEvaluation.id)
+          await updateEvaluation(currentEvaluation.id, formData)
+          setSuccessTitle("Evaluación Editada")
+          setSuccessMessage("La evaluación ha sido editada con éxito")
+        } else {
+          // Crear nueva evaluación
+          await createEvaluation(formData)
+          setSuccessTitle("Evaluación Creada")
+          setSuccessMessage("La evaluación ha sido creada con éxito")
+        }
+      } else {
+        // Si no es FormData, usar el enfoque anterior
+        console.log("Recibido objeto regular, convirtiendo a FormData")
+
+        // Crear un nuevo FormData
+        const data = new FormData()
+
+        // Añadir campos básicos
+        data.append("nombre", formData.nombre)
+        data.append("tematica", formData.tematica)
+        data.append("tipoEvaluacion", formData.tipoEvaluacion)
+        data.append("estado", formData.estado)
+        data.append("descripcion", formData.descripcion || "")
+
+        // Añadir material si existe
+        if (formData.material && formData.material instanceof File) {
+          data.append("material", formData.material)
+        }
+
+        // Procesar preguntas
+        const preguntasModificadas = [...formData.preguntas]
+
+        // Procesar archivos de preguntas
+        formData.preguntas.forEach((pregunta, index) => {
+          if (pregunta.tipo === "imagen" && pregunta.imagen instanceof File) {
+            const fileKey = `imagen_pregunta_${index}`
+            data.append(fileKey, pregunta.imagen)
+            preguntasModificadas[index].imagen = fileKey
+          }
+
+          if (pregunta.tipo === "audio" && pregunta.audio instanceof File) {
+            const fileKey = `audio_pregunta_${index}`
+            data.append(fileKey, pregunta.audio)
+            preguntasModificadas[index].audio = fileKey
+          }
+        })
+
+        // Añadir las preguntas modificadas
+        data.append("preguntas", JSON.stringify(preguntasModificadas))
+
+        // Ejecutar la operación correspondiente
+        if (currentEvaluation) {
+          data.append("id", currentEvaluation.id)
+          await updateEvaluation(currentEvaluation.id, data)
+          setSuccessTitle("Evaluación Editada")
+          setSuccessMessage("La evaluación ha sido editada con éxito")
+        } else {
+          await createEvaluation(data)
+          setSuccessTitle("Evaluación Creada")
+          setSuccessMessage("La evaluación ha sido creada con éxito")
+        }
+      }
+
+      // Refrescar la lista
+      refetch()
+
+      setIsFormOpen(false)
+      setIsSuccessModalOpen(true)
+    } catch (error) {
+      console.error("Error al procesar la evaluación:", error)
+      setErrorMessage(`Error: ${error.message || "Ocurrió un error al procesar la evaluación"}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (evaluationToDelete) {
-      setEvaluationsData((prev) => prev.filter((item) => item.id !== evaluationToDelete.id))
-      setIsDeleteModalOpen(false)
-      setSuccessTitle("Evaluación Eliminada")
-      setSuccessMessage("La evaluación ha sido eliminada con éxito")
-      setIsSuccessModalOpen(true)
-      setEvaluationToDelete(null)
+      try {
+        setIsLoading(true)
+        setErrorMessage("")
+
+        await deleteEvaluation(evaluationToDelete.id)
+
+        // Refrescar la lista
+        refetch()
+
+        setIsDeleteModalOpen(false)
+        setSuccessTitle("Evaluación Eliminada")
+        setSuccessMessage("La evaluación ha sido eliminada con éxito")
+        setIsSuccessModalOpen(true)
+        setEvaluationToDelete(null)
+      } catch (error) {
+        console.error("Error al eliminar la evaluación:", error)
+        setErrorMessage(`Error: ${error.message || "Ocurrió un error al eliminar la evaluación"}`)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -263,16 +268,28 @@ const Evaluations = () => {
       <div className="container mx-auto px-6">
         <h2 className="text-xl font-semibold mb-4">Lista de evaluaciones</h2>
 
-        <GenericTable
-          data={evaluationsData}
-          columns={columns}
-          onShow={handleShowEvaluation}
-          onEdit={handleEditEvaluation}
-          onDelete={handleDeleteEvaluation}
-          onAdd={handleAddEvaluation}
-          title="Listado de Evaluaciones"
-          showActions={{ show: true, edit: true, delete: true, add: true }}
-        />
+        {/* Mostrar error si existe */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center my-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            <span className="ml-2">Cargando...</span>
+          </div>
+        ) : (
+          <GenericTable
+            data={evaluationsData}
+            columns={columns}
+            onShow={handleShowEvaluation}
+            onEdit={handleEditEvaluation}
+            onDelete={handleDeleteEvaluation}
+            onAdd={handleAddEvaluation}
+            title="Listado de Evaluaciones"
+            showActions={{ show: true, edit: true, delete: true, add: true }}
+          />
+        )}
       </div>
 
       {/* Modal de formulario para crear/editar */}
