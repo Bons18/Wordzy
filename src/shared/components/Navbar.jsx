@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import NavItem from "./NavItem"
-import NavSubItem from "./NavSubItem"
-import logo from "../../assets/logo.png"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import NavItem from "./NavItem";
+import NavSubItem from "./NavSubItem";
+import logo from "../../assets/logo.png";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -21,21 +21,21 @@ import {
   TrendingUp,
   MessageSquare,
   Shield,
-} from "lucide-react"
+} from "lucide-react";
 
 const Navbar = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [openSections, setOpenSections] = useState({
     formacion: false,
     programacion: false,
     progreso: false,
     configuracion: false,
-  })
+  });
 
   // Add this new handler
   const handleLogoClick = () => {
-    navigate('/dashboard')
-  }
+    navigate("/dashboard");
+  };
 
   const toggleSection = (section) => {
     setOpenSections((prev) => {
@@ -46,26 +46,30 @@ const Navbar = () => {
         progreso: false,
         configuracion: false,
       };
-      
+
       // Toggle only the clicked section
       newState[section] = !prev[section];
-      
+
       return newState;
-    })
-  }
+    });
+  };
 
   const handleNavigation = (path) => {
-    navigate(path)
-  }
+    navigate(path);
+  };
 
   return (
     <div className="h-screen w-56 bg-[#1f384c] text-white flex flex-col flex-shrink-0 shadow-lg">
       {/* Update the logo div to be clickable */}
-      <div 
+      <div
         className="p-4 flex items-center shrink-0 cursor-pointer hover:bg-[#2a4a64] transition-colors"
         onClick={handleLogoClick}
       >
-        <img src={logo || "/placeholder.svg"} alt="Wordzy Logo" className="h-8 w-8 mr-2" />
+        <img
+          src={logo || "/placeholder.svg"}
+          alt="Wordzy Logo"
+          className="h-8 w-8 mr-2"
+        />
         <h1 className="text-xl font-bold font-['Poppins']">WORDZY</h1>
       </div>
 
@@ -73,7 +77,11 @@ const Navbar = () => {
       <div className="mt-4 text-sm flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#3a5d7a] scrollbar-track-[#1f384c] hover:scrollbar-thumb-[#4a6d8a] font-['Poppins'] font-medium">
         <p className="px-4 py-2 text-[#c8cbd9] text-xs">MENÚ</p>
 
-        <NavItem icon={<LayoutDashboard size={18} />} text="Dashboard" onClick={() => handleNavigation("/dashboard")} />
+        <NavItem
+          icon={<LayoutDashboard size={18} />}
+          text="Dashboard"
+          onClick={() => handleNavigation("/dashboard")}
+        />
 
         {/* Formación */}
         <div>
@@ -84,7 +92,12 @@ const Navbar = () => {
             isOpen={openSections.formacion}
             onClick={() => toggleSection("formacion")}
             chevron={
-              <ChevronDown size={16} className={`transition-transform ${openSections.formacion ? "rotate-180" : ""}`} />
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${
+                  openSections.formacion ? "rotate-180" : ""
+                }`}
+              />
             }
           />
 
@@ -125,7 +138,9 @@ const Navbar = () => {
             chevron={
               <ChevronDown
                 size={16}
-                className={`transition-transform ${openSections.programacion ? "rotate-180" : ""}`}
+                className={`transition-transform ${
+                  openSections.programacion ? "rotate-180" : ""
+                }`}
               />
             }
           />
@@ -150,7 +165,9 @@ const Navbar = () => {
               <NavSubItem
                 icon={<Calendar size={16} />}
                 text="Programación de Cursos"
-                onClick={() => handleNavigation("/programacion/programacionCursos")}
+                onClick={() =>
+                  handleNavigation("/programacion/programacionCursos")
+                }
               />
               <NavSubItem
                 icon={<Star size={16} />}
@@ -175,7 +192,12 @@ const Navbar = () => {
             isOpen={openSections.progreso}
             onClick={() => toggleSection("progreso")}
             chevron={
-              <ChevronDown size={16} className={`transition-transform ${openSections.progreso ? "rotate-180" : ""}`} />
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${
+                  openSections.progreso ? "rotate-180" : ""
+                }`}
+              />
             }
           />
 
@@ -199,9 +221,6 @@ const Navbar = () => {
             </div>
           )}
         </div>
-
-        <NavItem icon={<Users size={18} />} text="Usuarios" onClick={() => handleNavigation("/usuarios")} />
-
         {/* Configuración */}
         <div>
           <NavItem
@@ -213,7 +232,9 @@ const Navbar = () => {
             chevron={
               <ChevronDown
                 size={16}
-                className={`transition-transform ${openSections.configuracion ? "rotate-180" : ""}`}
+                className={`transition-transform ${
+                  openSections.configuracion ? "rotate-180" : ""
+                }`}
               />
             }
           />
@@ -230,8 +251,7 @@ const Navbar = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Navbar
-
+export default Navbar;

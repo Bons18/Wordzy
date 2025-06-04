@@ -14,7 +14,6 @@ import Badges from "./features/Badges/pages/Badges"
 import Badges2 from "./features/Badges/pages/Badges2";
 import Badges3 from "./features/Badges/pages/Badges3";
 import Ranking from "./features/Ranking/pages/Ranking"
-import UsersPage from "./features/Users/pages/UsersPage"
 import Dashboard from "./features/Dashboard/pages/Dashboard"
 import LoginPage from "./features/Auth/pages/LoginPage"
 import FilePage from "./features/ScheduledCourses/pages/FilePage"
@@ -135,11 +134,6 @@ const routes = [
   {
     path: "/progreso/retroalimentacion/detallesaprendiz",
     element: <StudentDetails />,
-  },
-  // Usuarios
-  {
-    path: "/usuarios",
-    element: <UsersPage />,
   },
   // Configuración
   {
