@@ -44,7 +44,7 @@ const Badges = () => {
           description:
             "¡El máximo reconocimiento! Otorgado al reunir 5,000 puntos. ¡Felicidades por ser un experto indiscutible!",
           color: "#ff5a87",
-          image: "/public/experto.png",
+          image: "/experto.png",
           startDate: "2023-01-01",
           endDate: "2023-12-31"
         },
@@ -54,7 +54,7 @@ const Badges = () => {
           points: 3000,
           description: "¡Excelente progreso! Has alcanzado 3,000 puntos. Representa un nivel avanzado de logros.",
           color: "#9747ff",
-          image: "/public/intermedia.png",
+          image: "/intermedia.png",
           startDate: "2023-01-01",
           endDate: "2023-12-31"
         },
@@ -64,7 +64,7 @@ const Badges = () => {
           points: 1000,
           description: "Se obtiene al alcanzar 1,000 puntos en tu progreso. ¡Es el primer paso para destacar!",
           color: "#ffcc33",
-          image: "/public/principiante.png",
+          image: "/principiante.png",
           startDate: "2023-01-01",
           endDate: "2023-12-31"
         },
