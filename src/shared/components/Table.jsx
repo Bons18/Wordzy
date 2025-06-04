@@ -144,7 +144,7 @@ const GenericTable = ({
                       {showActions.delete && (
                         <Tooltip text="Eliminar" position="top">
                           <button
-                            onClick={() => onDelete(item.id)}
+                            onClick={() => onDelete(item._id)}
                             className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
                             aria-label="Eliminar"
                           >

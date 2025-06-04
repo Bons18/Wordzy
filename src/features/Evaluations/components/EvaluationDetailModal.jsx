@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react"
 import { FiDownload, FiPlay, FiPause, FiVolume2, FiVolumeX } from "react-icons/fi"
 
+// URL base de la API (ajusta según tu configuración)
+const API_BASE_URL = "http://localhost:3000"
+
 const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
   const modalRef = useRef(null)
   const [audioPlaying, setAudioPlaying] = useState(null)
@@ -36,6 +39,23 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
       })
     }
   }, [isOpen, onClose])
+
+  // Función para convertir URLs relativas a absolutas
+  const getFullUrl = (url) => {
+    if (!url) return null
+
+    // Si ya es una URL completa o un objeto File, devolverla tal cual
+    if (url instanceof File || url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:")) {
+      return url
+    }
+
+    // Si es una ruta relativa, convertirla a URL completa
+    if (url.startsWith("/")) {
+      return `${API_BASE_URL}${url}`
+    } else {
+      return `${API_BASE_URL}/${url}`
+    }
+  }
 
   const handlePlayAudio = (id) => {
     const audio = audioRefs.current[id]
@@ -105,6 +125,20 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
         [id]: audio.muted,
       }))
     }
+  }
+
+  const handleDownload = (url, filename = "material") => {
+    if (!url) return
+
+    const fullUrl = getFullUrl(url)
+
+    // Crear un enlace temporal y simular clic
+    const link = document.createElement("a")
+    link.href = fullUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const renderCompletarEspacios = (pregunta) => {
@@ -186,11 +220,14 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                   </svg>
                   <span className="text-[14px]">
                     {typeof evaluation.material === "string"
-                      ? evaluation.material
+                      ? evaluation.material.split("/").pop() || "Material adjunto"
                       : evaluation.material.name || "Material adjunto"}
                   </span>
                 </div>
-                <button className="text-gray-600 hover:text-gray-800">
+                <button
+                  className="text-gray-600 hover:text-gray-800"
+                  onClick={() => handleDownload(evaluation.material, "material")}
+                >
                   <FiDownload size={20} />
                 </button>
               </div>
@@ -204,7 +241,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
             <div className="space-y-3">
               {evaluation.preguntas.map((pregunta, index) => (
-                <div key={pregunta.id} className="border border-gray-300 rounded-lg p-3">
+                <div key={pregunta.id || index} className="border border-gray-300 rounded-lg p-3">
                   {/* Título de la pregunta según su tipo */}
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="text-[14px] font-bold">
@@ -230,27 +267,16 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                     <div className="mb-4">
                       <p className="text-[14px] text-gray-500 mb-1">Imagen</p>
                       <div className="border border-gray-300 rounded-lg p-2 flex justify-center">
-                        {typeof pregunta.imagen === "string" ? (
-                          <img
-                            src={pregunta.imagen || "/placeholder.svg"}
-                            alt="Imagen de la pregunta"
-                            className="max-h-48 object-contain"
-                            onError={(e) => {
-                              e.target.onerror = null
-                              e.target.src = "/placeholder.svg?height=200&width=200"
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={URL.createObjectURL(pregunta.imagen) || "/placeholder.svg"}
-                            alt="Imagen de la pregunta"
-                            className="max-h-48 object-contain"
-                            onError={(e) => {
-                              e.target.onerror = null
-                              e.target.src = "/placeholder.svg?height=200&width=200"
-                            }}
-                          />
-                        )}
+                        <img
+                          src={getFullUrl(pregunta.imagen) || "/placeholder.svg"}
+                          alt="Imagen de la pregunta"
+                          className="max-h-48 object-contain"
+                          onError={(e) => {
+                            console.error("Error cargando imagen:", e)
+                            e.target.onerror = null
+                            e.target.src = "/placeholder.svg?height=200&width=200"
+                          }}
+                        />
                       </div>
                     </div>
                   )}
@@ -261,38 +287,38 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                       <p className="text-[14px] text-gray-500 mb-1">Audio</p>
                       <div className="border border-gray-300 rounded-lg p-2 flex items-center">
                         <button
-                          onClick={() => handlePlayAudio(pregunta.id)}
+                          onClick={() => handlePlayAudio(pregunta.id || index)}
                           className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 mr-2 flex-shrink-0"
                         >
-                          {audioPlaying === pregunta.id ? <FiPause size={18} /> : <FiPlay size={18} />}
+                          {audioPlaying === (pregunta.id || index) ? <FiPause size={18} /> : <FiPlay size={18} />}
                         </button>
 
                         <div
                           className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
-                          onClick={(e) => handleProgressClick(e, pregunta.id)}
+                          onClick={(e) => handleProgressClick(e, pregunta.id || index)}
                         >
                           <div
-                            className={`h-full bg-gray-400 ${audioPlaying === pregunta.id ? "transition-all duration-100" : ""}`}
-                            style={{ width: `${audioProgress[pregunta.id] || 0}%` }}
+                            className={`h-full bg-gray-400 ${audioPlaying === (pregunta.id || index) ? "transition-all duration-100" : ""}`}
+                            style={{ width: `${audioProgress[pregunta.id || index] || 0}%` }}
                           ></div>
                         </div>
 
                         <audio
                           ref={(el) => {
-                            if (el) audioRefs.current[pregunta.id] = el
+                            if (el) audioRefs.current[pregunta.id || index] = el
                           }}
-                          src={typeof pregunta.audio === "string" ? pregunta.audio : undefined}
-                          onEnded={() => handleAudioEnded(pregunta.id)}
+                          src={getFullUrl(pregunta.audio)}
+                          onEnded={() => handleAudioEnded(pregunta.id || index)}
                           className="hidden"
                         >
-                          {typeof pregunta.audio !== "string" && <source src={URL.createObjectURL(pregunta.audio)} />}
+                          Tu navegador no soporta el elemento de audio.
                         </audio>
 
                         <button
                           className="p-2 ml-2 flex-shrink-0 text-gray-600 hover:text-gray-800"
-                          onClick={(e) => toggleMute(e, pregunta.id)}
+                          onClick={(e) => toggleMute(e, pregunta.id || index)}
                         >
-                          {audioMuted[pregunta.id] ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
+                          {audioMuted[pregunta.id || index] ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
                         </button>
                       </div>
                     </div>

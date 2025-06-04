@@ -13,6 +13,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     estado: "Activo",
     descripcion: "",
     material: null,
+    materialName: "", // Añadir para mostrar el nombre del archivo existente
     preguntas: [],
   })
 
@@ -25,7 +26,9 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     respuestaCorrecta: 0,
     puntaje: 10,
     imagen: null,
+    imagenName: "", // Añadir para mostrar el nombre del archivo existente
     audio: null,
+    audioName: "", // Añadir para mostrar el nombre del archivo existente
     completarTexto: "",
     palabrasCompletar: ["", ""],
     opcionesRelleno: ["", "", ""],
@@ -36,14 +39,33 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
 
   useEffect(() => {
     if (evaluation) {
+      // Extraer nombres de archivo de las rutas
+      const extractFileName = (filePath) => {
+        if (!filePath) return ""
+        if (typeof filePath === "string") {
+          return filePath.split("/").pop() || filePath
+        }
+        return filePath.name || ""
+      }
+
       setFormData({
         nombre: evaluation.nombre || "",
-        tematica: evaluation.tematica || "", // Añadir esta línea
+        tematica: evaluation.tematica || "",
         tipoEvaluacion: evaluation.tipoEvaluacion || "Examen",
         estado: evaluation.estado || "Activo",
         descripcion: evaluation.descripcion || "",
         material: evaluation.material || null,
-        preguntas: evaluation.preguntas || [],
+        materialName: extractFileName(evaluation.material),
+        preguntas: evaluation.preguntas
+          ? evaluation.preguntas.map((pregunta) => {
+              // Para cada pregunta, extraer nombres de archivo si existen
+              return {
+                ...pregunta,
+                imagenName: pregunta.tipo === "imagen" ? extractFileName(pregunta.imagen) : "",
+                audioName: pregunta.tipo === "audio" ? extractFileName(pregunta.audio) : "",
+              }
+            })
+          : [],
       })
     }
   }, [evaluation])
@@ -77,6 +99,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       setFormData((prev) => ({
         ...prev,
         material: file,
+        materialName: file.name,
       }))
     }
   }
@@ -87,6 +110,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       setQuestionData((prev) => ({
         ...prev,
         imagen: file,
+        imagenName: file.name,
       }))
     }
   }
@@ -97,6 +121,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       setQuestionData((prev) => ({
         ...prev,
         audio: file,
+        audioName: file.name,
       }))
     }
   }
@@ -108,6 +133,9 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       ...questionToEdit,
       // Asegurarse de que las opciones de relleno existan
       opcionesRelleno: questionToEdit.opcionesRelleno || ["", "", ""],
+      // Mantener los nombres de archivo
+      imagenName: questionToEdit.imagenName || "",
+      audioName: questionToEdit.audioName || "",
     })
     setCurrentQuestionType(questionToEdit.tipo)
     setEditingQuestionIndex(index)
@@ -157,13 +185,15 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }
 
     // Validar que se haya seleccionado un archivo para preguntas con imagen
-    if (currentQuestionType === "imagen" && !questionData.imagen) {
+    // Para modo edición, permitir que imagen sea un string (URL existente) o un File
+    if (currentQuestionType === "imagen" && !questionData.imagen && !questionData.imagenName) {
       setValidationError("Debe seleccionar una imagen para este tipo de pregunta")
       return
     }
 
     // Validar que se haya seleccionado un archivo para preguntas con audio
-    if (currentQuestionType === "audio" && !questionData.audio) {
+    // Para modo edición, permitir que audio sea un string (URL existente) o un File
+    if (currentQuestionType === "audio" && !questionData.audio && !questionData.audioName) {
       setValidationError("Debe seleccionar un archivo de audio para este tipo de pregunta")
       return
     }
@@ -175,7 +205,13 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       // Actualizar pregunta existente
       setFormData((prev) => {
         const updatedPreguntas = [...prev.preguntas]
-        updatedPreguntas[editingQuestionIndex] = { ...questionData, id: prev.preguntas[editingQuestionIndex].id }
+        updatedPreguntas[editingQuestionIndex] = {
+          ...questionData,
+          id: prev.preguntas[editingQuestionIndex].id,
+          // Preservar URLs originales si no se seleccionó un nuevo archivo
+          imagen: questionData.imagen || (questionData.imagenName ? prev.preguntas[editingQuestionIndex].imagen : null),
+          audio: questionData.audio || (questionData.audioName ? prev.preguntas[editingQuestionIndex].audio : null),
+        }
         return {
           ...prev,
           preguntas: updatedPreguntas,
@@ -198,7 +234,9 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       respuestaCorrecta: 0,
       puntaje: 10,
       imagen: null,
+      imagenName: "",
       audio: null,
+      audioName: "",
       completarTexto: "",
       palabrasCompletar: ["", ""],
       opcionesRelleno: ["", "", ""],
@@ -277,15 +315,97 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (isPuntajeValid()) {
-      onSubmit(formData)
-    } else {
+
+    // Validar que el puntaje sea válido
+    if (!isPuntajeValid()) {
       // Si el puntaje no es válido, mostrar un mensaje o scroll hacia la advertencia
       const alertElement = document.getElementById("puntaje-alert")
       if (alertElement) {
         alertElement.scrollIntoView({ behavior: "smooth" })
       }
+      return
     }
+
+    // Crear un nuevo FormData para enviar los archivos
+    const data = new FormData()
+
+    // Añadir campos básicos
+    data.append("nombre", formData.nombre)
+    data.append("tematica", formData.tematica)
+    data.append("tipoEvaluacion", formData.tipoEvaluacion)
+    data.append("estado", formData.estado)
+    data.append("descripcion", formData.descripcion || "")
+
+    // Añadir el ID si estamos editando
+    if (evaluation && evaluation.id) {
+      data.append("id", evaluation.id)
+    }
+
+    // Añadir material si existe y es un File (nuevo archivo)
+    if (formData.material instanceof File) {
+      data.append("material", formData.material)
+      console.log("Añadiendo nuevo material:", formData.material.name)
+    } else if (formData.material && typeof formData.material === "string" && evaluation) {
+      // Si es una edición y el material es una URL existente, conservarla
+      data.append("materialUrl", formData.material)
+      console.log("Conservando material existente:", formData.material)
+    }
+
+    // Procesar preguntas para manejar archivos
+    const preguntasModificadas = JSON.parse(JSON.stringify(formData.preguntas))
+
+    // Procesar archivos de preguntas
+    formData.preguntas.forEach((pregunta, index) => {
+      // Limpiar propiedades auxiliares que no queremos enviar al servidor
+      delete preguntasModificadas[index].imagenName
+      delete preguntasModificadas[index].audioName
+
+      // Manejar preguntas con imágenes
+      if (pregunta.tipo === "imagen") {
+        if (pregunta.imagen instanceof File) {
+          // Si es un nuevo archivo, añadirlo al FormData
+          const fileKey = `imagen_pregunta_${index}`
+          data.append(fileKey, pregunta.imagen)
+          preguntasModificadas[index].imagen = fileKey
+          console.log(`Añadiendo nueva imagen para pregunta ${index}:`, pregunta.imagen.name)
+        } else if (typeof pregunta.imagen === "string" && pregunta.imagen) {
+          // Si es una URL existente, conservarla
+          preguntasModificadas[index].imagen = pregunta.imagen
+          console.log(`Conservando imagen existente para pregunta ${index}:`, pregunta.imagen)
+        }
+      }
+
+      // Manejar preguntas con audio
+      if (pregunta.tipo === "audio") {
+        if (pregunta.audio instanceof File) {
+          // Si es un nuevo archivo, añadirlo al FormData
+          const fileKey = `audio_pregunta_${index}`
+          data.append(fileKey, pregunta.audio)
+          preguntasModificadas[index].audio = fileKey
+          console.log(`Añadiendo nuevo audio para pregunta ${index}:`, pregunta.audio.name)
+        } else if (typeof pregunta.audio === "string" && pregunta.audio) {
+          // Si es una URL existente, conservarla
+          preguntasModificadas[index].audio = pregunta.audio
+          console.log(`Conservando audio existente para pregunta ${index}:`, pregunta.audio)
+        }
+      }
+    })
+
+    // Añadir las preguntas modificadas como JSON
+    data.append("preguntas", JSON.stringify(preguntasModificadas))
+
+    // Depuración - Mostrar todo lo que contiene el FormData
+    console.log("Contenido del FormData:")
+    for (const pair of data.entries()) {
+      if (pair[1] instanceof File) {
+        console.log(`${pair[0]}: File - ${pair[1].name} (${pair[1].size} bytes)`)
+      } else {
+        console.log(`${pair[0]}: ${pair[1]}`)
+      }
+    }
+
+    // Llamar a la función onSubmit con el FormData
+    onSubmit(data)
   }
 
   const handleCompletarTextoChange = (e) => {
@@ -430,7 +550,11 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
             <div className="flex items-center">
               <input type="file" id="material" onChange={handleFileChange} className="hidden" />
               <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                {formData.material ? formData.material.name : "Seleccionar archivo. Ningún archivo seleccionado"}
+                {formData.material instanceof File
+                  ? formData.material.name
+                  : formData.materialName
+                    ? formData.materialName
+                    : "Seleccionar archivo. Ningún archivo seleccionado"}
               </div>
               <label
                 htmlFor="material"
@@ -576,9 +700,11 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       className="hidden"
                     />
                     <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                      {questionData.imagen
+                      {questionData.imagen instanceof File
                         ? questionData.imagen.name
-                        : "Seleccionar archivo. Ningún archivo seleccionado"}
+                        : questionData.imagenName
+                          ? questionData.imagenName
+                          : "Seleccionar archivo. Ningún archivo seleccionado"}
                     </div>
                     <label
                       htmlFor="imagen"
@@ -792,9 +918,11 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                       className="hidden"
                     />
                     <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                      {questionData.audio
+                      {questionData.audio instanceof File
                         ? questionData.audio.name
-                        : "Seleccionar archivo. Ningún archivo seleccionado"}
+                        : questionData.audioName
+                          ? questionData.audioName
+                          : "Seleccionar archivo. Ningún archivo seleccionado"}
                     </div>
                     <label
                       htmlFor="audio"

@@ -1,28 +1,25 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import GenericTable from "../../../shared/components/Table";
 import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { formatDate } from "../../../shared/utils/dateFormatter";
+import { useDeleteRole } from "../hooks/useDeleteRole";
 
 const columns = [
-  { key: "id", label: "Id" },
-  { key: "nombre", label: "Nombre" },
-  { key: "descripcion", label: "Descripción" },
-  { key: "fechaCreacion", label: "Fecha de creación" },
+  { key: "name", label: "Nombre" },
+  { key: "description", label: "Descripción" },
+  { key: "creationDate", label: "Fecha de creación" },
   {
-    key: "estado",
+    key: "status",
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" 
-            ? "bg-green-100 text-green-800" 
-            : "bg-red-100 text-red-800"
-        }`}
-      >
-        {item.estado}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true
+          ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        {item.status ? "Activo" : "Inactivo"}
       </span>
     ),
   },
@@ -30,7 +27,9 @@ const columns = [
 
 const RolesPage = () => {
   const navigate = useNavigate();
-  const { roles, deleteRole } = useContext(RoleContext);
+  const { roles, refetch } = useContext(RoleContext);
+  const { deleteRole } = useDeleteRole();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -39,6 +38,17 @@ const RolesPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { logout } = useAuth();
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (roles.length === 0) {
+      refetch();
+    }
+  }, [roles]);
+
+  const formattedRoles = roles.map(role => ({
+    ...role,
+    creationDate: formatDate(role.creationDate),
+  }));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -77,6 +87,7 @@ const RolesPage = () => {
   const confirmDeleteRole = async () => {
     try {
       await deleteRole(itemToDelete);
+      await refetch();
       setSuccessMessage("Rol eliminado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
@@ -118,7 +129,7 @@ const RolesPage = () => {
 
       <div className="container mx-auto px-6">
         <GenericTable
-          data={roles}
+          data={formattedRoles}
           columns={columns}
           onAdd={handleAddRole}
           onEdit={handleEditRole}

@@ -1,5 +1,4 @@
-// src/features/topics/pages/TopicsPage.jsx
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import GenericTable from "../../../shared/components/Table";
 import TopicModal from "../components/TopicModal";
 import EditTopicModal from "../components/EditTopicModal";
@@ -7,62 +6,42 @@ import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-
-const topics = [
-  { id: 1, nombre: "Verbo to be", descripcion: "Explicación del verbo to be", estado: "Activo" },
-  { id: 2, nombre: "Artículos", descripcion: "Uso de artículos definidos e indefinidos", estado: "Inactivo" },
-  { id: 3, nombre: "Presente simple", descripcion: "Estructura y uso del presente simple", estado: "Activo" },
-  { id: 4, nombre: "Pronombres", descripcion: "Tipos y uso de pronombres en inglés", estado: "Inactivo" },
-  { id: 5, nombre: "Pasado simple", descripcion: "Estructura y uso del pasado simple", estado: "Activo" },
-  { id: 6, nombre: "Adjetivos", descripcion: "Uso y posición de adjetivos en oraciones", estado: "Inactivo" }
-];
+import { useGetTopics } from "../hooks/useGetTopics";
+import { usePostTopic } from "../hooks/usePostTopic";
+import { usePutTopic } from "../hooks/usePutTopic";
+import { useDeleteTopic } from "../hooks/useDeleteTopic";
 
 const columns = [
-  { key: "id", label: "Id" },
-  { key: "nombre", label: "Nombre" },
+  { key: "name", label: "Nombre" },
   {
-    key: "descripcion",
+    key: "description",
     label: "Descripción",
     render: (item) => (
       <span className="text-gray-600">
-        {item.descripcion || "Sin descripción"}
+        {item.description || "Sin descripción"}
       </span>
     )
   },
   {
-    key: "estado",
+    key: "status",
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo"
-          ? "bg-green-100 text-green-800"
-          : "bg-red-100 text-red-800"
-          }`}
-      >
-        {item.estado}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true
+          ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        {item.status ? "Activo" : "Inactivo"}
       </span>
     ),
   },
 ];
 
 const TopicsPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentTopic, setCurrentTopic] = useState(null);
-  const [topicsList, setTopicsList] = useState(topics);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-  const [pendingChanges, setPendingChanges] = useState(null);
-
-
+  // Cerrar sesión
+  const dropdownRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const dropdownRef = useRef(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -84,79 +63,104 @@ const TopicsPage = () => {
     logout();
     navigate("/login");
   };
+  ////////////////////////////////
 
+  //HOOKS
+  const { topics, loading, error, refetch } = useGetTopics();
+  const { postTopic } = usePostTopic();
+  const { putTopic } = usePutTopic()
+  const { deleteTopic } = useDeleteTopic()
+  // Estados
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState(null);
+
+
+
+  // Maneja la apertura del modal para agregar un nuevo tema
   const handleAddTopic = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmitTopic = (newTopic) => {
-    // Generar el nuevo ID y crear el tema (igual que antes)
-    const newId = topicsList.length + 1;
-    const newTema = { ...newTopic, id: newId, estado: "Activo" };
-
-    // Actualizar el estado (igual que antes)
-    setTopicsList([...topicsList, newTema]);
-
-    // Cerrar el modal de creación
-    setIsModalOpen(false);
-
-    // Mostrar confirmación de éxito
-    setSuccessMessage("Tema agregado exitosamente");
-    setShowSuccessModal(true);
+  // Maneja el envío del nuevo tema
+  const handleSubmitTopic = async (newTopic) => {
+    try {
+      await postTopic(newTopic);
+      setIsModalOpen(false);
+      await refetch(); // Refresca la lista de temas
+      setSuccessMessage("Tema agregado exitosamente");
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error("Error al agregar el tema:", error);
+      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
+      setShowSuccessModal(true);
+    }
   };
 
+  // Maneja la edición de un tema
   const handleEditTopic = (topic) => {
     setCurrentTopic(topic);
     setIsEditModalOpen(true);
   };
 
-  // Modifica handleUpdateTopic
-  const handleUpdateTopic = (updatedTopic) => {
+  // Maneja la actualización de un tema
+  const handleUpdateTopic = async (updatedTopic) => {
     setPendingChanges(updatedTopic);
     setShowSaveConfirm(true);
   };
 
-  // Agrega esta función para confirmar los cambios
-  const confirmSaveChanges = () => {
+  const confirmSaveChanges = async () => {
     try {
-      if (!currentTopic) {
+      if (!currentTopic || !pendingChanges) {
         throw new Error("No hay tema seleccionado para editar");
       }
 
-      setTopicsList(topicsList.map(topic =>
-        topic.id === currentTopic.id ? { ...topic, ...pendingChanges } : topic
-      ));
-      setIsEditModalOpen(false);
+      // Prepara los datos para la API
+      const topicToUpdate = {
+        name: pendingChanges.name,
+        description: pendingChanges.description,
+        status: pendingChanges.status // Ya es boolean
+      };
 
+      // Llama a la API para actualizar
+      await putTopic(currentTopic._id, topicToUpdate);
+
+      // Refresca la lista
+      await refetch();
+
+      // Cierra modales
+      setIsEditModalOpen(false);
+      setShowSaveConfirm(false);
+      setPendingChanges(null);
       setSuccessMessage("Tema actualizado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Error al actualizar el tema:", error);
       setSuccessMessage(error.message || "Ocurrió un error al actualizar el tema");
       setShowSuccessModal(true);
-    } finally {
-      setShowSaveConfirm(false);
-      setPendingChanges(null);
     }
   };
 
+  // Maneja la eliminación de un tema
   const handleDeleteTopic = (id) => {
     setItemToDelete(id);
     setShowDeleteConfirm(true);
   };
 
-  const confirmDeleteTopic = () => {
+  const confirmDeleteTopic = async () => {
     try {
-      // Eliminar de la lista local
-      const updatedTopics = topicsList.filter(t => t.id !== itemToDelete);
-      setTopicsList(updatedTopics);
-
-      // Mostrar mensaje de éxito
+      await deleteTopic(itemToDelete);
+      await refetch();
       setSuccessMessage("Tema eliminado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
-      console.error("Error al eliminar el tema:", error);
-      setSuccessMessage("Ocurrió un error al eliminar el tema");
+      setSuccessMessage(error.message || "Error al eliminar el tema");
       setShowSuccessModal(true);
     } finally {
       setShowDeleteConfirm(false);
@@ -193,75 +197,95 @@ const TopicsPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <div>
-          <GenericTable
-            data={topicsList}
-            columns={columns}
-            onAdd={handleAddTopic}
-            onEdit={handleEditTopic}
-            onDelete={handleDeleteTopic}
-          />
+        {/* Estado de carga */}
+        {loading ? (
+          <div className="text-center py-10 text-gray-500 text-lg">
+            Cargando temas...
+          </div>
+        ) : (
+          <>
+            {topics.length === 0 ? (
+              <div className="text-center py-10 text-gray-500 text-lg">
+                No hay temas registrados.
+                <div className="mt-4">
+                  <button
+                    onClick={handleAddTopic}
+                    className="px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors bg-green-500 hover:bg-green-600"
+                  >
+                    Registrar Tema
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <GenericTable
+                data={topics}
+                columns={columns}
+                onAdd={handleAddTopic}
+                onEdit={handleEditTopic}
+                onDelete={handleDeleteTopic}
+              />
+            )}
+          </>
+        )}
+        <TopicModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleSubmitTopic}
+          topic={currentTopic}
+          existingTopics={topics}
+        />
 
-          <TopicModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleSubmitTopic}
-            topic={currentTopic}
-            existingTopics={topicsList}
-          />
+        <EditTopicModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleUpdateTopic}
+          topic={currentTopic}
+          existingTopics={topics}
+        />
 
-          <EditTopicModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSubmit={handleUpdateTopic}
-            topic={currentTopic}
-            existingTopics={topicsList}
-          />
+        <ConfirmationModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={handleLogout}
+          title="Cerrar Sesión"
+          message="¿Está seguro de que desea cerrar la sesión actual?"
+          confirmText="Cerrar Sesión"
+        />
 
-          <ConfirmationModal
-            isOpen={showLogoutConfirm}
-            onClose={() => setShowLogoutConfirm(false)}
-            onConfirm={handleLogout}
-            title="Cerrar Sesión"
-            message="¿Está seguro de que desea cerrar la sesión actual?"
-            confirmText="Cerrar Sesión"
-          />
+        {/* Modal de confirmación para eliminar tema */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDeleteTopic}
+          title="Eliminar Tema"
+          message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          confirmColor="bg-[#f44144] hover:bg-red-600"
+        />
 
-          {/* Modal de confirmación para eliminar tema */}
-          <ConfirmationModal
-            isOpen={showDeleteConfirm}
-            onClose={() => setShowDeleteConfirm(false)}
-            onConfirm={confirmDeleteTopic}
-            title="Eliminar Tema"
-            message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
-            confirmText="Eliminar"
-            confirmColor="bg-[#f44144] hover:bg-red-600"
-          />
+        <ConfirmationModal
+          isOpen={showSaveConfirm}
+          onClose={() => {
+            setShowSaveConfirm(false);
+            setIsEditModalOpen(false);
+          }}
+          onConfirm={confirmSaveChanges}
+          title="Confirmar Cambios"
+          message="¿Estás seguro que deseas guardar los cambios del tema?"
+          confirmText="Guardar"
+          confirmColor="bg-green-500 hover:bg-green-600"
+        />
 
-          <ConfirmationModal
-            isOpen={showSaveConfirm}
-            onClose={() => {
-              setShowSaveConfirm(false);
-              setIsEditModalOpen(false);
-            }}
-            onConfirm={confirmSaveChanges}
-            title="Confirmar Cambios"
-            message="¿Estás seguro que deseas guardar los cambios del tema?"
-            confirmText="Guardar"
-            confirmColor="bg-green-500 hover:bg-green-600"
-          />
-
-          {/* Modal de éxito */}
-          <ConfirmationModal
-            isOpen={showSuccessModal}
-            onConfirm={() => setShowSuccessModal(false)}
-            title="Operación Exitosa"
-            message={successMessage}
-            confirmText="Aceptar"
-            confirmColor="bg-green-500 hover:bg-green-600"
-            showButtonCancel={false}
-          />
-        </div>
+        {/* Modal de éxito */}
+        <ConfirmationModal
+          isOpen={showSuccessModal}
+          onConfirm={() => setShowSuccessModal(false)}
+          title="Operación Exitosa"
+          message={successMessage}
+          confirmText="Aceptar"
+          confirmColor="bg-green-500 hover:bg-green-600"
+          showButtonCancel={false}
+        />
       </div>
     </div>
   );
