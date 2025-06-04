@@ -17,6 +17,8 @@ const Ranking = () => {
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
   const monthDropdownRef = useRef(null)
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false)
+  const yearDropdownRef = useRef(null)
 
   // Estado para la pestaña activa
   const [activeTab, setActiveTab] = useState("aprendices")
@@ -80,6 +82,9 @@ const Ranking = () => {
       }
       if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target)) {
         setIsMonthDropdownOpen(false)
+      }
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target)) {
+        setIsYearDropdownOpen(false)
       }
     }
 
@@ -731,6 +736,7 @@ const Ranking = () => {
   // Función para seleccionar un año
   const handleYearSelect = (year) => {
     setSelectedYear(year)
+    setIsYearDropdownOpen(false)
   }
 
   // Función para seleccionar un mes
@@ -742,6 +748,11 @@ const Ranking = () => {
   // Función para alternar el menú desplegable de meses
   const toggleMonthDropdown = () => {
     setIsMonthDropdownOpen(!isMonthDropdownOpen)
+  }
+
+  // Función para alternar el menú desplegable de años
+  const toggleYearDropdown = () => {
+    setIsYearDropdownOpen(!isYearDropdownOpen)
   }
 
   // Limpiar los filtros
@@ -897,20 +908,34 @@ const Ranking = () => {
 
           <div className="flex items-center">
             <span className="text-xs font-medium text-[#1f384c] mr-2">Año</span>
-            <div className="flex bg-gray-50 rounded-md border border-[#d6dade] p-0.5">
-              {[2023, 2024, 2025].map((year) => (
-                <button
-                  key={year}
-                  className={`px-3 py-1.5 text-xs rounded-md transition-all duration-200 ${
-                    selectedYear === year
-                      ? "bg-[#1f384c] text-white shadow-sm"
-                      : "bg-transparent text-[#1f384c] hover:bg-gray-100"
-                  }`}
-                  onClick={() => handleYearSelect(year)}
-                >
-                  {year}
-                </button>
-              ))}
+            <div className="relative" ref={yearDropdownRef}>
+              <button
+                className="flex items-center justify-between min-w-[80px] px-3 py-1.5 bg-white text-[#1f384c] text-xs rounded-md border border-[#d6dade] hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                onClick={toggleYearDropdown}
+              >
+                <span className="font-medium">{selectedYear}</span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 ml-2 transition-transform duration-200 ${isYearDropdownOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isYearDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-[100px] bg-white border border-[#d6dade] rounded-lg shadow-lg z-20 py-2">
+                  {[2023, 2024, 2025].map((year) => (
+                    <button
+                      key={year}
+                      className={`w-full text-left px-3 py-2 text-xs rounded-md transition-colors ${
+                        selectedYear === year
+                          ? "bg-blue-50 text-[#1f384c] font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                      onClick={() => handleYearSelect(year)}
+                    >
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
