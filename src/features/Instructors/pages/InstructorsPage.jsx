@@ -1,373 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, RefreshCw } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
 import FichaDetailModal from "./FichaDetailModal"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-const instructorsData = [
-  {
-    id: 1,
-    nombre: "Carlos",
-    apellido: "Gómez",
-    documento: "12345678",
-    tipoDocumento: "CC",
-    estado: "Activo",
-    telefono: "3102568799",
-    correo: "carlos.gomez@example.com",
-    fichas: [
-      {
-        id: 1,
-        numero: "2889927",
-        nivel: 3,
-        programa: "Desarrollo de Software",
-        fechaInicio: "23/01/2024",
-        fechaFin: "30/01/2025",
-        estudiantes: [
-          {
-            nombre: "Manolo",
-            apellido: "Bermudez",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Maria",
-            apellido: "Perez",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Cody",
-            apellido: "Fisher",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Esther",
-            apellido: "Howard",
-            documento: "704.555.0127",
-            tipoDocumento: "PEP",
-            estado: "En formación",
-          },
-          {
-            nombre: "Ronald",
-            apellido: "Richards",
-            documento: "704.555.0127",
-            tipoDocumento: "PPT",
-            estado: "En formación",
-          },
-        ],
-      },
-      {
-        id: 2,
-        numero: "2829397",
-        nivel: 2,
-        programa: "Diseño Gráfico",
-        fechaInicio: "15/02/2024",
-        fechaFin: "15/02/2025",
-        estudiantes: [
-          {
-            nombre: "Albert",
-            apellido: "Flores",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Marvin",
-            apellido: "McKinney",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "En formación",
-          },
-          {
-            nombre: "Leslie",
-            apellido: "Alexander",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-        ],
-      },
-      {
-        id: 3,
-        numero: "2978765",
-        nivel: 1,
-        programa: "Redes de Computadores",
-        fechaInicio: "10/03/2024",
-        fechaFin: "10/03/2025",
-        estudiantes: [
-          {
-            nombre: "Darlene",
-            apellido: "Robertson",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Jane",
-            apellido: "Cooper",
-            documento: "704.555.0127",
-            tipoDocumento: "PEP",
-            estado: "Condicionado",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    nombre: "Laura",
-    apellido: "Martínez",
-    documento: "87654321",
-    tipoDocumento: "PPT",
-    estado: "Inactivo",
-    telefono: "3156789012",
-    correo: "laura.martinez@example.com",
-    fichas: [
-      {
-        id: 4,
-        numero: "2889927",
-        nivel: 4,
-        programa: "Contabilidad",
-        fechaInicio: "05/01/2024",
-        fechaFin: "05/01/2025",
-        estudiantes: [
-          {
-            nombre: "Cameron",
-            apellido: "Williamson",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Brooklyn",
-            apellido: "Simmons",
-            documento: "704.555.0127",
-            tipoDocumento: "PPT",
-            estado: "En formación",
-          },
-        ],
-      },
-      {
-        id: 5,
-        numero: "2978765",
-        nivel: 5,
-        programa: "Administración de Empresas",
-        fechaInicio: "20/02/2024",
-        fechaFin: "20/02/2025",
-        estudiantes: [
-          {
-            nombre: "Savannah",
-            apellido: "Nguyen",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Ralph",
-            apellido: "Edwards",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Kristin",
-            apellido: "Watson",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    nombre: "Juan",
-    apellido: "Pérez",
-    documento: "11223344",
-    tipoDocumento: "PEP",
-    estado: "Activo",
-    telefono: "3209876543",
-    correo: "juan.perez@example.com",
-    fichas: [
-      {
-        id: 6,
-        numero: "2829397",
-        nivel: 6,
-        programa: "Mecánica Automotriz",
-        fechaInicio: "12/03/2024",
-        fechaFin: "12/03/2025",
-        estudiantes: [
-          {
-            nombre: "Wade",
-            apellido: "Warren",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Robert",
-            apellido: "Fox",
-            documento: "704.555.0127",
-            tipoDocumento: "PEP",
-            estado: "En formación",
-          },
-        ],
-      },
-      {
-        id: 7,
-        numero: "2978765",
-        nivel: 2,
-        programa: "Electrónica",
-        fechaInicio: "01/04/2024",
-        fechaFin: "01/04/2025",
-        estudiantes: [
-          { nombre: "Devon", apellido: "Lane", documento: "704.555.0127", tipoDocumento: "CC", estado: "En formación" },
-          {
-            nombre: "Darrell",
-            apellido: "Steward",
-            documento: "704.555.0127",
-            tipoDocumento: "PPT",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Courtney",
-            apellido: "Henry",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "En formación",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 4,
-    nombre: "Ana",
-    apellido: "López",
-    documento: "55667788",
-    tipoDocumento: "CC",
-    estado: "Activo",
-    telefono: "3112345678",
-    correo: "ana.lopez@example.com",
-    fichas: [
-      {
-        id: 8,
-        numero: "2889927",
-        nivel: 3,
-        programa: "Cocina Internacional",
-        fechaInicio: "15/01/2024",
-        fechaFin: "15/01/2025",
-        estudiantes: [
-          {
-            nombre: "Eleanor",
-            apellido: "Pena",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Theresa",
-            apellido: "Webb",
-            documento: "704.555.0127",
-            tipoDocumento: "PEP",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Kathryn",
-            apellido: "Murphy",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Bessie",
-            apellido: "Cooper",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "Condicionado",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 5,
-    nombre: "María",
-    apellido: "Gonzales",
-    documento: "2345447567",
-    tipoDocumento: "CC",
-    estado: "Activo",
-    telefono: "3102568799",
-    correo: "correo@correo.com",
-    fichas: [
-      {
-        id: 9,
-        numero: "2889927",
-        nivel: 1,
-        programa: "Desarrollo Web",
-        fechaInicio: "10/02/2024",
-        fechaFin: "10/02/2025",
-        estudiantes: [
-          {
-            nombre: "Jerome",
-            apellido: "Bell",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Dianne",
-            apellido: "Russell",
-            documento: "704.555.0127",
-            tipoDocumento: "PPT",
-            estado: "En formación",
-          },
-        ],
-      },
-      {
-        id: 10,
-        numero: "2829397",
-        nivel: 4,
-        programa: "Diseño UX/UI",
-        fechaInicio: "05/03/2024",
-        fechaFin: "05/03/2025",
-        estudiantes: [
-          {
-            nombre: "Annette",
-            apellido: "Black",
-            documento: "704.555.0127",
-            tipoDocumento: "CC",
-            estado: "En formación",
-          },
-          {
-            nombre: "Arlene",
-            apellido: "McCoy",
-            documento: "704.555.0127",
-            tipoDocumento: "PEP",
-            estado: "Condicionado",
-          },
-          {
-            nombre: "Jenny",
-            apellido: "Wilson",
-            documento: "704.555.0127",
-            tipoDocumento: "DNI",
-            estado: "En formación",
-          },
-        ],
-      },
-    ],
-  },
-]
+import useGetInstructors from "../hooks/useGetInstructors"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -396,9 +37,13 @@ const InstructorsPage = () => {
   const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
+
+  // Hook para API
+  const { instructors, loading, error, refetch } = useGetInstructors()
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -439,6 +84,26 @@ const InstructorsPage = () => {
     navigate("/login")
   }
 
+  const handleMassiveUpdate = () => {
+    // Función placeholder para actualización masiva
+    console.log("Actualización masiva de instructores - Funcionalidad pendiente")
+  }
+
+  // Mostrar estado de carga
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1f384c] mx-auto mb-4"></div>
+          <p className="text-[#1f384c] font-medium">Cargando instructores...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar error si existe
+  const displayError = error && !instructors.length ? error : null
+
   return (
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
@@ -468,12 +133,29 @@ const InstructorsPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
+        {/* Mostrar errores si los hay */}
+        {displayError && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Error: {displayError}</div>
+        )}
+
+        {/* Botón de Actualización Masiva */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={handleMassiveUpdate}
+            className="flex items-center gap-2 bg-[#1f384c] text-white px-4 py-2 rounded-lg hover:bg-[#2a4a5e] transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualización Masiva
+          </button>
+        </div>
+
         <GenericTable
-          data={instructorsData}
+          data={instructors}
           columns={columns}
           onShow={handleShowInstructor}
           title="LISTA DE INSTRUCTORES"
           showActions={{ show: true }}
+          tooltipText="Ver detalle del instructor"
         />
 
         {selectedInstructor && (

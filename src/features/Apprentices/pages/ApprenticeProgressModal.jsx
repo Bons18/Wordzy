@@ -86,4 +86,3 @@ const ApprenticeProgressModal = ({ isOpen, onClose, progressData }) => {
 }
 
 export default ApprenticeProgressModal
-

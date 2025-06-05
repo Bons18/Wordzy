@@ -114,4 +114,3 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 }
 
 export default ApprenticeDetailModal
-
