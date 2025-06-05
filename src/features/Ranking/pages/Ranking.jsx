@@ -1,46 +1,58 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Globe, FileText, Calendar, Search, X, SlidersHorizontal, Filter } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
-import { useNavigate } from "react-router-dom"
-import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import { useState, useRef, useEffect } from "react";
+import {
+  ChevronDown,
+  Globe,
+  FileText,
+  Calendar,
+  Search,
+  X,
+  SlidersHorizontal,
+  Filter,
+} from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 
 const Ranking = () => {
   // Estado para el año y mes seleccionados
-  const [selectedYear, setSelectedYear] = useState(2024)
-  const [selectedMonth, setSelectedMonth] = useState("Mayo")
-  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-  const dropdownRef = useRef(null)
-  const monthDropdownRef = useRef(null)
-  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false)
-  const yearDropdownRef = useRef(null)
+  const [selectedYear, setSelectedYear] = useState(2024);
+  const [selectedMonth, setSelectedMonth] = useState("Mayo");
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+  const monthDropdownRef = useRef(null);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const yearDropdownRef = useRef(null);
 
   // Estado para la pestaña activa
-  const [activeTab, setActiveTab] = useState("aprendices")
+  const [activeTab, setActiveTab] = useState("aprendices");
 
   // Estados para los filtros
-  const [selectedFicha, setSelectedFicha] = useState("")
-  const [selectedPrograma, setSelectedPrograma] = useState("")
-  const [showFichaDropdown, setShowFichaDropdown] = useState(false)
-  const [showProgramaDropdown, setShowProgramaDropdown] = useState(false)
+  const [selectedFicha, setSelectedFicha] = useState("");
+  const [selectedPrograma, setSelectedPrograma] = useState("");
+  const [showFichaDropdown, setShowFichaDropdown] = useState(false);
+  const [showProgramaDropdown, setShowProgramaDropdown] = useState(false);
 
   // Estado para almacenar las métricas
   const [metrics, setMetrics] = useState({
     aprendices: 0,
     fichas: 0,
     programas: 0,
-  })
+  });
 
   // Lista de fichas disponibles (simuladas)
-  const fichas = ["2889927-801", "2889927-802", "2889927-803", "2889927-804"]
+  const fichas = ["2889927-801", "2889927-802", "2889927-803", "2889927-804"];
 
   // Lista de programas disponibles
-  const programas = ["Análisis y desarrollo de software", "Técnico en programación"]
+  const programas = [
+    "Análisis y desarrollo de software",
+    "Técnico en programación",
+  ];
 
   // Lista de meses
   const months = [
@@ -56,7 +68,7 @@ const Ranking = () => {
     "Octubre",
     "Noviembre",
     "Diciembre",
-  ]
+  ];
 
   // Mapeo de nombres de meses a números
   const monthToNumber = {
@@ -72,35 +84,41 @@ const Ranking = () => {
     Octubre: 10,
     Noviembre: 11,
     Diciembre: 12,
-  }
+  };
 
   // Add click outside handler for user dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-      if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target)) {
-        setIsMonthDropdownOpen(false)
+      if (
+        monthDropdownRef.current &&
+        !monthDropdownRef.current.contains(event.target)
+      ) {
+        setIsMonthDropdownOpen(false);
       }
-      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target)) {
-        setIsYearDropdownOpen(false)
+      if (
+        yearDropdownRef.current &&
+        !yearDropdownRef.current.contains(event.target)
+      ) {
+        setIsYearDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+    logout();
+    navigate("/login");
+  };
 
   // Base de datos completa con información de año y mes
   const fullRankingData = {
@@ -116,7 +134,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 524, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 524,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -184,7 +208,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 645, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 645,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -192,8 +222,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 580, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 530, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 580,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 530,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 1500,
@@ -211,7 +253,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 624, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 624,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -279,7 +327,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 745, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 745,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -287,8 +341,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 680, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 630, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 680,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 630,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 1700,
@@ -309,7 +375,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 624, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 624,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -377,7 +449,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 745, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 745,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -385,8 +463,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 680, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 630, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 680,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 630,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 1800,
@@ -404,7 +494,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 724, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 724,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -472,7 +568,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 845, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 845,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -480,8 +582,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 780, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 830, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 780,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 830,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 2000,
@@ -502,7 +616,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 824, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 824,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -570,7 +690,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 945, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 945,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -578,8 +704,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 880, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 930, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 880,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 930,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 2200,
@@ -597,7 +735,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Brayan Restrepo", puntos: 924, ficha: "2889927-803", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Brayan Restrepo",
+            puntos: 924,
+            ficha: "2889927-803",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Zurangely Portillo",
@@ -665,7 +809,13 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 2, nombre: "Alejandro G.", puntos: 1045, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 2,
+            nombre: "Alejandro G.",
+            puntos: 1045,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
           {
             top: 3,
             nombre: "Santiago R.",
@@ -673,8 +823,20 @@ const Ranking = () => {
             ficha: "2889927-801",
             programa: "Análisis y desarrollo de software",
           },
-          { top: 4, nombre: "María López", puntos: 980, ficha: "2889927-802", programa: "Técnico en programación" },
-          { top: 5, nombre: "Beatriz H.", puntos: 1030, ficha: "2889927-804", programa: "Técnico en programación" },
+          {
+            top: 4,
+            nombre: "María López",
+            puntos: 980,
+            ficha: "2889927-802",
+            programa: "Técnico en programación",
+          },
+          {
+            top: 5,
+            nombre: "Beatriz H.",
+            puntos: 1030,
+            ficha: "2889927-804",
+            programa: "Técnico en programación",
+          },
         ],
         metrics: {
           aprendices: 2500,
@@ -683,83 +845,94 @@ const Ranking = () => {
         },
       },
     },
-  }
+  };
 
   // Obtener los datos actuales según el año y mes seleccionados
   const getCurrentData = () => {
-    const monthNumber = monthToNumber[selectedMonth]
+    const monthNumber = monthToNumber[selectedMonth];
 
     // Verificar si existen datos para el año y mes seleccionados
-    if (fullRankingData[selectedYear] && fullRankingData[selectedYear][monthNumber]) {
-      return fullRankingData[selectedYear][monthNumber]
+    if (
+      fullRankingData[selectedYear] &&
+      fullRankingData[selectedYear][monthNumber]
+    ) {
+      return fullRankingData[selectedYear][monthNumber];
     }
 
     // Si no hay datos para el mes específico, buscar el mes más cercano disponible
     if (fullRankingData[selectedYear]) {
-      const availableMonths = Object.keys(fullRankingData[selectedYear]).map(Number)
+      const availableMonths = Object.keys(fullRankingData[selectedYear]).map(
+        Number
+      );
       if (availableMonths.length > 0) {
         // Encontrar el mes más cercano
         const closestMonth = availableMonths.reduce((prev, curr) =>
-          Math.abs(curr - monthNumber) < Math.abs(prev - monthNumber) ? curr : prev,
-        )
-        return fullRankingData[selectedYear][closestMonth]
+          Math.abs(curr - monthNumber) < Math.abs(prev - monthNumber)
+            ? curr
+            : prev
+        );
+        return fullRankingData[selectedYear][closestMonth];
       }
     }
 
     // Si no hay datos para el año, usar los datos de 2024/Mayo como fallback
-    return fullRankingData[2024][5]
-  }
+    return fullRankingData[2024][5];
+  };
 
   // Actualizar los datos cuando cambia el año o mes
   useEffect(() => {
-    const currentData = getCurrentData()
-    setMetrics(currentData.metrics)
-  }, [selectedYear, selectedMonth])
+    const currentData = getCurrentData();
+    setMetrics(currentData.metrics);
+  }, [selectedYear, selectedMonth]);
 
   // Función para filtrar los datos según los filtros seleccionados
   const getFilteredData = (category) => {
-    const currentData = getCurrentData()
-    let filteredData = [...currentData[category]]
+    const currentData = getCurrentData();
+    let filteredData = [...currentData[category]];
 
     // Aplicar filtro según la categoría
     if (category === "ficha" && selectedFicha) {
-      filteredData = filteredData.filter((item) => item.ficha === selectedFicha)
+      filteredData = filteredData.filter(
+        (item) => item.ficha === selectedFicha
+      );
     } else if (category === "programa" && selectedPrograma) {
-      filteredData = filteredData.filter((item) => item.programa === selectedPrograma)
+      filteredData = filteredData.filter(
+        (item) => item.programa === selectedPrograma
+      );
       // Ordenar por puntos de mayor a menor cuando se filtra por programa
-      filteredData.sort((a, b) => b.puntos - a.puntos)
+      filteredData.sort((a, b) => b.puntos - a.puntos);
     }
 
-    return filteredData
-  }
+    return filteredData;
+  };
 
   // Función para seleccionar un año
   const handleYearSelect = (year) => {
-    setSelectedYear(year)
-    setIsYearDropdownOpen(false)
-  }
+    setSelectedYear(year);
+    setIsYearDropdownOpen(false);
+  };
 
   // Función para seleccionar un mes
   const handleMonthSelect = (month) => {
-    setSelectedMonth(month)
-    setIsMonthDropdownOpen(false)
-  }
+    setSelectedMonth(month);
+    setIsMonthDropdownOpen(false);
+  };
 
   // Función para alternar el menú desplegable de meses
   const toggleMonthDropdown = () => {
-    setIsMonthDropdownOpen(!isMonthDropdownOpen)
-  }
+    setIsMonthDropdownOpen(!isMonthDropdownOpen);
+  };
 
   // Función para alternar el menú desplegable de años
   const toggleYearDropdown = () => {
-    setIsYearDropdownOpen(!isYearDropdownOpen)
-  }
+    setIsYearDropdownOpen(!isYearDropdownOpen);
+  };
 
   // Limpiar los filtros
   const clearFilters = () => {
-    setSelectedFicha("")
-    setSelectedPrograma("")
-  }
+    setSelectedFicha("");
+    setSelectedPrograma("");
+  };
 
   // Renderizar el filtro contextual según la categoría
   const renderContextualFilter = (category) => {
@@ -773,7 +946,9 @@ const Ranking = () => {
           >
             <SlidersHorizontal className="w-3 h-3 text-gray-500" />
             {selectedFicha ? (
-              <span className="font-medium text-[#1f384c]">{selectedFicha}</span>
+              <span className="font-medium text-[#1f384c]">
+                {selectedFicha}
+              </span>
             ) : (
               <span className="text-gray-500">Seleccionar ficha</span>
             )}
@@ -786,11 +961,13 @@ const Ranking = () => {
                 <div
                   key={ficha}
                   className={`cursor-pointer select-none relative py-1.5 px-3 hover:bg-gray-100 ${
-                    selectedFicha === ficha ? "bg-blue-50 text-[#1f384c] font-medium" : ""
+                    selectedFicha === ficha
+                      ? "bg-blue-50 text-[#1f384c] font-medium"
+                      : ""
                   }`}
                   onClick={() => {
-                    setSelectedFicha(ficha)
-                    setShowFichaDropdown(false)
+                    setSelectedFicha(ficha);
+                    setShowFichaDropdown(false);
                   }}
                 >
                   {ficha}
@@ -800,8 +977,8 @@ const Ranking = () => {
                 <div
                   className="cursor-pointer select-none relative py-1.5 px-3 text-red-600 hover:bg-red-50 border-t"
                   onClick={() => {
-                    setSelectedFicha("")
-                    setShowFichaDropdown(false)
+                    setSelectedFicha("");
+                    setShowFichaDropdown(false);
                   }}
                 >
                   <X className="w-3 h-3 inline mr-1" />
@@ -811,7 +988,7 @@ const Ranking = () => {
             </div>
           )}
         </div>
-      )
+      );
     } else if (category === "programa") {
       return (
         <div className="relative">
@@ -822,7 +999,9 @@ const Ranking = () => {
           >
             <SlidersHorizontal className="w-3 h-3 text-gray-500" />
             {selectedPrograma ? (
-              <span className="font-medium text-[#1f384c] truncate max-w-[100px]">{selectedPrograma}</span>
+              <span className="font-medium text-[#1f384c] truncate max-w-[100px]">
+                {selectedPrograma}
+              </span>
             ) : (
               <span className="text-gray-500">Seleccionar programa</span>
             )}
@@ -835,11 +1014,13 @@ const Ranking = () => {
                 <div
                   key={programa}
                   className={`cursor-pointer select-none relative py-1.5 px-3 hover:bg-gray-100 ${
-                    selectedPrograma === programa ? "bg-blue-50 text-[#1f384c] font-medium" : ""
+                    selectedPrograma === programa
+                      ? "bg-blue-50 text-[#1f384c] font-medium"
+                      : ""
                   }`}
                   onClick={() => {
-                    setSelectedPrograma(programa)
-                    setShowProgramaDropdown(false)
+                    setSelectedPrograma(programa);
+                    setShowProgramaDropdown(false);
                   }}
                 >
                   {programa}
@@ -849,8 +1030,8 @@ const Ranking = () => {
                 <div
                   className="cursor-pointer select-none relative py-1.5 px-3 text-red-600 hover:bg-red-50 border-t"
                   onClick={() => {
-                    setSelectedPrograma("")
-                    setShowProgramaDropdown(false)
+                    setSelectedPrograma("");
+                    setShowProgramaDropdown(false);
                   }}
                 >
                   <X className="w-3 h-3 inline mr-1" />
@@ -860,11 +1041,11 @@ const Ranking = () => {
             </div>
           )}
         </div>
-      )
+      );
     }
 
-    return null
-  }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -878,7 +1059,11 @@ const Ranking = () => {
               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               <span>Administrador</span>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-5 h-5 transition-transform ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {isDropdownOpen && (
@@ -903,7 +1088,9 @@ const Ranking = () => {
             <div className="bg-gray-50 p-2 rounded-full mr-3">
               <Calendar className="h-5 w-5 text-[#1f384c]" />
             </div>
-            <span className="text-sm font-medium text-[#1f384c] mr-3">Filtros:</span>
+            <span className="text-sm font-medium text-[#1f384c] mr-3">
+              Filtros:
+            </span>
           </div>
 
           <div className="flex items-center">
@@ -915,7 +1102,9 @@ const Ranking = () => {
               >
                 <span className="font-medium">{selectedYear}</span>
                 <ChevronDown
-                  className={`h-3.5 w-3.5 ml-2 transition-transform duration-200 ${isYearDropdownOpen ? "rotate-180" : ""}`}
+                  className={`h-3.5 w-3.5 ml-2 transition-transform duration-200 ${
+                    isYearDropdownOpen ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
@@ -948,7 +1137,9 @@ const Ranking = () => {
               >
                 <span className="font-medium">{selectedMonth}</span>
                 <ChevronDown
-                  className={`h-3.5 w-3.5 ml-2 transition-transform duration-200 ${isMonthDropdownOpen ? "rotate-180" : ""}`}
+                  className={`h-3.5 w-3.5 ml-2 transition-transform duration-200 ${
+                    isMonthDropdownOpen ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 
@@ -989,8 +1180,12 @@ const Ranking = () => {
                 <Globe className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">Top Ranking de Aprendices</p>
-                <h2 className="text-3xl font-bold text-blue-500">{metrics.aprendices}</h2>
+                <p className="text-sm font-medium text-[#1f384c]">
+                  Top Ranking de Aprendices
+                </p>
+                <h2 className="text-3xl font-bold text-blue-500">
+                  {metrics.aprendices}
+                </h2>
               </div>
             </div>
           </div>
@@ -1002,8 +1197,12 @@ const Ranking = () => {
                 <FileText className="h-6 w-6 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">Total de Fichas</p>
-                <h2 className="text-3xl font-bold text-purple-500">{metrics.fichas}</h2>
+                <p className="text-sm font-medium text-[#1f384c]">
+                  Total de Fichas
+                </p>
+                <h2 className="text-3xl font-bold text-purple-500">
+                  {metrics.fichas}
+                </h2>
               </div>
             </div>
           </div>
@@ -1015,8 +1214,12 @@ const Ranking = () => {
                 <Calendar className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">Total de Programas</p>
-                <h2 className="text-3xl font-bold text-green-500">{metrics.programas}</h2>
+                <p className="text-sm font-medium text-[#1f384c]">
+                  Total de Programas
+                </p>
+                <h2 className="text-3xl font-bold text-green-500">
+                  {metrics.programas}
+                </h2>
               </div>
             </div>
           </div>
@@ -1056,16 +1259,24 @@ const Ranking = () => {
                     >
                       {section.icon}
                     </div>
-                    <h2 className="text-sm font-bold text-[#1f384c]">{section.title}</h2>
+                    <h2 className="text-sm font-bold text-[#1f384c]">
+                      {section.title}
+                    </h2>
                   </div>
                   {/* Filtro contextual */}
                   {renderContextualFilter(section.category)}
                 </div>
                 <div className="space-y-2">
                   <div className="grid grid-cols-3 pb-1 border-b border-[#d6dade]">
-                    <div className="text-xs font-medium text-[#1f384c]">Top</div>
-                    <div className="text-xs font-medium text-[#1f384c]">Nombre</div>
-                    <div className="text-xs font-medium text-[#1f384c] text-right">Puntos</div>
+                    <div className="text-xs font-medium text-[#1f384c]">
+                      Top
+                    </div>
+                    <div className="text-xs font-medium text-[#1f384c]">
+                      Nombre
+                    </div>
+                    <div className="text-xs font-medium text-[#1f384c] text-right">
+                      Puntos
+                    </div>
                   </div>
                   {getFilteredData(section.category).length > 0 ? (
                     getFilteredData(section.category)
@@ -1075,15 +1286,27 @@ const Ranking = () => {
                           key={item.top}
                           className="grid grid-cols-3 py-1 transition-colors duration-200 hover:bg-gray-50 rounded"
                         >
-                          <div className={`text-${section.color}-500 text-xs font-bold`}>{item.top}</div>
-                          <div className="text-[#1f384c] text-xs font-medium truncate">{item.nombre}</div>
-                          <div className={`text-${section.color}-500 text-xs font-bold text-right`}>{item.puntos}</div>
+                          <div
+                            className={`text-${section.color}-500 text-xs font-bold`}
+                          >
+                            {item.top}
+                          </div>
+                          <div className="text-[#1f384c] text-xs font-medium truncate">
+                            {item.nombre}
+                          </div>
+                          <div
+                            className={`text-${section.color}-500 text-xs font-bold text-right`}
+                          >
+                            {item.puntos}
+                          </div>
                         </div>
                       ))
                   ) : (
                     <div className="text-center py-4">
                       <Search className="w-5 h-5 text-gray-300 mx-auto mb-1" />
-                      <p className="text-gray-500 text-xs">No se encontraron resultados</p>
+                      <p className="text-gray-500 text-xs">
+                        No se encontraron resultados
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1104,7 +1327,7 @@ const Ranking = () => {
         confirmColor="bg-[#f44144] hover:bg-red-600"
       />
     </div>
-  )
-}
+  );
+};
 
-export default Ranking
+export default Ranking;

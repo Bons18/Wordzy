@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Search, Upload, X, ChevronDown } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import GenericTable from "../../../shared/components/Table"
+import { useState, useEffect } from "react";
+import { Search, Upload, X, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import GenericTable from "../../../shared/components/Table";
 
 const Badges = () => {
   // Hook de navegación de React Router
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Estado para controlar la vista (formulario o lista)
-  const [view, setView] = useState("list") // "list" o "form"
-  const [showEditConfirm, setShowEditConfirm] = useState(false)
-  
+  const [view, setView] = useState("list"); // "list" o "form"
+  const [showEditConfirm, setShowEditConfirm] = useState(false);
+
   // Estado para el modal de confirmación de eliminación
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [badgeToDelete, setBadgeToDelete] = useState(null)
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [badgeToDelete, setBadgeToDelete] = useState(null);
+
   // Estado para las alertas de éxito
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Estado para los campos del formulario
-  const [badgeName, setBadgeName] = useState("")
-  const [points, setPoints] = useState("")
-  const [description, setDescription] = useState("")
-  const [file, setFile] = useState(null)
-  const [filePreview, setFilePreview] = useState(null)
-  const [fileSize, setFileSize] = useState(null)
+  const [badgeName, setBadgeName] = useState("");
+  const [points, setPoints] = useState("");
+  const [description, setDescription] = useState("");
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [fileSize, setFileSize] = useState(null);
 
   // Estado para almacenar las insignias creadas
   const [badges, setBadges] = useState(() => {
     // Get badges from localStorage or use default badges if none exist
-    const savedBadges = JSON.parse(localStorage.getItem('badges') || '[]')
-    
+    const savedBadges = JSON.parse(localStorage.getItem("badges") || "[]");
+
     // If there are no saved badges, use the default ones
     if (savedBadges.length === 0) {
       return [
@@ -46,172 +46,162 @@ const Badges = () => {
           color: "#ff5a87",
           image: "/experto.png",
           startDate: "2023-01-01",
-          endDate: "2023-12-31"
+          endDate: "2023-12-31",
         },
         {
           id: 2,
           name: "Insignia Intermedio",
           points: 3000,
-          description: "¡Excelente progreso! Has alcanzado 3,000 puntos. Representa un nivel avanzado de logros.",
+          description:
+            "¡Excelente progreso! Has alcanzado 3,000 puntos. Representa un nivel avanzado de logros.",
           color: "#9747ff",
           image: "/intermedia.png",
           startDate: "2023-01-01",
-          endDate: "2023-12-31"
+          endDate: "2023-12-31",
         },
         {
           id: 3,
           name: "Insignia Principiante",
           points: 1000,
-          description: "Se obtiene al alcanzar 1,000 puntos en tu progreso. ¡Es el primer paso para destacar!",
+          description:
+            "Se obtiene al alcanzar 1,000 puntos en tu progreso. ¡Es el primer paso para destacar!",
           color: "#ffcc33",
           image: "/principiante.png",
           startDate: "2023-01-01",
-          endDate: "2023-12-31"
+          endDate: "2023-12-31",
         },
-      ]
+      ];
     }
-    
-    return savedBadges
-  })
+
+    return savedBadges;
+  });
 
   // Define columns for the table
   const columns = [
-    { 
-      key: 'name', 
-      label: 'Nombre', 
-      width: '15%',
-      render: (item) => (
-        <div className="py-2 pl-4">
-          {item.name}
-        </div>
-      )
+    {
+      key: "name",
+      label: "Nombre",
+      width: "15%",
+      render: (item) => <div className="py-2 pl-4">{item.name}</div>,
     },
-    { 
-      key: 'points', 
-      label: 'Puntos', 
-      width: '10%',
-      render: (item) => (
-        <div className="py-2 pl-4">
-          {item.points}
-        </div>
-      )
+    {
+      key: "points",
+      label: "Puntos",
+      width: "10%",
+      render: (item) => <div className="py-2 pl-4">{item.points}</div>,
     },
-    { 
-      key: 'startDate', 
-      label: 'Fecha inicio', 
-      width: '15%',
+    {
+      key: "startDate",
+      label: "Fecha inicio",
+      width: "15%",
       render: (item) => (
-        <div className="py-2 pl-4">
-          {item.startDate || 'N/A'}
-        </div>
-      )
+        <div className="py-2 pl-4">{item.startDate || "N/A"}</div>
+      ),
     },
-    { 
-      key: 'endDate', 
-      label: 'Fecha fin', 
-      width: '15%',
+    {
+      key: "endDate",
+      label: "Fecha fin",
+      width: "15%",
       render: (item) => (
-        <div className="py-2 pl-4">
-          {item.endDate || 'N/A'}
-        </div>
-      )
+        <div className="py-2 pl-4">{item.endDate || "N/A"}</div>
+      ),
     },
-    { 
-      key: 'description', 
-      label: 'Descripción', 
-      width: '25%',
+    {
+      key: "description",
+      label: "Descripción",
+      width: "25%",
       render: (item) => (
         <div className="py-2 pl-4 truncate max-w-xs" title={item.description}>
           {item.description}
         </div>
-      )
+      ),
     },
-    { 
-      key: 'image', 
-      label: 'Imagen', 
-      width: '20%',
-      align: 'center',
-      headerAlign: 'center',
+    {
+      key: "image",
+      label: "Imagen",
+      width: "20%",
+      align: "center",
+      headerAlign: "center",
       render: (item) => (
         <div className="flex justify-center items-center w-full py-2">
           <div className="w-10 h-10 flex items-center justify-center">
-            <img 
-              src={item.image} 
-              alt={item.name} 
-              className="max-w-full max-h-full object-contain" 
+            <img
+              src={item.image}
+              alt={item.name}
+              className="max-w-full max-h-full object-contain"
             />
           </div>
         </div>
-      )
+      ),
     },
-  ]
+  ];
 
   // Handle actions
   const handleShowBadge = (item) => {
-    console.log('Ver detalles de:', item)
+    console.log("Ver detalles de:", item);
     // You could implement a modal to show badge details
-  }
-  
+  };
+
   const handleEditBadge = (item) => {
-    console.log('Editar:', item)
+    console.log("Editar:", item);
     // Mostrar alerta de confirmación en lugar de redirección inmediata
-    setSuccessMessage("¿Está seguro de que desea editar esta insignia?")
-    setShowEditConfirm(true)
-  }
-  
+    setSuccessMessage("¿Está seguro de que desea editar esta insignia?");
+    setShowEditConfirm(true);
+  };
+
   const handleDeleteClick = (id) => {
-    setBadgeToDelete(id)
-    setShowDeleteConfirm(true)
-  }
-  
+    setBadgeToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
   const handleDeleteBadge = () => {
-    console.log('Eliminar ID:', badgeToDelete)
-    const updatedBadges = badges.filter(badge => badge.id !== badgeToDelete)
-    setBadges(updatedBadges)
-    localStorage.setItem('badges', JSON.stringify(updatedBadges))
-    setShowDeleteConfirm(false)
-    
+    console.log("Eliminar ID:", badgeToDelete);
+    const updatedBadges = badges.filter((badge) => badge.id !== badgeToDelete);
+    setBadges(updatedBadges);
+    localStorage.setItem("badges", JSON.stringify(updatedBadges));
+    setShowDeleteConfirm(false);
+
     // Mostrar alerta de éxito
-    setSuccessMessage("Insignia eliminada exitosamente")
-    setShowSuccessAlert(true)
-    
+    setSuccessMessage("Insignia eliminada exitosamente");
+    setShowSuccessAlert(true);
+
     // Ocultar la alerta después de 3 segundos
     setTimeout(() => {
-      setShowSuccessAlert(false)
-    }, 3000)
-  }
-  
+      setShowSuccessAlert(false);
+    }, 3000);
+  };
+
   const handleAddBadge = () => {
     // Navegar directamente sin mostrar alerta
-    navigate("/programacion/insigneas")
-  }
+    navigate("/programacion/insigneas");
+  };
 
   // Función para manejar el cambio de archivo
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0]
-      setFile(selectedFile)
-      setFilePreview(URL.createObjectURL(selectedFile))
-      setFileSize((selectedFile.size / (1024 * 1024)).toFixed(1))
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setFilePreview(URL.createObjectURL(selectedFile));
+      setFileSize((selectedFile.size / (1024 * 1024)).toFixed(1));
     }
-  }
+  };
 
   // Función para eliminar el archivo
   const removeFile = () => {
-    setFile(null)
-    setFilePreview(null)
-    setFileSize(null)
-  }
+    setFile(null);
+    setFilePreview(null);
+    setFileSize(null);
+  };
 
   // Función para generar un color aleatorio para la insignia
   const getRandomColor = () => {
-    const colors = ["#ff5a87", "#9747ff", "#ffcc33", "#33cc99", "#3399ff"]
-    return colors[Math.floor(Math.random() * colors.length)]
-  }
+    const colors = ["#ff5a87", "#9747ff", "#ffcc33", "#33cc99", "#3399ff"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
 
   // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Crear nueva insignia
     const newBadge = {
@@ -221,34 +211,34 @@ const Badges = () => {
       description: description,
       color: getRandomColor(),
       image: filePreview || "/placeholder.svg?height=60&width=60",
-    }
+    };
 
     // Añadir la nueva insignia al array
-    setBadges([...badges, newBadge])
+    setBadges([...badges, newBadge]);
 
     // Resetear el formulario
-    setBadgeName("")
-    setPoints("")
-    setDescription("")
-    setFile(null)
-    setFilePreview(null)
-    setFileSize(null)
+    setBadgeName("");
+    setPoints("");
+    setDescription("");
+    setFile(null);
+    setFilePreview(null);
+    setFileSize(null);
 
     // Cambiar a la vista de lista
-    setView("list")
-  }
+    setView("list");
+  };
 
   // Función para navegar a la página de edición de insignias
   const handleEditClick = () => {
-    setShowEditConfirm(true)
-  }
+    setShowEditConfirm(true);
+  };
 
   const handleEditConfirm = () => {
-    setShowEditConfirm(false)
-    
+    setShowEditConfirm(false);
+
     // Navegar directamente sin mostrar alerta
-    navigate("/programacion/insigneas3")
-  }
+    navigate("/programacion/insigneas3");
+  };
 
   // Renderizar la vista de lista de insignias
   const renderBadgesList = () => {
@@ -263,7 +253,7 @@ const Badges = () => {
 
         {/* Main Content */}
         <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
-          <GenericTable 
+          <GenericTable
             data={badges}
             columns={columns}
             onShow={handleShowBadge}
@@ -291,7 +281,7 @@ const Badges = () => {
                     ¿Está seguro de que desea editar las insignias?
                   </p>
                 </div>
-                
+
                 <div className="flex justify-center gap-3">
                   <button
                     className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
@@ -324,7 +314,7 @@ const Badges = () => {
                     ¿Está seguro de que desea eliminar esta insignia?
                   </p>
                 </div>
-                
+
                 <div className="flex justify-center gap-3">
                   <button
                     className="px-6 py-2.5 border border-[#d9d9d9] rounded-lg text-[#627b87] hover:bg-gray-50 font-medium transition-colors"
@@ -349,14 +339,25 @@ const Badges = () => {
           <div className="fixed bottom-4 right-4 bg-white rounded-xl shadow-xl w-full max-w-md mx-4 transform transition-all z-50">
             <div className="p-4 flex items-center">
               <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-3">
-                <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-green-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{successMessage}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {successMessage}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowSuccessAlert(false)}
                 className="ml-4 text-gray-400 hover:text-gray-500 focus:outline-none"
               >
@@ -366,12 +367,11 @@ const Badges = () => {
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   // Renderizar la vista correspondiente
-  return view === "list" ? renderBadgesList() : renderBadgeForm()
-}
+  return view === "list" ? renderBadgesList() : renderBadgeForm();
+};
 
-export default Badges
-
+export default Badges;
