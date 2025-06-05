@@ -10,16 +10,18 @@ export function useGetRoles() {
         setError(null);
         try {
             const response = await fetch("http://localhost:3000/api/role");
+            const data = await response.json();
 
             if (!response.ok) {
-                const data = await response.json();
                 throw new Error(data.message || "Error al obtener los roles");
             }
-
-            const data = await response.json();
-            setRoles(data);
+    
+            // Actualiza el estado y DEVUELVE los datos
+            setRoles(data || []);
+            return data; // Esto es importante
         } catch (err) {
-            setError(err.message);
+            setError(err.message || "Error desconocido al obtener los roles");
+            throw err; // Re-lanza el error para que pueda ser capturado fuera
         } finally {
             setLoading(false);
         }

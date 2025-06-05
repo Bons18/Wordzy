@@ -1,141 +1,269 @@
-import React, { useState, useEffect, useContext } from "react";
-import { formatDate } from "../../../shared/utils/dateFormatter";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
-
-// Función para normalizar texto (ignora tildes y mayúsculas)
-const normalizarTexto = (texto) =>
-  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+import { useState, useEffect, useContext } from "react"
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext"
+import { normalizeText } from "../../../shared/utils/normalizeText"
 
 const RoleForm = ({ onSubmit, onCancel, initialData }) => {
-  const { roles: existingRoles } = useContext(RoleContext);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [estado, setEstado] = useState("Activo");
-  const [permisos, setPermisos] = useState({
-    Dashboard: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Programas: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Fichas: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Instructores: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Aprendices: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Temas: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    MaterialDeApoyo: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Evaluaciones: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    ProgramacionDeCursos: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    EscalaDeValoracion: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Imagenes: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    CursosProgramados: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Ranking: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Retroalimentacion: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Usuarios: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-    Roles: { Visualizar: false, Crear: false, Editar: false, Eliminar: false },
-  });
+  const { roles: existingRoles, loading, error: contextError } = useContext(RoleContext)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [status, setStatus] = useState(true)
+  const [allPermissions, setAllPermissions] = useState({})
+  const [formError, setFormError] = useState("")
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false)
+  const [permissionsMap, setPermissionsMap] = useState({}) // Nuevo: mapa de ID -> módulo
 
-  const [errors, setErrors] = useState({});
-
+  // Validar si el nombre ya existe mientras se escribe
   useEffect(() => {
-    if (initialData) {
-      setNombre(initialData.nombre);
-      setDescripcion(initialData.descripcion);
-      setEstado(initialData.estado || "Activo");
-      setPermisos(initialData.permisos);
-      setHasChanges(false);
+    if (!name) return
+
+    const trimmed = name.trim()
+    const normalized = normalizeText(trimmed)
+
+    const exists = existingRoles.some(
+      (role) =>
+        normalizeText(role.name) === normalized &&
+        (!initialData || role._id !== initialData._id)
+    )
+
+    if (exists) {
+      setErrors(prev => ({ ...prev, name: "El nombre del rol ya existe" }))
+    } else if (errors.name === "El nombre del rol ya existe") {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors.name
+        return newErrors
+      })
     }
-  }, [initialData]);
+  }, [name, existingRoles, initialData])
 
-  const toggleEstado = () => {
-    setEstado(estado === "Activo" ? "Inactivo" : "Activo");
-    setHasChanges(true);
-  };
+  // Cargar todos los permisos disponibles
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/permission")
+        const data = await response.json()
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "nombre") setNombre(value);
-    if (name === "descripcion") setDescripcion(value);
-    setHasChanges(true);
-  };
+        const permisosObjeto = {}
+        const idToModuleMap = {} // Crear mapa de ID -> módulo
 
-  const handlePermisoChange = (modulo, accion) => {
-    setPermisos({
-      ...permisos,
-      [modulo]: {
-        ...permisos[modulo],
-        [accion]: !permisos[modulo][accion],
-      },
-    });
-    setHasChanges(true);
-  };
-
-  const validarFormulario = () => {
-    const errores = {};
-  
-    if (!nombre.trim()) {
-      errores.nombre = "El nombre del rol es obligatorio.";
-    } else {
-      const nombreNormalizado = normalizarTexto(nombre);
-      const nombresExistentes = existingRoles
-        .filter(role => !initialData || role.id !== initialData.id)
-        .map(role => normalizarTexto(role.nombre));
-  
-      if (nombresExistentes.includes(nombreNormalizado)) {
-        errores.nombre = "El nombre del rol ya existe.";
+        for (const permiso of data) {
+          permisosObjeto[permiso.module] = {
+            ver: false, // Inicializar en false
+            crear: false,
+            editar: false,
+            eliminar: false,
+            _id: permiso._id,
+          }
+          idToModuleMap[permiso._id] = permiso.module // Mapear ID -> módulo
+        }
+        setAllPermissions(permisosObjeto)
+        setPermissionsMap(idToModuleMap)
+        setPermissionsLoaded(true)
+      } catch (error) {
+        console.error("Error al obtener permisos:", error)
+        setFormError("No se pudieron cargar los permisos")
       }
     }
-  
-    const tieneAlMenosUnPermiso = Object.values(permisos).some(modulo =>
-      Object.values(modulo).some(valor => valor)
-    );
-  
-    if (!tieneAlMenosUnPermiso) {
-      errores.permisos = "Debe seleccionar al menos un permiso.";
+
+    fetchPermissions()
+  }, [])
+
+  // Aplicar datos iniciales cuando todo esté listo
+  useEffect(() => {
+    if (
+      initialData &&
+      permissionsLoaded &&
+      Object.keys(allPermissions).length > 0 &&
+      Object.keys(permissionsMap).length > 0
+    ) {
+
+      // Aplicar datos básicos
+      setName(initialData.name || "")
+      setDescription(initialData.description || "")
+      setStatus(initialData.status !== undefined ? initialData.status : true)
+
+      // Aplicar permisos específicos del rol
+      if (initialData.permissions && initialData.permissions.length > 0) {
+
+        // Crear una copia de los permisos base
+        const permisosActualizados = { ...allPermissions }
+
+        // Aplicar cada permiso del rol
+        initialData.permissions.forEach((perm, index) => {
+
+          let moduleName = null
+
+          // Caso 1: El permiso ya tiene el módulo (populate funcionó)
+          if (perm.module) {
+            moduleName = perm.module
+          }
+          // Caso 2: Solo tenemos el ID, buscar en el mapa
+          else if (perm.permission && permissionsMap[perm.permission]) {
+            moduleName = permissionsMap[perm.permission]
+          }
+          // Caso 3: Buscar por _id si existe
+          else if (perm._id && permissionsMap[perm._id]) {
+            moduleName = permissionsMap[perm._id]
+          }
+
+          if (moduleName && permisosActualizados[moduleName]) {
+            console.log(`Aplicando permiso para módulo ${moduleName}:`, {
+              ver: perm.canView,
+              crear: perm.canCreate,
+              editar: perm.canEdit,
+              eliminar: perm.canDelete,
+            })
+
+            permisosActualizados[moduleName] = {
+              ...permisosActualizados[moduleName],
+              ver: perm.canView || false,
+              crear: perm.canCreate || false,
+              editar: perm.canEdit || false,
+              eliminar: perm.canDelete || false,
+            }
+          } else {
+            console.warn(`No se pudo encontrar el módulo para el permiso:`, perm)
+            console.warn(`moduleName: ${moduleName}, existe en allPermissions: ${!!permisosActualizados[moduleName]}`)
+          }
+        })
+        setAllPermissions(permisosActualizados)
+      } else {
+        console.log("No hay permisos en initialData o está vacío")
+      }
+
+      setHasChanges(false)
     }
-  
-    setErrors(errores);
-    return Object.keys(errores).length === 0;
-  };
-  
+  }, [initialData, permissionsLoaded, permissionsMap])
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validarFormulario()) return;
+  const toggleStatus = () => {
+    setStatus((prevStatus) => !prevStatus)
+    setHasChanges(true)
+  }
 
-    const rolActualizado = {
-      ...initialData,
-      nombre,
-      descripcion,
-      estado,
-      permisos,
-      fechaCreacion: formatDate(new Date()),
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    if (name === "name") setName(value)
+    if (name === "description") setDescription(value)
+    setHasChanges(true)
+  }
 
-    console.log("Datos del rol a agregar:", rolActualizado);
-    onSubmit(rolActualizado);
-  };
+  const handlePermisoChange = (modulo, accion) => {
+    setAllPermissions((prev) => {
+      const newPermissions = {
+        ...prev,
+        [modulo]: {
+          ...prev[modulo],
+          [accion]: !prev[modulo][accion],
+        },
+      }
+      return newPermissions
+    })
+    setHasChanges(true)
+  }
+
+  const validarFormulario = () => {
+    const errores = {}
+    setFormError("")
+
+    if (!name.trim()) {
+      errores.name = "El nombre del rol es obligatorio."
+    } else if (name.length > 50) {
+      errores.name = "El nombre no puede exceder los 50 caracteres."
+    } else if (errors.name === "El nombre del rol ya existe") {
+      // Asegurarnos de mantener el error de duplicado si existe
+      errores.name = errors.name
+    }
+
+    // Verificar que al menos un permiso esté seleccionado
+    const tienePermisos = Object.values(allPermissions).some(
+      (modulo) => modulo.ver || modulo.crear || modulo.editar || modulo.eliminar,
+    )
+
+    if (!tienePermisos) {
+      errores.allPermissions = "Debe seleccionar al menos un permiso."
+    }
+
+    setErrors(errores)
+    return Object.keys(errores).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setFormError("")
+
+    if (!validarFormulario()) return
+
+    try {
+      // Estructura correcta para el backend
+      const permisosParaEnviar = []
+
+      Object.entries(allPermissions).forEach(([modulo, acciones]) => {
+        if (acciones.ver || acciones.crear || acciones.editar || acciones.eliminar) {
+          permisosParaEnviar.push({
+            permissionId: acciones._id,
+            canView: acciones.ver || false,
+            canCreate: acciones.crear || false,
+            canEdit: acciones.editar || false,
+            canDelete: acciones.eliminar || false,
+          })
+        }
+      })
+
+      const nuevoRol = {
+        name,
+        description: description || "",
+        status,
+        permissions: permisosParaEnviar,
+      }
+      onSubmit(nuevoRol)
+    } catch (error) {
+      console.error("Error al preparar el rol:", error)
+      setFormError(error.message || "Error al preparar el rol")
+    }
+  }
+
+  // Mostrar loading mientras se cargan los permisos
+  if (!permissionsLoaded) {
+    return (
+      <div className="p-1">
+        <h2 className="text-xl font-bold text-[#1f384c] mb-4">{initialData ? "EDITAR ROL" : "AÑADIR ROL"}</h2>
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-500">Cargando permisos...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="p-1">
       <h2 className="text-xl font-bold text-[#1f384c] mb-4">{initialData ? "EDITAR ROL" : "AÑADIR ROL"}</h2>
 
+      {formError && <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{formError}</div>}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            name="nombre"
-            value={nombre}
+            name="name"
+            value={name}
             onChange={handleChange}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             required
           />
-          {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
           <input
             type="text"
-            name="descripcion"
-            value={descripcion}
+            name="description"
+            value={description}
             onChange={handleChange}
             className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -146,13 +274,9 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
             <div className="flex items-center">
               <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={estado === "Activo"}
-                  onChange={toggleEstado}
-                  className="sr-only peer"
-                />
+                <input type="checkbox" checked={status} onChange={toggleStatus} className="sr-only peer" />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
+                <span className="ml-2 text-sm font-medium text-gray-700">{status ? "Activo" : "Inactivo"}</span>
               </label>
             </div>
           </div>
@@ -160,13 +284,17 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
       </div>
 
       <div className="mb-4">
-        {errors.permisos && <p className="text-red-500 text-xs mb-2">{errors.permisos}</p>}
+        {errors.allPermissions && <p className="text-red-500 text-xs mb-2">{errors.allPermissions}</p>}
         <div className="overflow-x-auto text-sm">
           <table className="w-full bg-white border border-gray-200">
             <thead>
               <tr className="bg-[#1F384C] text-white">
-                <th colSpan="1" className="px-2 py-2 font-medium text-center">Permisos</th>
-                <th colSpan="4" className="px-2 py-2 font-medium text-center">Privilegios</th>
+                <th colSpan="1" className="px-2 py-2 font-medium text-center">
+                  Permisos
+                </th>
+                <th colSpan="4" className="px-2 py-2 font-medium text-center">
+                  Privilegios
+                </th>
               </tr>
               <tr>
                 <th className="px-2 py-1 border border-gray-200">Módulos</th>
@@ -177,36 +305,39 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
               </tr>
             </thead>
             <tbody>
-              {Object.keys(permisos).map((modulo) => (
-                <tr key={modulo} className="hover:bg-gray-50 even:bg-gray-50">
-                  <td className="px-2 py-1 border border-gray-200 font-medium text-gray-700 whitespace-nowrap">
-                    {modulo
-                      .replace(/([A-Z])/g, ' $1')
-                      .replace(/([a-z])([0-9])/g, '$1 $2')
-                      .trim()}
+              {Object.entries(allPermissions).map(([modulo, acciones]) => (
+                <tr key={acciones._id || modulo}>
+                  <td className="px-2 py-1 border border-gray-200">
+                    {modulo}
                   </td>
-                  {Object.keys(permisos[modulo]).map((accion) => (
-                    <td key={accion} className="px-2 py-1 border border-gray-200 text-center">
-                      <label className="inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={permisos[modulo][accion]}
-                          onChange={() => handlePermisoChange(modulo, accion)}
-                          className="hidden"
-                        />
-                        <span className={`relative w-4 h-4 border-2 rounded-[5px] flex items-center justify-center transition-all ${permisos[modulo][accion]
-                            ? 'border-[#1F384C] bg-[#1F384C]'
-                            : 'border-gray-400 hover:border-gray-500'
-                          }`}>
-                          {permisos[modulo][accion] && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </span>
-                      </label>
-                    </td>
-                  ))}
+                  <td className="px-2 py-1 border border-gray-200 text-center">
+                    <input
+                      type="checkbox"
+                      checked={acciones.ver || false}
+                      onChange={() => handlePermisoChange(modulo, "ver")}
+                    />
+                  </td>
+                  <td className="px-2 py-1 border border-gray-200 text-center">
+                    <input
+                      type="checkbox"
+                      checked={acciones.crear || false}
+                      onChange={() => handlePermisoChange(modulo, "crear")}
+                    />
+                  </td>
+                  <td className="px-2 py-1 border border-gray-200 text-center">
+                    <input
+                      type="checkbox"
+                      checked={acciones.editar || false}
+                      onChange={() => handlePermisoChange(modulo, "editar")}
+                    />
+                  </td>
+                  <td className="px-2 py-1 border border-gray-200 text-center">
+                    <input
+                      type="checkbox"
+                      checked={acciones.eliminar || false}
+                      onChange={() => handlePermisoChange(modulo, "eliminar")}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -224,18 +355,17 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
         </button>
         <button
           type="submit"
-          disabled={!hasChanges}
-          className={`px-3 py-1.5 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 ${
-            hasChanges 
-              ? "bg-green-500 hover:bg-green-600 focus:ring-blue-500" 
-              : "bg-gray-400 cursor-not-allowed"
-          }`}
+          disabled={!hasChanges || loading || errors.name === "El nombre del rol ya existe"}
+          className={`px-3 py-1.5 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 ${hasChanges && !loading && errors.name !== "El nombre del rol ya existe"
+            ? "bg-green-500 hover:bg-green-600 focus:ring-blue-500"
+            : "bg-gray-400 cursor-not-allowed"
+            }`}
         >
-          {initialData ? "Guardar Cambios" : "Añadir Rol"}
+          {loading ? "Guardando..." : initialData ? "Guardar Cambios" : "Añadir Rol"}
         </button>
       </div>
     </form>
-  );
-};
+  )
+}
 
-export default RoleForm;
+export default RoleForm

@@ -1,56 +1,74 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
-import { useAuth } from "../../auth/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import RoleForm from "../components/RoleForm";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
-import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+"use client"
+
+import { useContext, useState, useEffect, useRef } from "react"
+import { ChevronDown } from "lucide-react"
+import { useAuth } from "../../auth/hooks/useAuth"
+import { useNavigate } from "react-router-dom"
+import RoleForm from "../components/RoleForm"
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 const RegistrarRolPage = () => {
-  const navigate = useNavigate();
-  const { addRole } = useContext(RoleContext);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const { logout } = useAuth();
-  const dropdownRef = useRef(null);
+  const navigate = useNavigate()
+  const { addRole } = useContext(RoleContext)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false) // Nuevo estado
+  const { logout } = useAuth()
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+        setIsDropdownOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false);
-    setShowLogoutConfirm(true);
-  };
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+    logout()
+    navigate("/login")
+  }
 
   const handleFormSubmit = async (nuevoRol) => {
+    // Prevenir doble submit
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+
     try {
-      await addRole(nuevoRol);
-      setSuccessMessage("Rol creado exitosamente");
-      setShowSuccessModal(true);
+      await addRole(nuevoRol)
+      setSuccessMessage("Rol creado exitosamente")
+      setShowSuccessModal(true)
     } catch (error) {
-      setSuccessMessage("Error al crear el rol: " + error.message);
-      setShowSuccessModal(true);
+      console.error("Error al crear el rol:", error)
+      setSuccessMessage("Error al crear el rol: " + error.message)
+      setShowSuccessModal(true)
+    } finally {
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleCancel = () => {
-    navigate("/configuracion/roles");
-  };
+    navigate("/configuracion/roles")
+  }
+
+  const handleSuccessModalConfirm = () => {
+    setShowSuccessModal(false)
+    if (successMessage.includes("exitosamente")) {
+      navigate("/configuracion/roles")
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -102,18 +120,17 @@ const RegistrarRolPage = () => {
       {/* Modal de éxito/error al crear rol */}
       <ConfirmationModal
         isOpen={showSuccessModal}
-        onConfirm={() => {
-          setShowSuccessModal(false);
-          navigate("/configuracion/roles");
-        }}
+        onConfirm={handleSuccessModalConfirm}
         title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
         message={successMessage}
         confirmText="Aceptar"
-        confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
+        confirmColor={
+          successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"
+        }
         showButtonCancel={false}
       />
     </div>
-  );
-};
+  )
+}
 
-export default RegistrarRolPage;
+export default RegistrarRolPage

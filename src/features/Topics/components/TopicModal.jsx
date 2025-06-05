@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import Modal from "../../../shared/components/Modal"
 import { normalizeText } from "../../../shared/utils/normalizeText"
 
-const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
+const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] }) => {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [hasChanges, setHasChanges] = useState(false)
@@ -41,12 +41,6 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
       description: description.trim(),
       status: true,
     })
-
-    // Limpiar el formulario
-    setName("")
-    setDescription("")
-    setHasChanges(false)
-    onClose()
   }
 
   const handleCancel = () => {
@@ -83,7 +77,6 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
     }
   }, [name, existingTopics])
 
-
   return (
     <Modal isOpen={isOpen} onClose={handleCancel}>
       <h1 className="text-xl font-bold text-[#1f384c]">AÑADIR TEMA</h1>
@@ -96,8 +89,9 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
             type="text"
             value={name}
             onChange={handleInputChange(setName)}
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              }`}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
+              error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            }`}
             required
           />
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -121,11 +115,14 @@ const TopicModal = ({ isOpen, onClose, onSubmit, existingTopics = [] }) => {
           </button>
           <button
             type="submit"
-            disabled={!hasChanges}
-            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${hasChanges ? "bg-green-500 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"
-              }`}
+            disabled={!hasChanges || loading}
+            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
+              hasChanges && !loading
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
-            Añadir Tema
+            {loading ? "Guardando..." : "Añadir Tema"}
           </button>
         </div>
       </form>

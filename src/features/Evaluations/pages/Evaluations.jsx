@@ -266,8 +266,6 @@ const Evaluations = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <h2 className="text-xl font-semibold mb-4">Lista de evaluaciones</h2>
-
         {/* Mostrar error si existe */}
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
