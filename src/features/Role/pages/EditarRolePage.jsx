@@ -1,82 +1,105 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
-import { useAuth } from "../../auth/hooks/useAuth";
-import { useNavigate, useParams } from "react-router-dom";
-import RoleForm from "../components/RoleForm";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
-import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { useContext, useState, useEffect, useRef } from "react"
+import { ChevronDown } from "lucide-react"
+import { useAuth } from "../../auth/hooks/useAuth"
+import { useNavigate, useParams } from "react-router-dom"
+import RoleForm from "../components/RoleForm"
+import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 const EditRolePage = () => {
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const { roles, updateRole } = useContext(RoleContext);
-  const [rol, setRol] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-  const [pendingChanges, setPendingChanges] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const { logout } = useAuth();
-  const dropdownRef = useRef(null);
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const { roles, updateRole } = useContext(RoleContext)
+  const [rol, setRol] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false)
+  const [pendingChanges, setPendingChanges] = useState(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { logout } = useAuth()
+  const dropdownRef = useRef(null)
 
   // Buscar el rol a editar
   useEffect(() => {
-    const foundRol = roles.find(r => r.id === parseInt(id));
+    // Buscar por _id (string) en lugar de id (number)
+    const foundRol = roles.find((r) => r._id === id || r.id === Number.parseInt(id))
+
     if (foundRol) {
-      setRol(foundRol);
+      setRol(foundRol)
     } else {
-      navigate("/configuracion/roles");
+      navigate("/configuracion/roles")
     }
-    setLoading(false);
-  }, [id, roles, navigate]);
+    setLoading(false)
+  }, [id, roles, navigate])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+        setIsDropdownOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false);
-    setShowLogoutConfirm(true);
-  };
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+    logout()
+    navigate("/login")
+  }
 
   const handleFormSubmit = (rolActualizado) => {
-    setPendingChanges(rolActualizado);
-    setShowSaveConfirm(true);
-  };
+    // Agregar el ID del rol a los datos
+    const rolConId = {
+      ...rolActualizado,
+      _id: rol._id || rol.id,
+    }
+
+    setPendingChanges(rolConId)
+    setShowSaveConfirm(true)
+  }
 
   const confirmSaveChanges = async () => {
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+
     try {
-      await updateRole(pendingChanges);
-      setSuccessMessage("Rol actualizado exitosamente");
-      setShowSuccessModal(true);
-      setShowSaveConfirm(false);
+      await updateRole(pendingChanges)
+      setSuccessMessage("Rol actualizado exitosamente")
+      setShowSuccessModal(true)
+      setShowSaveConfirm(false)
     } catch (error) {
-      setSuccessMessage("Error al actualizar el rol: " + error.message);
-      setShowSuccessModal(true);
-      setShowSaveConfirm(false);
+      console.error("Error al actualizar el rol:", error)
+      setSuccessMessage("Error al actualizar el rol: " + error.message)
+      setShowSuccessModal(true)
+      setShowSaveConfirm(false)
+    } finally {
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleCancel = () => {
-    navigate("/configuracion/roles");
-  };
+    navigate("/configuracion/roles")
+  }
+
+  const handleSuccessModalConfirm = () => {
+    setShowSuccessModal(false)
+    if (successMessage.includes("exitosamente")) {
+      navigate("/configuracion/roles")
+    }
+  }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
   }
 
   if (!rol) {
@@ -84,7 +107,7 @@ const EditRolePage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <p>Rol no encontrado</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -118,16 +141,12 @@ const EditRolePage = () => {
       <div className="container mx-auto px-6">
         <div className="min-h-screen">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-10xl mx-auto">
-            <RoleForm 
-              onSubmit={handleFormSubmit} 
-              onCancel={handleCancel} 
-              initialData={rol} 
-            />
+            <RoleForm onSubmit={handleFormSubmit} onCancel={handleCancel} initialData={rol} />
           </div>
         </div>
       </div>
 
-      {/* Modal de confirmación para cerrar sesión */}
+      {/* Modales... */}
       <ConfirmationModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
@@ -138,32 +157,30 @@ const EditRolePage = () => {
         confirmColor="bg-[#f44144] hover:bg-red-600"
       />
 
-      {/* Modal de confirmación para guardar cambios */}
       <ConfirmationModal
         isOpen={showSaveConfirm}
         onClose={() => setShowSaveConfirm(false)}
         onConfirm={confirmSaveChanges}
         title="Confirmar Cambios"
         message="¿Estás seguro que deseas guardar los cambios del rol?"
-        confirmText="Guardar"
+        confirmText={isSubmitting ? "Guardando..." : "Guardar"}
         confirmColor="bg-green-600 hover:bg-green-700"
+        disabled={isSubmitting}
       />
 
-      {/* Modal de éxito/error */}
       <ConfirmationModal
         isOpen={showSuccessModal}
-        onConfirm={() => {
-          setShowSuccessModal(false);
-          navigate("/configuracion/roles");
-        }}
+        onConfirm={handleSuccessModalConfirm}
         title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
         message={successMessage}
         confirmText="Aceptar"
-        confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
+        confirmColor={
+          successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"
+        }
         showButtonCancel={false}
       />
     </div>
-  );
-};
+  )
+}
 
-export default EditRolePage;
+export default EditRolePage

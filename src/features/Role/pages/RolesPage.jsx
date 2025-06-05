@@ -1,16 +1,24 @@
-import { useContext, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import GenericTable from "../../../shared/components/Table";
-import { RoleContext } from "../../../shared/contexts/RoleContext/RoleContext";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
 import { formatDate } from "../../../shared/utils/dateFormatter";
 import { useDeleteRole } from "../hooks/useDeleteRole";
+import { useGetRoles } from "../hooks/useGetRoles";
 
 const columns = [
   { key: "name", label: "Nombre" },
-  { key: "description", label: "Descripción" },
+  {
+    key: "description",
+    label: "Descripción",
+    render: (item) => (
+      <span className="text-gray-600">
+        {item.description || "Sin descripción"}
+      </span>
+    )
+  },
   { key: "creationDate", label: "Fecha de creación" },
   {
     key: "status",
@@ -27,9 +35,12 @@ const columns = [
 
 const RolesPage = () => {
   const navigate = useNavigate();
-  const { roles, refetch } = useContext(RoleContext);
-  const { deleteRole } = useDeleteRole();
+  const { roles, loading: fetchLoading, error: fetchError, refetch } = useGetRoles();
+  const { deleteRole, loading: deleteLoading, error: deleteError } = useDeleteRole();
 
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -39,11 +50,16 @@ const RolesPage = () => {
   const { logout } = useAuth();
   const dropdownRef = useRef(null);
 
+  // Actualizar el estado de carga y error cuando cambien los hooks
   useEffect(() => {
-    if (roles.length === 0) {
-      refetch();
-    }
-  }, [roles]);
+    setIsLoading(fetchLoading || deleteLoading)
+  }, [fetchLoading, deleteLoading])
+
+  // Consolidar errores de los diferentes hooks
+  useEffect(() => {
+    const error = fetchError || deleteError
+    setErrorMessage(error ? `Error: ${error}` : "")
+  }, [fetchError, deleteError])
 
   const formattedRoles = roles.map(role => ({
     ...role,
@@ -76,8 +92,10 @@ const RolesPage = () => {
   };
 
   const handleEditRole = (role) => {
-    navigate(`/configuracion/roles/editar/${role.id}`);
-  };
+    // Usar _id en lugar de id para la navegación
+    const roleId = role._id || role.id
+    navigate(`/configuracion/roles/editar/${roleId}`)
+  }
 
   const handleDeleteRole = (id) => {
     setItemToDelete(id);
@@ -86,14 +104,18 @@ const RolesPage = () => {
 
   const confirmDeleteRole = async () => {
     try {
+      setIsDeleting(true);
       await deleteRole(itemToDelete);
-      await refetch();
+      // Espera a que refetch termine Y devuelva los datos
+      const updatedRoles = await refetch();
+      console.log("Roles actualizados:", updatedRoles); // Verificación
       setSuccessMessage("Rol eliminado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {
       setSuccessMessage(error.message || "Ocurrió un error al eliminar el rol");
       setShowSuccessModal(true);
     } finally {
+      setIsDeleting(false);
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     }
@@ -128,48 +150,61 @@ const RolesPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <GenericTable
-          data={formattedRoles}
-          columns={columns}
-          onAdd={handleAddRole}
-          onEdit={handleEditRole}
-          onDelete={handleDeleteRole}
-          showActions={{ show: false, edit: true, delete: true, add: true }}
+        {/* Mostrar error si existe */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center my-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            <span className="ml-2">Cargando...</span>
+          </div>
+        ) : (
+          <GenericTable
+            data={formattedRoles}
+            columns={columns}
+            onAdd={handleAddRole}
+            onEdit={handleEditRole}
+            onDelete={handleDeleteRole}
+            showActions={{ show: false, edit: true, delete: true, add: true }}
+          />
+        )}
+
+        {/* Modal de confirmación para cerrar sesión */}
+        <ConfirmationModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={handleLogout}
+          title="Cerrar Sesión"
+          message="¿Está seguro de que desea cerrar la sesión actual?"
+          confirmText="Cerrar Sesión"
+          confirmColor="bg-[#f44144] hover:bg-red-600"
+        />
+
+        {/* Modal de confirmación para eliminar rol */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={confirmDeleteRole}
+          title="Eliminar Rol"
+          message="¿Está seguro que desea eliminar este rol? Esta acción no se puede deshacer."
+          confirmText={isDeleting ? "Eliminando..." : "Eliminar"}
+          confirmColor="bg-[#f44144] hover:bg-red-600"
+          isLoading={isDeleting}
+        />
+
+        {/* Modal de éxito/error */}
+        <ConfirmationModal
+          isOpen={showSuccessModal}
+          onConfirm={() => setShowSuccessModal(false)}
+          title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
+          message={successMessage}
+          confirmText="Aceptar"
+          confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
+          showButtonCancel={false}
         />
       </div>
-
-      {/* Modal de confirmación para cerrar sesión */}
-      <ConfirmationModal
-        isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
-        onConfirm={handleLogout}
-        title="Cerrar Sesión"
-        message="¿Está seguro de que desea cerrar la sesión actual?"
-        confirmText="Cerrar Sesión"
-        confirmColor="bg-[#f44144] hover:bg-red-600"
-      />
-
-      {/* Modal de confirmación para eliminar rol */}
-      <ConfirmationModal
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDeleteRole}
-        title="Eliminar Rol"
-        message="¿Está seguro que desea eliminar este rol? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        confirmColor="bg-[#f44144] hover:bg-red-600"
-      />
-
-      {/* Modal de éxito/error */}
-      <ConfirmationModal
-        isOpen={showSuccessModal}
-        onConfirm={() => setShowSuccessModal(false)}
-        title={successMessage.includes("exitosamente") ? "Operación Exitosa" : "Error"}
-        message={successMessage}
-        confirmText="Aceptar"
-        confirmColor={successMessage.includes("exitosamente") ? "bg-green-500 hover:bg-green-600" : "bg-[#f44144] hover:bg-red-600"}
-        showButtonCancel={false}
-      />
     </div>
   );
 };

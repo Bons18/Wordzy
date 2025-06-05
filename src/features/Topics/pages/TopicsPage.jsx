@@ -66,10 +66,10 @@ const TopicsPage = () => {
   ////////////////////////////////
 
   //HOOKS
-  const { topics, loading, error, refetch } = useGetTopics();
-  const { postTopic } = usePostTopic();
-  const { putTopic } = usePutTopic()
-  const { deleteTopic } = useDeleteTopic()
+  const { topics, loading: fetchLoading, error: fetchError, refetch } = useGetTopics();
+  const { postTopic, loading: createLoading, error: createError } = usePostTopic();
+  const { putTopic, loading: updateLoading, error: updateError } = usePutTopic()
+  const { deleteTopic, loading: deleteLoading, error: deleteError } = useDeleteTopic()
   // Estados
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -80,8 +80,21 @@ const TopicsPage = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
+  // Actualizar el estado de carga y error cuando cambien los hooks
+  useEffect(() => {
+    setIsLoading(fetchLoading || createLoading || updateLoading || deleteLoading)
+  }, [fetchLoading, createLoading, updateLoading, deleteLoading])
 
+  // Consolidar errores de los diferentes hooks
+  useEffect(() => {
+    const error = fetchError || createError || updateError || deleteError
+    setErrorMessage(error ? `Error: ${error}` : "")
+  }, [fetchError, createError, updateError, deleteError])
 
   // Maneja la apertura del modal para agregar un nuevo tema
   const handleAddTopic = () => {
@@ -91,6 +104,7 @@ const TopicsPage = () => {
   // Maneja el envío del nuevo tema
   const handleSubmitTopic = async (newTopic) => {
     try {
+      setIsSaving(true);
       await postTopic(newTopic);
       setIsModalOpen(false);
       await refetch(); // Refresca la lista de temas
@@ -100,6 +114,8 @@ const TopicsPage = () => {
       console.error("Error al agregar el tema:", error);
       setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
       setShowSuccessModal(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -117,6 +133,7 @@ const TopicsPage = () => {
 
   const confirmSaveChanges = async () => {
     try {
+      setIsSaving(true);
       if (!currentTopic || !pendingChanges) {
         throw new Error("No hay tema seleccionado para editar");
       }
@@ -144,6 +161,8 @@ const TopicsPage = () => {
       console.error("Error al actualizar el tema:", error);
       setSuccessMessage(error.message || "Ocurrió un error al actualizar el tema");
       setShowSuccessModal(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -155,6 +174,7 @@ const TopicsPage = () => {
 
   const confirmDeleteTopic = async () => {
     try {
+      setIsDeleting(true);
       await deleteTopic(itemToDelete);
       await refetch();
       setSuccessMessage("Tema eliminado exitosamente");
@@ -163,6 +183,7 @@ const TopicsPage = () => {
       setSuccessMessage(error.message || "Error al eliminar el tema");
       setShowSuccessModal(true);
     } finally {
+      setIsDeleting(false);
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     }
@@ -197,42 +218,33 @@ const TopicsPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        {/* Estado de carga */}
-        {loading ? (
-          <div className="text-center py-10 text-gray-500 text-lg">
-            Cargando temas...
+        {/* Mostrar error si existe */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center my-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            <span className="ml-2">Cargando...</span>
           </div>
         ) : (
-          <>
-            {topics.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 text-lg">
-                No hay temas registrados.
-                <div className="mt-4">
-                  <button
-                    onClick={handleAddTopic}
-                    className="px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors bg-green-500 hover:bg-green-600"
-                  >
-                    Registrar Tema
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <GenericTable
-                data={topics}
-                columns={columns}
-                onAdd={handleAddTopic}
-                onEdit={handleEditTopic}
-                onDelete={handleDeleteTopic}
-              />
-            )}
-          </>
+          <GenericTable
+            data={topics}
+            columns={columns}
+            onAdd={handleAddTopic}
+            onEdit={handleEditTopic}
+            onDelete={handleDeleteTopic}
+          />
         )}
+
         <TopicModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmitTopic}
           topic={currentTopic}
           existingTopics={topics}
+          loading={isLoading}
         />
 
         <EditTopicModal
@@ -259,8 +271,9 @@ const TopicsPage = () => {
           onConfirm={confirmDeleteTopic}
           title="Eliminar Tema"
           message="¿Está seguro que desea eliminar este tema? Esta acción no se puede deshacer."
-          confirmText="Eliminar"
+          confirmText={isDeleting ? "Eliminando..." : "Eliminar"}
           confirmColor="bg-[#f44144] hover:bg-red-600"
+          isLoading={isDeleting}
         />
 
         <ConfirmationModal
@@ -272,8 +285,9 @@ const TopicsPage = () => {
           onConfirm={confirmSaveChanges}
           title="Confirmar Cambios"
           message="¿Estás seguro que deseas guardar los cambios del tema?"
-          confirmText="Guardar"
+          confirmText={isSaving ? "Guardando..." : "Guardar"}
           confirmColor="bg-green-500 hover:bg-green-600"
+          isLoading={isSaving}
         />
 
         {/* Modal de éxito */}
