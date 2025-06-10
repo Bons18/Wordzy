@@ -1,2066 +1,3 @@
-
-
-// // // "use client"
-
-// // // import { useState, useEffect, useRef } from "react"
-
-// // // import {
-// // //   ChevronDown,
-// // //   AlignCenter,
-// // //   AlignJustify,
-// // //   AlignLeft,
-// // //   AlignRight,
-// // //   Bold,
-// // //   Image,
-// // //   Italic,
-// // //   Link,
-// // //   List,
-// // //   ListOrdered,
-// // //   Maximize2,
-// // //   Underline,
-// // // } from "lucide-react"
-// // // import { useNavigate } from "react-router-dom"
-// // // import GenericTable from "../../../shared/components/Table"
-// // // import { useAuth } from "../../auth/hooks/useAuth"
-// // // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-// // // import { topics } from "../../Topics/pages/TopicsPage"
-
-// // // // Datos de ejemplo
-// // // const materialesData = [
-// // //   { id: 1, nombre: "Gramática y vocabulario", tema: "Verb to be", estado: "Activo" },
-// // //   { id: 2, nombre: "Comprensión auditiva y pronunciación", tema: "verb tobe", estado: "Inactivo" },
-// // //   { id: 3, nombre: "Lectura y escritura", tema: "Verb to be", estado: "Activo" },
-// // //   { id: 4, nombre: "Recursos interactivos", tema: "Pronunciador", estado: "Activo" },
-// // //   { id: 5, nombre: "Cultura y contexto", tema: "Pronunciador", estado: "Activo" },
-// // //   { id: 6, nombre: "The crown", tema: "Verb to be", estado: "Inactivo" },
-// // //   { id: 7, nombre: "Postal", tema: "Pronunciador", estado: "Inactivo" },
-// // // ]
-
-// // // const columns = [
-// // //   { key: "nombre", label: "Nombre" },
-// // //   { key: "tema", label: "Tema" },
-// // //   {
-// // //     key: "estado",
-// // //     label: "Estado",
-// // //     render: (item) => (
-// // //       <span
-// // //         className={`px-2 py-1 rounded-full text-xs font-medium ${
-// // //           item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-// // //         }`}
-// // //       >
-// // //         {item.estado}
-// // //       </span>
-// // //     ),
-// // //   },
-// // // ]
-
-// // // export default function SupportMaterials() {
-// // //   const [showAddModal, setShowAddModal] = useState(false)
-// // //   const [showEditModal, setShowEditModal] = useState(false)
-// // //   const [showDetailModal, setShowDetailModal] = useState(false)
-// // //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// // //   const [selectedMaterial, setSelectedMaterial] = useState(null)
-// // //   const [itemToDelete, setItemToDelete] = useState(null)
-// // //   const [successMessage, setSuccessMessage] = useState("")
-// // //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// // //   const [materials, setMaterials] = useState([...materialesData])
-// // //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// // //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-
-// // //   const { logout } = useAuth()
-// // //   const navigate = useNavigate()
-// // //   const dropdownRef = useRef(null)
-
-// // //   // Referencias para los editores
-// // //   const addEditorRef = useRef(null)
-// // //   const editEditorRef = useRef(null)
-
-// // //   useEffect(() => {
-// // //     const handleClickOutside = (event) => {
-// // //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// // //         setIsDropdownOpen(false)
-// // //       }
-// // //     }
-
-// // //     document.addEventListener("mousedown", handleClickOutside)
-// // //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// // //   }, [])
-
-// // //   const handleLogoutClick = () => {
-// // //     setIsDropdownOpen(false)
-// // //     setShowLogoutConfirm(true)
-// // //   }
-
-// // //   const handleLogout = () => {
-// // //     logout()
-// // //     navigate("/login")
-// // //   }
-
-// // //   const handleAdd = () => {
-// // //     setShowAddModal(true)
-// // //   }
-
-// // //   const handleEdit = (material) => {
-// // //     setSelectedMaterial(material)
-// // //     setShowEditModal(true)
-// // //   }
-
-// // //   const handleView = (material) => {
-// // //     setSelectedMaterial(material)
-// // //     setShowDetailModal(true)
-// // //   }
-
-// // //   const handleDelete = (material) => {
-// // //     setItemToDelete(material.id)
-// // //     setSelectedMaterial(material)
-// // //     setShowDeleteConfirm(true)
-// // //   }
-
-// // //   const confirmDeleteMaterial = () => {
-// // //     try {
-// // //       // Eliminar de la lista local
-// // //       const updatedMaterials = materials.filter((m) => m.id !== itemToDelete)
-// // //       setMaterials(updatedMaterials)
-
-// // //       // Mostrar mensaje de éxito
-// // //       setSuccessMessage("Material eliminado exitosamente")
-// // //       setShowSuccessModal(true)
-// // //     } catch (error) {
-// // //       console.error("Error al eliminar el material:", error)
-// // //       setSuccessMessage("Ocurrió un error al eliminar el material")
-// // //       setShowSuccessModal(true)
-// // //     } finally {
-// // //       setShowDeleteConfirm(false)
-// // //       setItemToDelete(null)
-// // //     }
-// // //   }
-
-// // //   // Funciones para el editor de texto
-// // //   const execCommand = (command, value = null, editorRef) => {
-// // //     if (!editorRef.current) return
-
-// // //     // Asegurarse de que el editor tiene el foco
-// // //     editorRef.current.focus()
-
-// // //     // Ejecutar el comando
-// // //     document.execCommand(command, false, value)
-// // //   }
-
-// // //   return (
-// // //     <div className="min-h-screen">
-// // //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// // //         <div className="container mx-auto flex justify-between items-center">
-// // //           <h1 className="text-2xl font-bold text-[#1f384c]">MATERIAL DE APOYO</h1>
-// // //           <div className="relative" ref={dropdownRef}>
-// // //             <button
-// // //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// // //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// // //             >
-// // //               <span>Administrador</span>
-// // //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// // //             </button>
-
-// // //             {isDropdownOpen && (
-// // //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// // //                 <button
-// // //                   onClick={handleLogoutClick}
-// // //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// // //                 >
-// // //                   Cerrar Sesión
-// // //                 </button>
-// // //               </div>
-// // //             )}
-// // //           </div>
-// // //         </div>
-// // //       </header>
-
-// // //       <div className="container mx-auto px-6">
-// // //         <GenericTable
-// // //           data={materials}
-// // //           columns={columns}
-// // //           onShow={handleView}
-// // //           onEdit={handleEdit}
-// // //           onDelete={handleDelete}
-// // //           onAdd={handleAdd}
-// // //           title=""
-// // //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// // //         />
-// // //       </div>
-
-// // //       {/* Add Material Modal - Mantenido del original pero con mejor espaciado */}
-// // //       {showAddModal && (
-// // //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// // //             <div className="p-6">
-// // //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir material de apoyo</h2>
-
-// // //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// // //                   <input
-// // //                     type="text"
-// // //                     placeholder="Ingrese nombre"
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// // //                   <select className="w-full px-3 py-2 border border-[#d9d9d9] rounded" defaultValue="">
-// // //                     <option value="" disabled>
-// // //                       Seleccione un tema
-// // //                     </option>
-// // //                     {topics.map((topic) => (
-// // //                       <option key={topic.id} value={topic.nombre}>
-// // //                         {topic.nombre}
-// // //                       </option>
-// // //                     ))}
-// // //                   </select>
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// // //                   <input
-// // //                     type="text"
-// // //                     placeholder="Yaritza lopez"
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
-// // //                   <input
-// // //                     type="Date"
-// // //                     placeholder="20-02-2025"
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="mb-4">
-// // //                 <div className="border border-[#d9d9d9] rounded">
-// // //                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("bold", null, addEditorRef)}
-// // //                     >
-// // //                       <Bold className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("italic", null, addEditorRef)}
-// // //                     >
-// // //                       <Italic className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("underline", null, addEditorRef)}
-// // //                     >
-// // //                       <Underline className="h-4 w-4" />
-// // //                     </button>
-// // //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyLeft", null, addEditorRef)}
-// // //                     >
-// // //                       <AlignLeft className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyCenter", null, addEditorRef)}
-// // //                     >
-// // //                       <AlignCenter className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyRight", null, addEditorRef)}
-// // //                     >
-// // //                       <AlignRight className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyFull", null, addEditorRef)}
-// // //                     >
-// // //                       <AlignJustify className="h-4 w-4" />
-// // //                     </button>
-// // //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("insertUnorderedList", null, addEditorRef)}
-// // //                     >
-// // //                       <List className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("insertOrderedList", null, addEditorRef)}
-// // //                     >
-// // //                       <ListOrdered className="h-4 w-4" />
-// // //                     </button>
-// // //                     <div className="ml-auto flex items-center gap-2">
-// // //                       <button
-// // //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                         onClick={() => {
-// // //                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-// // //                           if (imageUrl) execCommand("insertImage", imageUrl, addEditorRef)
-// // //                         }}
-// // //                       >
-// // //                         <Image className="h-4 w-4" />
-// // //                       </button>
-// // //                       <button
-// // //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                         onClick={() => {
-// // //                           const url = prompt("Ingrese la URL:")
-// // //                           const text = prompt("Ingrese el texto del enlace:")
-// // //                           if (url) {
-// // //                             // Crear un enlace con el texto proporcionado
-// // //                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-// // //                             document.execCommand("insertHTML", false, linkHtml)
-// // //                           }
-// // //                         }}
-// // //                       >
-// // //                         <Link className="h-4 w-4" />
-// // //                       </button>
-// // //                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-// // //                         <Maximize2 className="h-4 w-4" />
-// // //                       </button>
-// // //                     </div>
-// // //                   </div>
-// // //                   <div
-// // //                     ref={addEditorRef}
-// // //                     className="p-4 min-h-[200px] border-none outline-none"
-// // //                     contentEditable={true}
-// // //                     dangerouslySetInnerHTML={{ __html: "<div>Material de Apoyo...</div>" }}
-// // //                   />
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="flex justify-between px-4">
-// // //                 <button
-// // //                   className="bg-[#f44144] text-white text-sm py-2 px-2 rounded-lg  font-medium hover:bg-red-600 transition-colors"
-// // //                   onClick={() => setShowAddModal(false)}
-// // //                 >
-// // //                   Cancelar
-// // //                 </button>
-// // //                 <button
-// // //                   className="px-2 py-2 bg-[#46ae69] text-white rounded-lg text-sm  hover:bg-green-600"
-// // //                   onClick={() => setShowAddModal(false)}
-// // //                 >
-// // //                   Añadir
-// // //                 </button>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         </div>
-// // //       )}
-
-// // //       {/* Edit Material Modal - Mantenido del original pero con mejor espaciado */}
-// // //       {showEditModal && selectedMaterial && (
-// // //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// // //             <div className="p-6">
-// // //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar material de apoyo</h2>
-
-// // //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// // //                   <input
-// // //                     type="text"
-// // //                     defaultValue={selectedMaterial.nombre}
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// // //                   <input
-// // //                     type="text"
-// // //                     defaultValue={selectedMaterial.tema}
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// // //                   <input
-// // //                     type="text"
-// // //                     defaultValue="Yaritza lopez"
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-// // //                   <input
-// // //                     type="Date"
-// // //                     defaultValue="20/02/2025"
-// // //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// // //                   />
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="mb-4">
-// // //                 <div className="border border-[#d9d9d9] rounded">
-// // //                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("bold", null, editEditorRef)}
-// // //                     >
-// // //                       <Bold className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("italic", null, editEditorRef)}
-// // //                     >
-// // //                       <Italic className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("underline", null, editEditorRef)}
-// // //                     >
-// // //                       <Underline className="h-4 w-4" />
-// // //                     </button>
-// // //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyLeft", null, editEditorRef)}
-// // //                     >
-// // //                       <AlignLeft className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyCenter", null, editEditorRef)}
-// // //                     >
-// // //                       <AlignCenter className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyRight", null, editEditorRef)}
-// // //                     >
-// // //                       <AlignRight className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("justifyFull", null, editEditorRef)}
-// // //                     >
-// // //                       <AlignJustify className="h-4 w-4" />
-// // //                     </button>
-// // //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("insertUnorderedList", null, editEditorRef)}
-// // //                     >
-// // //                       <List className="h-4 w-4" />
-// // //                     </button>
-// // //                     <button
-// // //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                       onClick={() => execCommand("insertOrderedList", null, editEditorRef)}
-// // //                     >
-// // //                       <ListOrdered className="h-4 w-4" />
-// // //                     </button>
-// // //                     <div className="ml-auto flex items-center gap-2">
-// // //                       <button
-// // //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                         onClick={() => {
-// // //                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-// // //                           if (imageUrl) execCommand("insertImage", imageUrl, editEditorRef)
-// // //                         }}
-// // //                       >
-// // //                         <Image className="h-4 w-4" />
-// // //                       </button>
-// // //                       <button
-// // //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// // //                         onClick={() => {
-// // //                           const url = prompt("Ingrese la URL:")
-// // //                           const text = prompt("Ingrese el texto del enlace:")
-// // //                           if (url) {
-// // //                             // Seleccionar el editor de edición
-// // //                             editEditorRef.current.focus()
-// // //                             // Crear un enlace con el texto proporcionado
-// // //                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-// // //                             document.execCommand("insertHTML", false, linkHtml)
-// // //                           }
-// // //                         }}
-// // //                       >
-// // //                         <Link className="h-4 w-4" />
-// // //                       </button>
-// // //                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-// // //                         <Maximize2 className="h-4 w-4" />
-// // //                       </button>
-// // //                     </div>
-// // //                   </div>
-// // //                   <div
-// // //                     ref={editEditorRef}
-// // //                     className="p-4 min-h-[200px] border-none outline-none"
-// // //                     contentEditable={true}
-// // //                     dangerouslySetInnerHTML={{ __html: "<div>Material de Apoyo...</div>" }}
-// // //                   />
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="flex justify-between px-4">
-// // //                 <button
-// // //                   className="bg-[#f44144] text-white text-sm py-2 px-2 rounded-lg  font-medium hover:bg-red-600 transition-colors"
-// // //                   onClick={() => setShowEditModal(false)}
-// // //                 >
-// // //                   Cancelar
-// // //                 </button>
-// // //                 <button
-// // //                   className="px-2 py-2 bg-[#46ae69] text-white rounded-lg text-sm  hover:bg-green-600"
-// // //                   onClick={() => setShowEditModal(false)}
-// // //                 >
-// // //                   Guardar
-// // //                 </button>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         </div>
-// // //       )}
-
-// // //       {/* Detail Material Modal - Mantenido del original pero con mejor espaciado */}
-// // //       {showDetailModal && selectedMaterial && (
-// // //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// // //             <div className="p-6">
-// // //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Detalle de material de apoyo</h2>
-
-// // //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// // //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-// // //                     {selectedMaterial.nombre}
-// // //                   </div>
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// // //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">{selectedMaterial.tema}</div>
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// // //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">Yaritza lopez</div>
-// // //                 </div>
-// // //                 <div>
-// // //                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-// // //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">20-02-2025</div>
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="mb-4">
-// // //                 <div className="border border-[#d9d9d9] rounded">
-// // //                   <div className="p-4 min-h-[200px]">
-// // //                     <div className="text-sm text-[#627b87] mb-2">Material de Apoyo...</div>
-// // //                     <div className="border border-dashed border-[#d9d9d9] rounded h-32 flex items-center justify-center">
-// // //                       <div className="text-center text-[#627b87]">
-// // //                         <div className="text-sm">Contenido del material</div>
-// // //                       </div>
-// // //                     </div>
-// // //                   </div>
-// // //                 </div>
-// // //               </div>
-
-// // //               <div className="flex justify-end">
-// // //                 <button className="px-4 py-2 bg-[#dc3545] text-white rounded" onClick={() => setShowDetailModal(false)}>
-// // //                   Cerrar
-// // //                 </button>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         </div>
-// // //       )}
-
-// // //       {/* Modal de confirmación para eliminar material */}
-// // //       <ConfirmationModal
-// // //         isOpen={showDeleteConfirm}
-// // //         onClose={() => setShowDeleteConfirm(false)}
-// // //         onConfirm={confirmDeleteMaterial}
-// // //         title="Eliminar Material"
-// // //         message="¿Está seguro que desea eliminar este material de apoyo? Esta acción no se puede deshacer."
-// // //         confirmText="Eliminar"
-// // //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// // //       />
-
-// // //       {/* Modal de éxito */}
-// // //       <ConfirmationModal
-// // //         isOpen={showSuccessModal}
-// // //         onConfirm={() => setShowSuccessModal(false)}
-// // //         title="Operación Exitosa"
-// // //         message={successMessage}
-// // //         confirmText="Aceptar"
-// // //         confirmColor="bg-green-500 hover:bg-green-600"
-// // //         showButtonCancel={false}
-// // //       />
-
-// // //       {/* Modal de confirmación para cerrar sesión */}
-// // //       <ConfirmationModal
-// // //         isOpen={showLogoutConfirm}
-// // //         onClose={() => setShowLogoutConfirm(false)}
-// // //         onConfirm={handleLogout}
-// // //         title="Cerrar Sesión"
-// // //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// // //         confirmText="Cerrar Sesión"
-// // //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// // //       />
-// // //     </div>
-// // //   )
-// // // }
-
-// // "use client"
-
-// // import { useState, useEffect, useRef } from "react"
-// // import {
-// //   ChevronDown,
-// //   AlignCenter,
-// //   AlignJustify,
-// //   AlignLeft,
-// //   AlignRight,
-// //   Bold,
-// //   ImageIcon,
-// //   Italic,
-// //   Link,
-// //   List,
-// //   ListOrdered,
-// //   Maximize2,
-// //   Underline,
-// // } from "lucide-react"
-// // import { useNavigate } from "react-router-dom"
-// // import GenericTable from "../../../shared/components/Table"
-// // import { useAuth } from "../../auth/hooks/useAuth"
-// // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // // Importar los topics desde el archivo de TopicsPage
-// // import { topics } from "../../Topics/pages/TopicsPage"
-
-// // // Datos de ejemplo
-// // const materialesData = [
-// //   { id: 1, nombre: "Gramática y vocabulario", tema: "Verb to be", estado: "Activo" },
-// //   { id: 2, nombre: "Comprensión auditiva y pronunciación", tema: "verb tobe", estado: "Inactivo" },
-// //   { id: 3, nombre: "Lectura y escritura", tema: "Verb to be", estado: "Activo" },
-// //   { id: 4, nombre: "Recursos interactivos", tema: "Pronunciador", estado: "Activo" },
-// //   { id: 5, nombre: "Cultura y contexto", tema: "Pronunciador", estado: "Activo" },
-// //   { id: 6, nombre: "The crown", tema: "Verb to be", estado: "Inactivo" },
-// //   { id: 7, nombre: "Postal", tema: "Pronunciador", tema: "Inactivo" },
-// // ]
-
-// // const columns = [
-// //   { key: "nombre", label: "Nombre" },
-// //   { key: "tema", label: "Tema" },
-// //   {
-// //     key: "estado",
-// //     label: "Estado",
-// //     render: (item) => (
-// //       <span
-// //         className={`px-2 py-1 rounded-full text-xs font-medium ${
-// //           item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-// //         }`}
-// //       >
-// //         {item.estado}
-// //       </span>
-// //     ),
-// //   },
-// // ]
-
-// // export default function SupportMaterials() {
-// //   const [showAddModal, setShowAddModal] = useState(false)
-// //   const [showEditModal, setShowEditModal] = useState(false)
-// //   const [showDetailModal, setShowDetailModal] = useState(false)
-// //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// //   const [selectedMaterial, setSelectedMaterial] = useState(null)
-// //   const [itemToDelete, setItemToDelete] = useState(null)
-// //   const [successMessage, setSuccessMessage] = useState("")
-// //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// //   const [materials, setMaterials] = useState([...materialesData])
-// //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-
-// //   const { logout, user } = useAuth()
-// //   const navigate = useNavigate()
-// //   const dropdownRef = useRef(null)
-
-// //   // Referencias para los editores
-// //   const addEditorRef = useRef(null)
-// //   const editEditorRef = useRef(null)
-
-// //   useEffect(() => {
-// //     const handleClickOutside = (event) => {
-// //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// //         setIsDropdownOpen(false)
-// //       }
-// //     }
-
-// //     document.addEventListener("mousedown", handleClickOutside)
-// //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// //   }, [])
-
-// //   const handleLogoutClick = () => {
-// //     setIsDropdownOpen(false)
-// //     setShowLogoutConfirm(true)
-// //   }
-
-// //   const handleLogout = () => {
-// //     logout()
-// //     navigate("/login")
-// //   }
-
-// //   const handleAdd = () => {
-// //     setShowAddModal(true)
-// //   }
-
-// //   const handleEdit = (material) => {
-// //     setSelectedMaterial(material)
-// //     setShowEditModal(true)
-// //   }
-
-// //   const handleView = (material) => {
-// //     setSelectedMaterial(material)
-// //     setShowDetailModal(true)
-// //   }
-
-// //   const handleDelete = (material) => {
-// //     setItemToDelete(material.id)
-// //     setSelectedMaterial(material)
-// //     setShowDeleteConfirm(true)
-// //   }
-
-// //   const confirmDeleteMaterial = () => {
-// //     try {
-// //       // Eliminar de la lista local
-// //       const updatedMaterials = materials.filter((m) => m.id !== itemToDelete)
-// //       setMaterials(updatedMaterials)
-
-// //       // Mostrar mensaje de éxito
-// //       setSuccessMessage("Material eliminado exitosamente")
-// //       setShowSuccessModal(true)
-// //     } catch (error) {
-// //       console.error("Error al eliminar el material:", error)
-// //       setSuccessMessage("Ocurrió un error al eliminar el material")
-// //       setShowSuccessModal(true)
-// //     } finally {
-// //       setShowDeleteConfirm(false)
-// //       setItemToDelete(null)
-// //     }
-// //   }
-
-// //   // Funciones para el editor de texto
-// //   const execCommand = (command, value = null, editorRef) => {
-// //     if (!editorRef.current) return
-
-// //     // Asegurarse de que el editor tiene el foco
-// //     editorRef.current.focus()
-
-// //     // Ejecutar el comando
-// //     document.execCommand(command, false, value)
-// //   }
-
-// //   return (
-// //     <div className="min-h-screen">
-// //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// //         <div className="container mx-auto flex justify-between items-center">
-// //           <h1 className="text-2xl font-bold text-[#1f384c]">MATERIAL DE APOYO</h1>
-// //           <div className="relative" ref={dropdownRef}>
-// //             <button
-// //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// //             >
-// //               <span>Administrador</span>
-// //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// //             </button>
-
-// //             {isDropdownOpen && (
-// //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// //                 <button
-// //                   onClick={handleLogoutClick}
-// //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// //                 >
-// //                   Cerrar Sesión
-// //                 </button>
-// //               </div>
-// //             )}
-// //           </div>
-// //         </div>
-// //       </header>
-
-// //       <div className="container mx-auto px-6">
-// //         <GenericTable
-// //           data={materials}
-// //           columns={columns}
-// //           onShow={handleView}
-// //           onEdit={handleEdit}
-// //           onDelete={handleDelete}
-// //           onAdd={handleAdd}
-// //           title=""
-// //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// //         />
-// //       </div>
-
-// //       {/* Add Material Modal - Mantenido del original pero con mejor espaciado */}
-// //       {showAddModal && (
-// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// //             <div className="p-6">
-// //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir material de apoyo</h2>
-
-// //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// //                   <input
-// //                     type="text"
-// //                     placeholder="Ingrese nombre"
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// //                   />
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// //                   <select className="w-full px-3 py-2 border border-[#d9d9d9] rounded" defaultValue="">
-// //                     <option value="" disabled>
-// //                       Seleccione un tema
-// //                     </option>
-// //                     {topics.map((topic) => (
-// //                       <option key={topic.id} value={topic.nombre}>
-// //                         {topic.nombre}
-// //                       </option>
-// //                     ))}
-// //                   </select>
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// //                   <input
-// //                     type="text"
-// //                     value={user ? user.nombre || user.username || "Usuario actual" : "Usuario no identificado"}
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]"
-// //                     readOnly
-// //                   />
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
-// //                   <input
-// //                     type="Date"
-// //                     placeholder="20-02-2025"
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// //                   />
-// //                 </div>
-// //               </div>
-
-// //               <div className="mb-4">
-// //                 <div className="border border-[#d9d9d9] rounded">
-// //                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("bold", null, addEditorRef)}
-// //                     >
-// //                       <Bold className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("italic", null, addEditorRef)}
-// //                     >
-// //                       <Italic className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("underline", null, addEditorRef)}
-// //                     >
-// //                       <Underline className="h-4 w-4" />
-// //                     </button>
-// //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyLeft", null, addEditorRef)}
-// //                     >
-// //                       <AlignLeft className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyCenter", null, addEditorRef)}
-// //                     >
-// //                       <AlignCenter className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyRight", null, addEditorRef)}
-// //                     >
-// //                       <AlignRight className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyFull", null, addEditorRef)}
-// //                     >
-// //                       <AlignJustify className="h-4 w-4" />
-// //                     </button>
-// //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("insertUnorderedList", null, addEditorRef)}
-// //                     >
-// //                       <List className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("insertOrderedList", null, addEditorRef)}
-// //                     >
-// //                       <ListOrdered className="h-4 w-4" />
-// //                     </button>
-// //                     <div className="ml-auto flex items-center gap-2">
-// //                       <button
-// //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                         onClick={() => {
-// //                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-// //                           if (imageUrl) execCommand("insertImage", imageUrl, addEditorRef)
-// //                         }}
-// //                       >
-// //                         <ImageIcon className="h-4 w-4" />
-// //                       </button>
-// //                       <button
-// //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                         onClick={() => {
-// //                           const url = prompt("Ingrese la URL:")
-// //                           const text = prompt("Ingrese el texto del enlace:")
-// //                           if (url) {
-// //                             // Crear un enlace con el texto proporcionado
-// //                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-// //                             document.execCommand("insertHTML", false, linkHtml)
-// //                           }
-// //                         }}
-// //                       >
-// //                         <Link className="h-4 w-4" />
-// //                       </button>
-// //                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-// //                         <Maximize2 className="h-4 w-4" />
-// //                       </button>
-// //                     </div>
-// //                   </div>
-// //                   <div
-// //                     ref={addEditorRef}
-// //                     className="p-4 min-h-[200px] border-none outline-none"
-// //                     contentEditable={true}
-// //                     dangerouslySetInnerHTML={{ __html: "<div>Material de Apoyo...</div>" }}
-// //                   />
-// //                 </div>
-// //               </div>
-
-// //               <div className="flex justify-between px-4">
-// //                 <button
-// //                   className="bg-[#f44144] text-white text-sm py-2 px-2 rounded-lg  font-medium hover:bg-red-600 transition-colors"
-// //                   onClick={() => setShowAddModal(false)}
-// //                 >
-// //                   Cancelar
-// //                 </button>
-// //                 <button
-// //                   className="px-2 py-2 bg-[#46ae69] text-white rounded-lg text-sm  hover:bg-green-600"
-// //                   onClick={() => setShowAddModal(false)}
-// //                 >
-// //                   Añadir
-// //                 </button>
-// //               </div>
-// //             </div>
-// //           </div>
-// //         </div>
-// //       )}
-
-// //       {/* Edit Material Modal - Mantenido del original pero con mejor espaciado */}
-// //       {showEditModal && selectedMaterial && (
-// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// //             <div className="p-6">
-// //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar material de apoyo</h2>
-
-// //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// //                   <input
-// //                     type="text"
-// //                     defaultValue={selectedMaterial.nombre}
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// //                   />
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// //                   <select
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// //                     defaultValue={selectedMaterial.tema}
-// //                   >
-// //                     <option value="" disabled>
-// //                       Seleccione un tema
-// //                     </option>
-// //                     {topics.map((topic) => (
-// //                       <option key={topic.id} value={topic.nombre}>
-// //                         {topic.nombre}
-// //                       </option>
-// //                     ))}
-// //                   </select>
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// //                   <input
-// //                     type="text"
-// //                     value={user ? user.nombre || user.username || "Usuario actual" : "Usuario no identificado"}
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]"
-// //                     readOnly
-// //                   />
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-// //                   <input
-// //                     type="Date"
-// //                     defaultValue="20/02/2025"
-// //                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-// //                   />
-// //                 </div>
-// //               </div>
-
-// //               <div className="mb-4">
-// //                 <div className="border border-[#d9d9d9] rounded">
-// //                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("bold", null, editEditorRef)}
-// //                     >
-// //                       <Bold className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("italic", null, editEditorRef)}
-// //                     >
-// //                       <Italic className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("underline", null, editEditorRef)}
-// //                     >
-// //                       <Underline className="h-4 w-4" />
-// //                     </button>
-// //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyLeft", null, editEditorRef)}
-// //                     >
-// //                       <AlignLeft className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyCenter", null, editEditorRef)}
-// //                     >
-// //                       <AlignCenter className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyRight", null, editEditorRef)}
-// //                     >
-// //                       <AlignRight className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("justifyFull", null, editEditorRef)}
-// //                     >
-// //                       <AlignJustify className="h-4 w-4" />
-// //                     </button>
-// //                     <span className="mx-1 text-[#d9d9d9]">|</span>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("insertUnorderedList", null, editEditorRef)}
-// //                     >
-// //                       <List className="h-4 w-4" />
-// //                     </button>
-// //                     <button
-// //                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                       onClick={() => execCommand("insertOrderedList", null, editEditorRef)}
-// //                     >
-// //                       <ListOrdered className="h-4 w-4" />
-// //                     </button>
-// //                     <div className="ml-auto flex items-center gap-2">
-// //                       <button
-// //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                         onClick={() => {
-// //                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-// //                           if (imageUrl) execCommand("insertImage", imageUrl, editEditorRef)
-// //                         }}
-// //                       >
-// //                         <ImageIcon className="h-4 w-4" />
-// //                       </button>
-// //                       <button
-// //                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-// //                         onClick={() => {
-// //                           const url = prompt("Ingrese la URL:")
-// //                           const text = prompt("Ingrese el texto del enlace:")
-// //                           if (url) {
-// //                             // Seleccionar el editor de edición
-// //                             editEditorRef.current.focus()
-// //                             // Crear un enlace con el texto proporcionado
-// //                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-// //                             document.execCommand("insertHTML", false, linkHtml)
-// //                           }
-// //                         }}
-// //                       >
-// //                         <Link className="h-4 w-4" />
-// //                       </button>
-// //                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-// //                         <Maximize2 className="h-4 w-4" />
-// //                       </button>
-// //                     </div>
-// //                   </div>
-// //                   <div
-// //                     ref={editEditorRef}
-// //                     className="p-4 min-h-[200px] border-none outline-none"
-// //                     contentEditable={true}
-// //                     dangerouslySetInnerHTML={{ __html: "<div>Material de Apoyo...</div>" }}
-// //                   />
-// //                 </div>
-// //               </div>
-
-// //               <div className="flex justify-between px-4">
-// //                 <button
-// //                   className="bg-[#f44144] text-white text-sm py-2 px-2 rounded-lg  font-medium hover:bg-red-600 transition-colors"
-// //                   onClick={() => setShowEditModal(false)}
-// //                 >
-// //                   Cancelar
-// //                 </button>
-// //                 <button
-// //                   className="px-2 py-2 bg-[#46ae69] text-white rounded-lg text-sm  hover:bg-green-600"
-// //                   onClick={() => setShowEditModal(false)}
-// //                 >
-// //                   Guardar
-// //                 </button>
-// //               </div>
-// //             </div>
-// //           </div>
-// //         </div>
-// //       )}
-
-// //       {/* Detail Material Modal - Mantenido del original pero con mejor espaciado */}
-// //       {showDetailModal && selectedMaterial && (
-// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-// //             <div className="p-6">
-// //               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Detalle de material de apoyo</h2>
-
-// //               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-// //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-// //                     {selectedMaterial.nombre}
-// //                   </div>
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-// //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">{selectedMaterial.tema}</div>
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-// //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">Yaritza lopez</div>
-// //                 </div>
-// //                 <div>
-// //                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-// //                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">20-02-2025</div>
-// //                 </div>
-// //               </div>
-
-// //               <div className="mb-4">
-// //                 <div className="border border-[#d9d9d9] rounded">
-// //                   <div className="p-4 min-h-[200px]">
-// //                     <div className="text-sm text-[#627b87] mb-2">Material de Apoyo...</div>
-// //                     <div className="border border-dashed border-[#d9d9d9] rounded h-32 flex items-center justify-center">
-// //                       <div className="text-center text-[#627b87]">
-// //                         <div className="text-sm">Contenido del material</div>
-// //                       </div>
-// //                     </div>
-// //                   </div>
-// //                 </div>
-// //               </div>
-
-// //               <div className="flex justify-end">
-// //                 <button className="px-4 py-2 bg-[#dc3545] text-white rounded" onClick={() => setShowDetailModal(false)}>
-// //                   Cerrar
-// //                 </button>
-// //               </div>
-// //             </div>
-// //           </div>
-// //         </div>
-// //       )}
-
-// //       {/* Modal de confirmación para eliminar material */}
-// //       <ConfirmationModal
-// //         isOpen={showDeleteConfirm}
-// //         onClose={() => setShowDeleteConfirm(false)}
-// //         onConfirm={confirmDeleteMaterial}
-// //         title="Eliminar Material"
-// //         message="¿Está seguro que desea eliminar este material de apoyo? Esta acción no se puede deshacer."
-// //         confirmText="Eliminar"
-// //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// //       />
-
-// //       {/* Modal de éxito */}
-// //       <ConfirmationModal
-// //         isOpen={showSuccessModal}
-// //         onConfirm={() => setShowSuccessModal(false)}
-// //         title="Operación Exitosa"
-// //         message={successMessage}
-// //         confirmText="Aceptar"
-// //         confirmColor="bg-green-500 hover:bg-green-600"
-// //         showButtonCancel={false}
-// //       />
-
-// //       {/* Modal de confirmación para cerrar sesión */}
-// //       <ConfirmationModal
-// //         isOpen={showLogoutConfirm}
-// //         onClose={() => setShowLogoutConfirm(false)}
-// //         onConfirm={handleLogout}
-// //         title="Cerrar Sesión"
-// //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// //         confirmText="Cerrar Sesión"
-// //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// //       />
-// //     </div>
-// //   )
-// // }
-
-
-
-// "use client"
-
-// import { useState, useEffect, useRef } from "react"
-// import {
-//   ChevronDown,
-//   AlignCenter,
-//   AlignJustify,
-//   AlignLeft,
-//   AlignRight,
-//   Bold,
-//   ImageIcon,
-//   Italic,
-//   Link,
-//   List,
-//   ListOrdered,
-//   Maximize2,
-//   Underline,
-// } from "lucide-react"
-// import { useNavigate } from "react-router-dom"
-// import GenericTable from "../../../shared/components/Table"
-// import { useAuth } from "../../auth/hooks/useAuth"
-// import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // Importar los topics desde el archivo de TopicsPage
-// import { topics } from "../../Topics/pages/TopicsPage"
-
-// // Datos de ejemplo
-// const materialesData = [
-//   { id: 1, nombre: "Gramática y vocabulario", tema: "Verb to be", estado: "Activo" },
-//   { id: 2, nombre: "Comprensión auditiva y pronunciación", tema: "verb tobe", estado: "Inactivo" },
-//   { id: 3, nombre: "Lectura y escritura", tema: "Verb to be", estado: "Activo" },
-//   { id: 4, nombre: "Recursos interactivos", tema: "Pronunciador", estado: "Activo" },
-//   { id: 5, nombre: "Cultura y contexto", tema: "Pronunciador", estado: "Activo" },
-//   { id: 6, nombre: "The crown", tema: "Verb to be", estado: "Inactivo" },
-//   { id: 7, nombre: "Postal", tema: "Pronunciador", estado: "Inactivo" },
-// ]
-
-// const columns = [
-//   { key: "nombre", label: "Nombre" },
-//   { key: "tema", label: "Tema" },
-//   {
-//     key: "estado",
-//     label: "Estado",
-//     render: (item) => (
-//       <span
-//         className={`px-2 py-1 rounded-full text-xs font-medium ${
-//           item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-//         }`}
-//       >
-//         {item.estado}
-//       </span>
-//     ),
-//   },
-// ]
-
-// export default function SupportMaterials() {
-//   const [showAddModal, setShowAddModal] = useState(false)
-//   const [showEditModal, setShowEditModal] = useState(false)
-//   const [showDetailModal, setShowDetailModal] = useState(false)
-//   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-//   const [selectedMaterial, setSelectedMaterial] = useState(null)
-//   const [itemToDelete, setItemToDelete] = useState(null)
-//   const [successMessage, setSuccessMessage] = useState("")
-//   const [showSuccessModal, setShowSuccessModal] = useState(false)
-//   const [materials, setMaterials] = useState([...materialesData])
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-//   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-//   const [formErrors, setFormErrors] = useState({})
-//   const [showErrorModal, setShowErrorModal] = useState(false)
-//   const [errorMessage, setErrorMessage] = useState("")
-
-//   // Formulario para añadir nuevo material
-//   const [newMaterial, setNewMaterial] = useState({
-//     nombre: "",
-//     tema: "",
-//     contenido: "<div>Material de Apoyo...</div>",
-//     estado: "Activo",
-//   })
-
-//   // Formulario para editar material
-//   const [editedMaterial, setEditedMaterial] = useState({
-//     id: null,
-//     nombre: "",
-//     tema: "",
-//     contenido: "",
-//     estado: "",
-//   })
-
-//   const { logout, user } = useAuth()
-//   const navigate = useNavigate()
-//   const dropdownRef = useRef(null)
-
-//   // Referencias para los editores
-//   const addEditorRef = useRef(null)
-//   const editEditorRef = useRef(null)
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setIsDropdownOpen(false)
-//       }
-//     }
-
-//     document.addEventListener("mousedown", handleClickOutside)
-//     return () => document.removeEventListener("mousedown", handleClickOutside)
-//   }, [])
-
-//   // Actualizar el contenido del editor cuando cambia
-//   useEffect(() => {
-//     if (addEditorRef.current) {
-//       const updateContent = () => {
-//         setNewMaterial((prev) => ({
-//           ...prev,
-//           contenido: addEditorRef.current.innerHTML,
-//         }))
-//       }
-
-//       addEditorRef.current.addEventListener("input", updateContent)
-//       return () => {
-//         if (addEditorRef.current) {
-//           addEditorRef.current.removeEventListener("input", updateContent)
-//         }
-//       }
-//     }
-//   }, [addEditorRef.current])
-
-//   useEffect(() => {
-//     if (editEditorRef.current) {
-//       const updateContent = () => {
-//         setEditedMaterial((prev) => ({
-//           ...prev,
-//           contenido: editEditorRef.current.innerHTML,
-//         }))
-//       }
-
-//       editEditorRef.current.addEventListener("input", updateContent)
-//       return () => {
-//         if (editEditorRef.current) {
-//           editEditorRef.current.removeEventListener("input", updateContent)
-//         }
-//       }
-//     }
-//   }, [editEditorRef.current])
-
-//   const handleLogoutClick = () => {
-//     setIsDropdownOpen(false)
-//     setShowLogoutConfirm(true)
-//   }
-
-//   const handleLogout = () => {
-//     logout()
-//     navigate("/login")
-//   }
-
-//   const handleAdd = () => {
-//     setNewMaterial({
-//       nombre: "",
-//       tema: "",
-//       contenido: "<div>Material de Apoyo...</div>",
-//       estado: "Activo",
-//     })
-//     setFormErrors({})
-//     setShowAddModal(true)
-//   }
-
-//   const handleEdit = (material) => {
-//     setSelectedMaterial(material)
-//     setEditedMaterial({
-//       id: material.id,
-//       nombre: material.nombre,
-//       tema: material.tema,
-//       contenido: "<div>Material de Apoyo...</div>", // Aquí normalmente cargarías el contenido real
-//       estado: material.estado,
-//     })
-//     setFormErrors({})
-//     setShowEditModal(true)
-//   }
-
-//   const handleView = (material) => {
-//     setSelectedMaterial(material)
-//     setShowDetailModal(true)
-//   }
-
-//   const handleDelete = (material) => {
-//     setItemToDelete(material.id)
-//     setSelectedMaterial(material)
-//     setShowDeleteConfirm(true)
-//   }
-
-//   const validateForm = (data) => {
-//     const errors = {}
-
-//     if (!data.nombre.trim()) {
-//       errors.nombre = "El nombre es obligatorio"
-//     }
-
-//     if (!data.tema) {
-//       errors.tema = "Debe seleccionar un tema"
-//     }
-
-//     if (!data.contenido || data.contenido === "Material de Apoyo...") {
-//       errors.contenido = "Debe agregar contenido al material"
-//     }
-
-//     return errors
-//   }
-
-//   const handleInputChange = (e, formSetter) => {
-//     const { name, value } = e.target
-//     formSetter((prev) => ({
-//       ...prev,
-//       [name]: value,
-//     }))
-//   }
-
-//   const handleAddSubmit = () => {
-//     const errors = validateForm(newMaterial)
-
-//     if (Object.keys(errors).length > 0) {
-//       setFormErrors(errors)
-//       setErrorMessage("Por favor complete todos los campos requeridos")
-//       setShowErrorModal(true)
-//       return
-//     }
-
-//     try {
-//       // Generar un ID único para el nuevo material
-//       const newId = Math.max(...materials.map((m) => m.id)) + 1
-
-//       // Crear el nuevo material
-//       const materialToAdd = {
-//         id: newId,
-//         nombre: newMaterial.nombre,
-//         tema: newMaterial.tema,
-//         estado: newMaterial.estado,
-//         // Aquí se agregarían más campos si fueran necesarios
-//       }
-
-//       // Actualizar la lista de materiales
-//       setMaterials((prev) => [...prev, materialToAdd])
-
-//       // Mostrar mensaje de éxito
-//       setSuccessMessage("Material agregado exitosamente")
-//       setShowSuccessModal(true)
-
-//       // Cerrar el modal
-//       setShowAddModal(false)
-//     } catch (error) {
-//       console.error("Error al agregar el material:", error)
-//       setErrorMessage("Ocurrió un error al agregar el material")
-//       setShowErrorModal(true)
-//     }
-//   }
-
-//   const handleEditSubmit = () => {
-//     const errors = validateForm(editedMaterial)
-
-//     if (Object.keys(errors).length > 0) {
-//       setFormErrors(errors)
-//       setErrorMessage("Por favor complete todos los campos requeridos")
-//       setShowErrorModal(true)
-//       return
-//     }
-
-//     try {
-//       // Actualizar el material en la lista
-//       const updatedMaterials = materials.map((material) =>
-//         material.id === editedMaterial.id
-//           ? { ...material, nombre: editedMaterial.nombre, tema: editedMaterial.tema, estado: editedMaterial.estado }
-//           : material,
-//       )
-
-//       setMaterials(updatedMaterials)
-
-//       // Mostrar mensaje de éxito
-//       setSuccessMessage("Material actualizado exitosamente")
-//       setShowSuccessModal(true)
-
-//       // Cerrar el modal
-//       setShowEditModal(false)
-//     } catch (error) {
-//       console.error("Error al actualizar el material:", error)
-//       setErrorMessage("Ocurrió un error al actualizar el material")
-//       setShowErrorModal(true)
-//     }
-//   }
-
-//   const confirmDeleteMaterial = () => {
-//     try {
-//       // Eliminar de la lista local
-//       const updatedMaterials = materials.filter((m) => m.id !== itemToDelete)
-//       setMaterials(updatedMaterials)
-
-//       // Mostrar mensaje de éxito
-//       setSuccessMessage("Material eliminado exitosamente")
-//       setShowSuccessModal(true)
-//     } catch (error) {
-//       console.error("Error al eliminar el material:", error)
-//       setSuccessMessage("Ocurrió un error al eliminar el material")
-//       setShowSuccessModal(true)
-//     } finally {
-//       setShowDeleteConfirm(false)
-//       setItemToDelete(null)
-//     }
-//   }
-
-//   // Funciones para el editor de texto
-//   const execCommand = (command, value = null, editorRef) => {
-//     if (!editorRef.current) return
-
-//     // Asegurarse de que el editor tiene el foco
-//     editorRef.current.focus()
-
-//     // Ejecutar el comando
-//     document.execCommand(command, false, value)
-//   }
-
-//   return (
-//     <div className="min-h-screen">
-//       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-//         <div className="container mx-auto flex justify-between items-center">
-//           <h1 className="text-2xl font-bold text-[#1f384c]">MATERIAL DE APOYO</h1>
-//           <div className="relative" ref={dropdownRef}>
-//             <button
-//               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-//               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-//             >
-//               <span>{user ? user.nombre || user.username || "Administrador" : "Administrador"}</span>
-//               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-//             </button>
-
-//             {isDropdownOpen && (
-//               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-//                 <button
-//                   onClick={handleLogoutClick}
-//                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-//                 >
-//                   Cerrar Sesión
-//                 </button>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </header>
-
-//       <div className="container mx-auto px-6">
-//         <GenericTable
-//           data={materials}
-//           columns={columns}
-//           onShow={handleView}
-//           onEdit={handleEdit}
-//           onDelete={handleDelete}
-//           onAdd={handleAdd}
-//           title=""
-//           showActions={{ show: true, edit: true, delete: true, add: true }}
-//         />
-//       </div>
-
-//       {/* Add Material Modal */}
-//       {showAddModal && (
-        
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-//             <div className="p-6">
-//               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir material de apoyo</h2>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-//                   <input
-//                     type="text"
-//                     name="nombre"
-//                     placeholder="Ingrese nombre"
-//                     className={`w-full px-3 py-2 border ${formErrors.nombre ? "border-red-500" : "border-[#d9d9d9]"} rounded`}
-//                     value={newMaterial.nombre}
-//                     onChange={(e) => handleInputChange(e, setNewMaterial)}
-//                   />
-//                   {formErrors.nombre && <p className="text-red-500 text-xs mt-1">{formErrors.nombre}</p>}
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-//                   <select
-//                     name="tema"
-//                     className={`w-full px-3 py-2 border ${formErrors.tema ? "border-red-500" : "border-[#d9d9d9]"} rounded`}
-//                     value={newMaterial.tema}
-//                     onChange={(e) => handleInputChange(e, setNewMaterial)}
-//                   >
-//                     <option value="" disabled>
-//                       Seleccione un tema
-//                     </option>
-//                     {topics.map((topic) => (
-//                       <option key={topic.id} value={topic.nombre}>
-//                         {topic.nombre}
-//                       </option>
-//                     ))}
-//                   </select>
-//                   {formErrors.tema && <p className="text-red-500 text-xs mt-1">{formErrors.tema}</p>}
-//                 </div>
-//                 {/* <div>
-//   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-//   <p className="w-full px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-//     {user ? user.nombre || user.username || "Usuario actual" : "Usuario no identificado"}
-//   </p>
-// </div> */}
-                    
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
-//                   <input
-//                     type="Date"
-//                     name="fecha"
-//                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-//                     defaultValue={new Date().toISOString().split("T")[0]}
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Estado:</label>
-//                   <select
-//                     name="estado"
-//                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-//                     value={newMaterial.estado}
-//                     onChange={(e) => handleInputChange(e, setNewMaterial)}
-//                   >
-//                     <option value="Activo">Activo</option>
-//                     <option value="Inactivo">Inactivo</option>
-//                   </select>
-//                 </div>
-//               </div>
-
-//               <div className="mb-4">
-//                 <label className="block text-sm text-[#627b87] mb-1">Contenido:</label>
-//                 <div className={`border ${formErrors.contenido ? "border-red-500" : "border-[#d9d9d9]"} rounded`}>
-//                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("bold", null, addEditorRef)}
-//                     >
-//                       <Bold className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("italic", null, addEditorRef)}
-//                     >
-//                       <Italic className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("underline", null, addEditorRef)}
-//                     >
-//                       <Underline className="h-4 w-4" />
-//                     </button>
-//                     <span className="mx-1 text-[#d9d9d9]">|</span>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyLeft", null, addEditorRef)}
-//                     >
-//                       <AlignLeft className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyCenter", null, addEditorRef)}
-//                     >
-//                       <AlignCenter className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyRight", null, addEditorRef)}
-//                     >
-//                       <AlignRight className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyFull", null, addEditorRef)}
-//                     >
-//                       <AlignJustify className="h-4 w-4" />
-//                     </button>
-//                     <span className="mx-1 text-[#d9d9d9]">|</span>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("insertUnorderedList", null, addEditorRef)}
-//                     >
-//                       <List className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("insertOrderedList", null, addEditorRef)}
-//                     >
-//                       <ListOrdered className="h-4 w-4" />
-//                     </button>
-//                     <div className="ml-auto flex items-center gap-2">
-//                       <button
-//                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                         onClick={() => {
-//                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-//                           if (imageUrl) execCommand("insertImage", imageUrl, addEditorRef)
-//                         }}
-//                       >
-//                         <ImageIcon className="h-4 w-4" />
-//                       </button>
-//                       <button
-//                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                         onClick={() => {
-//                           const url = prompt("Ingrese la URL:")
-//                           const text = prompt("Ingrese el texto del enlace:")
-//                           if (url) {
-//                             // Crear un enlace con el texto proporcionado
-//                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-//                             document.execCommand("insertHTML", false, linkHtml)
-//                           }
-//                         }}
-//                       >
-//                         <Link className="h-4 w-4" />
-//                       </button>
-//                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-//                         <Maximize2 className="h-4 w-4" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                   <div
-//                     ref={addEditorRef}
-//                     className="p-4 min-h-[200px] border-none outline-none"
-//                     contentEditable={true}
-//                     dangerouslySetInnerHTML={{ __html: newMaterial.contenido }}
-//                   />
-//                 </div>
-//                 {formErrors.contenido && <p className="text-red-500 text-xs mt-1">{formErrors.contenido}</p>}
-//               </div>
-
-//               <div className="flex justify-between px-4">
-//                 <button
-//                   className="bg-[#f44144] text-white text-sm py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
-//                   onClick={() => setShowAddModal(false)}
-//                 >
-//                   Cancelar
-//                 </button>
-//                 <button
-//                   className="px-4 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600"
-//                   onClick={handleAddSubmit}
-//                 >
-//                   Añadir
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Edit Material Modal */}
-//       {showEditModal && selectedMaterial && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-//             <div className="p-6">
-//               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar material de apoyo</h2>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-//                   <input
-//                     type="text"
-//                     name="nombre"
-//                     value={editedMaterial.nombre}
-//                     onChange={(e) => handleInputChange(e, setEditedMaterial)}
-//                     className={`w-full px-3 py-2 border ${formErrors.nombre ? "border-red-500" : "border-[#d9d9d9]"} rounded`}
-//                   />
-//                   {formErrors.nombre && <p className="text-red-500 text-xs mt-1">{formErrors.nombre}</p>}
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-//                   <select
-//                     name="tema"
-//                     value={editedMaterial.tema}
-//                     onChange={(e) => handleInputChange(e, setEditedMaterial)}
-//                     className={`w-full px-3 py-2 border ${formErrors.tema ? "border-red-500" : "border-[#d9d9d9]"} rounded`}
-//                   >
-//                     <option value="" disabled>
-//                       Seleccione un tema
-//                     </option>
-//                     {topics.map((topic) => (
-//                       <option key={topic.id} value={topic.nombre}>
-//                         {topic.nombre}
-//                       </option>
-//                     ))}
-//                   </select>
-//                   {formErrors.tema && <p className="text-red-500 text-xs mt-1">{formErrors.tema}</p>}
-//                 </div>
-//                 {/* <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-//                   <input
-//                     type="text"
-//                     value={user ? user.nombre || user.username || "Usuario actual" : "Usuario no identificado"}
-//                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]"
-//                     readOnly
-//                   />
-//                 </div> */}
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-//                   <input
-//                     type="Date"
-//                     name="fecha"
-//                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-//                     defaultValue={new Date().toISOString().split("T")[0]}
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Estado:</label>
-//                   <select
-//                     name="estado"
-//                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-//                     value={editedMaterial.estado}
-//                     onChange={(e) => handleInputChange(e, setEditedMaterial)}
-//                   >
-//                     <option value="Activo">Activo</option>
-//                     <option value="Inactivo">Inactivo</option>
-//                   </select>
-//                 </div>
-//               </div>
-
-//               <div className="mb-4">
-//                 <label className="block text-sm text-[#627b87] mb-1">Contenido:</label>
-//                 <div className={`border ${formErrors.contenido ? "border-red-500" : "border-[#d9d9d9]"} rounded`}>
-//                   <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2">
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("bold", null, editEditorRef)}
-//                     >
-//                       <Bold className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("italic", null, editEditorRef)}
-//                     >
-//                       <Italic className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("underline", null, editEditorRef)}
-//                     >
-//                       <Underline className="h-4 w-4" />
-//                     </button>
-//                     <span className="mx-1 text-[#d9d9d9]">|</span>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyLeft", null, editEditorRef)}
-//                     >
-//                       <AlignLeft className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyCenter", null, editEditorRef)}
-//                     >
-//                       <AlignCenter className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyRight", null, editEditorRef)}
-//                     >
-//                       <AlignRight className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("justifyFull", null, editEditorRef)}
-//                     >
-//                       <AlignJustify className="h-4 w-4" />
-//                     </button>
-//                     <span className="mx-1 text-[#d9d9d9]">|</span>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("insertUnorderedList", null, editEditorRef)}
-//                     >
-//                       <List className="h-4 w-4" />
-//                     </button>
-//                     <button
-//                       className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                       onClick={() => execCommand("insertOrderedList", null, editEditorRef)}
-//                     >
-//                       <ListOrdered className="h-4 w-4" />
-//                     </button>
-//                     <div className="ml-auto flex items-center gap-2">
-//                       <button
-//                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                         onClick={() => {
-//                           const imageUrl = prompt("Ingrese la URL de la imagen:")
-//                           if (imageUrl) execCommand("insertImage", imageUrl, editEditorRef)
-//                         }}
-//                       >
-//                         <ImageIcon className="h-4 w-4" />
-//                       </button>
-//                       <button
-//                         className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-//                         onClick={() => {
-//                           const url = prompt("Ingrese la URL:")
-//                           const text = prompt("Ingrese el texto del enlace:")
-//                           if (url) {
-//                             // Seleccionar el editor de edición
-//                             editEditorRef.current.focus()
-//                             // Crear un enlace con el texto proporcionado
-//                             const linkHtml = `<a href="${url}" target="_blank">${text || url}</a>`
-//                             document.execCommand("insertHTML", false, linkHtml)
-//                           }
-//                         }}
-//                       >
-//                         <Link className="h-4 w-4" />
-//                       </button>
-//                       <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
-//                         <Maximize2 className="h-4 w-4" />
-//                       </button>
-//                     </div>
-//                   </div>
-//                   <div
-//                     ref={editEditorRef}
-//                     className="p-4 min-h-[200px] border-none outline-none"
-//                     contentEditable={true}
-//                     dangerouslySetInnerHTML={{ __html: editedMaterial.contenido }}
-//                   />
-//                 </div>
-//                 {formErrors.contenido && <p className="text-red-500 text-xs mt-1">{formErrors.contenido}</p>}
-//               </div>
-
-//               <div className="flex justify-between px-4">
-//                 <button
-//                   className="bg-[#f44144] text-white text-sm py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
-//                   onClick={() => setShowEditModal(false)}
-//                 >
-//                   Cancelar
-//                 </button>
-//                 <button
-//                   className="px-4 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600"
-//                   onClick={handleEditSubmit}
-//                 >
-//                   Guardar
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Detail Material Modal */}
-//       {showDetailModal && selectedMaterial && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-//             <div className="p-6">
-//               <h2 className="text-xl font-bold text-[#1f384c] mb-6">Detalle de material de apoyo</h2>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
-//                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-//                     {selectedMaterial.nombre}
-//                   </div>
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-//                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">{selectedMaterial.tema}</div>
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-//                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-//                     {user ? user.nombre || user.username || "Usuario actual" : "Usuario no identificado"}
-//                   </div>
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">Estado:</label>
-//                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-//                     <span
-//                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         selectedMaterial.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-//                       }`}
-//                     >
-//                       {selectedMaterial.estado}
-//                     </span>
-//                   </div>
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm text-[#627b87] mb-1">fecha:</label>
-//                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-//                     {new Date().toLocaleDateString()}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="mb-4">
-//                 <div className="border border-[#d9d9d9] rounded">
-//                   <div className="p-4 min-h-[200px]">
-//                     <div className="text-sm text-[#627b87] mb-2">Material de Apoyo...</div>
-//                     <div className="border border-dashed border-[#d9d9d9] rounded h-32 flex items-center justify-center">
-//                       <div className="text-center text-[#627b87]">
-//                         <div className="text-sm">Contenido del material</div>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="flex justify-end">
-//                 <button
-//                   className="px-4 py-2 bg-[#dc3545] text-white rounded-lg hover:bg-red-600"
-//                   onClick={() => setShowDetailModal(false)}
-//                 >
-//                   Cerrar
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Modal de error */}
-//       <ConfirmationModal
-//         isOpen={showErrorModal}
-//         onConfirm={() => setShowErrorModal(false)}
-//         title="Error"
-//         message={errorMessage}
-//         confirmText="Aceptar"
-//         confirmColor="bg-[#f44144] hover:bg-red-600"
-//         showButtonCancel={false}
-//       />
-
-//       {/* Modal de confirmación para eliminar material */}
-//       <ConfirmationModal
-//         isOpen={showDeleteConfirm}
-//         onClose={() => setShowDeleteConfirm(false)}
-//         onConfirm={confirmDeleteMaterial}
-//         title="Eliminar Material"
-//         message="¿Está seguro que desea eliminar este material de apoyo? Esta acción no se puede deshacer."
-//         confirmText="Eliminar"
-//         confirmColor="bg-[#f44144] hover:bg-red-600"
-//       />
-
-//       {/* Modal de éxito */}
-//       <ConfirmationModal
-//         isOpen={showSuccessModal}
-//         onConfirm={() => setShowSuccessModal(false)}
-//         title="Operación Exitosa"
-//         message={successMessage}
-//         confirmText="Aceptar"
-//         confirmColor="bg-green-500 hover:bg-green-600"
-//         showButtonCancel={false}
-//       />
-
-//       {/* Modal de confirmación para cerrar sesión */}
-//       <ConfirmationModal
-//         isOpen={showLogoutConfirm}
-//         onClose={() => setShowLogoutConfirm(false)}
-//         onConfirm={handleLogout}
-//         title="Cerrar Sesión"
-//         message="¿Está seguro de que desea cerrar la sesión actual?"
-//         confirmText="Cerrar Sesión"
-//         confirmColor="bg-[#f44144] hover:bg-red-600"
-//       />
-//     </div>
-//   )
-// }
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import {
   ChevronDown,
@@ -2076,64 +13,19 @@ import {
   ListOrdered,
   Maximize2,
   Underline,
+  Upload,
+  FileText,
+  Music,
+  Trash2,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// Datos de ejemplo
-const initialMaterialsData = [
-  {
-    id: 1,
-    nombre: "Gramática y vocabulario",
-    tema: "Verb to be",
-    estado: "Activo",
-    contenido: "<p>Este material contiene información sobre el verbo 'to be' en inglés, sus usos y conjugaciones.</p>",
-  },
-  {
-    id: 2,
-    nombre: "Comprensión auditiva y pronunciación",
-    tema: "verb tobe",
-    estado: "Inactivo",
-    contenido: "<p>Ejercicios de comprensión auditiva y guía de pronunciación para principiantes.</p>",
-  },
-  {
-    id: 3,
-    nombre: "Lectura y escritura",
-    tema: "Verb to be",
-    estado: "Activo",
-    contenido: "<p>Actividades de lectura y escritura para practicar el verbo 'to be'.</p>",
-  },
-  {
-    id: 4,
-    nombre: "Recursos interactivos",
-    tema: "Pronunciador",
-    estado: "Activo",
-    contenido: "<p>Herramientas interactivas para mejorar la pronunciación en inglés.</p>",
-  },
-  {
-    id: 5,
-    nombre: "Cultura y contexto",
-    tema: "Pronunciador",
-    estado: "Activo",
-    contenido: "<p>Información cultural y contextual para entender mejor el idioma inglés.</p>",
-  },
-  {
-    id: 6,
-    nombre: "The crown",
-    tema: "Verb to be",
-    estado: "Inactivo",
-    contenido: "<p>Material basado en la serie 'The Crown' para practicar inglés.</p>",
-  },
-  {
-    id: 7,
-    nombre: "Postal",
-    tema: "Pronunciador",
-    estado: "Inactivo",
-    contenido: "<p>Ejercicio de escritura de postales en inglés.</p>",
-  },
-]
+import LoadingSpinner from "../../../shared/components/LoadingSpinner"
+import ErrorMessage from "../../../shared/components/ErrorMessage"
+import useSupportMaterials from "../../../shared/hooks/useSupportMaterials"
+import { useGetTopics } from "../../Topics/hooks/useGetTopics"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -2144,7 +36,9 @@ const columns = [
     render: (item) => (
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          item.estado === "Activo" || item.estado === "activo"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
         }`}
       >
         {item.estado}
@@ -2153,7 +47,34 @@ const columns = [
   },
 ]
 
+// Datos de prueba temporales para cuando no hay conexión
+const testMaterials = [
+//   {
+//     _id: "1",
+//     nombre: "Material de prueba 1",
+//     tema: "Verb to be",
+//     estado: "Activo",
+//     contenido: "<p>Contenido de prueba</p>",
+//   },
+//   {
+//     _id: "2",
+//     nombre: "Material de prueba 2",
+//     tema: "Pronunciador",
+//     estado: "Inactivo",
+//     contenido: "<p>Otro contenido de prueba</p>",
+//   },
+]
+
 export default function SupportMaterials() {
+  // Hook personalizado para manejar materiales
+  const { materials, loading, error, createMaterial, updateMaterial, deleteMaterial, setMaterials, setError } =
+    useSupportMaterials()
+
+  // Debug: verificar qué datos estamos recibiendo
+  console.log("SupportMaterials - materials:", materials, "loading:", loading, "error:", error)
+  console.log("SupportMaterials - materials es array?", Array.isArray(materials))
+
+  const { topics } = useGetTopics();
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -2162,17 +83,16 @@ export default function SupportMaterials() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [materials, setMaterials] = useState([...initialMaterialsData])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
 
-  // Nuevos estados para el formulario
+  // Nuevos estados para el formulario (sin descripción, tipo y creado por)
   const [formData, setFormData] = useState({
-    nombre: "",
+    titulo: "",
     tema: "",
-    creadoPor: "Yaritza lopez",
     fecha: new Date().toISOString().split("T")[0],
-    estado: "Activo",
+    estado: "activo",
     contenido: "<div>Material de Apoyo...</div>",
   })
 
@@ -2183,6 +103,138 @@ export default function SupportMaterials() {
   // Referencias para los editores
   const addEditorRef = useRef(null)
   const editEditorRef = useRef(null)
+
+  // Referencias para inputs de archivos
+  const imageInputRef = useRef(null)
+  const documentInputRef = useRef(null)
+  const audioInputRef = useRef(null)
+
+  // Función para hacer elementos del editor eliminables
+  const makeContentEditable = (editorRef) => {
+    if (!editorRef.current) return
+
+    // Agregar event listeners a imágenes, documentos y audios
+    const images = editorRef.current.querySelectorAll("img")
+    const documents = editorRef.current.querySelectorAll(".document-link")
+    const audios = editorRef.current.querySelectorAll(".audio-container")
+
+    // Hacer imágenes eliminables
+    images.forEach((img) => {
+      img.style.cursor = "pointer"
+      img.style.border = "2px solid transparent"
+      img.title = "Haz clic para eliminar esta imagen"
+
+      img.addEventListener("click", (e) => {
+        e.preventDefault()
+        if (confirm("¿Deseas eliminar esta imagen?")) {
+          img.remove()
+        }
+      })
+
+      img.addEventListener("mouseenter", () => {
+        img.style.border = "2px solid #ff4444"
+      })
+
+      img.addEventListener("mouseleave", () => {
+        img.style.border = "2px solid transparent"
+      })
+    })
+
+    // Hacer documentos eliminables
+    documents.forEach((doc) => {
+      doc.style.cursor = "pointer"
+      doc.style.position = "relative"
+      doc.title = "Haz clic para eliminar este documento"
+
+      // Agregar botón de eliminar
+      const deleteBtn = document.createElement("button")
+      deleteBtn.innerHTML = "✕"
+      deleteBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        display: none;
+      `
+
+      doc.appendChild(deleteBtn)
+
+      doc.addEventListener("mouseenter", () => {
+        deleteBtn.style.display = "block"
+      })
+
+      doc.addEventListener("mouseleave", () => {
+        deleteBtn.style.display = "none"
+      })
+
+      deleteBtn.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (confirm("¿Deseas eliminar este documento?")) {
+          doc.remove()
+        }
+      })
+    })
+
+    // Hacer audios eliminables
+    audios.forEach((audio) => {
+      audio.style.cursor = "pointer"
+      audio.style.position = "relative"
+      audio.title = "Haz clic para eliminar este audio"
+
+      // Agregar botón de eliminar
+      const deleteBtn = document.createElement("button")
+      deleteBtn.innerHTML = "✕"
+      deleteBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        display: none;
+      `
+
+      audio.appendChild(deleteBtn)
+
+      audio.addEventListener("mouseenter", () => {
+        deleteBtn.style.display = "block"
+      })
+
+      audio.addEventListener("mouseleave", () => {
+        deleteBtn.style.display = "none"
+      })
+
+      deleteBtn.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (confirm("¿Deseas eliminar este audio?")) {
+          audio.remove()
+        }
+      })
+    })
+  }
+
+  // Función para limpiar todo el contenido
+  const clearAllContent = (editorRef) => {
+    if (!editorRef.current) return
+
+    if (confirm("¿Deseas eliminar todo el contenido? Esta acción no se puede deshacer.")) {
+      editorRef.current.innerHTML = "<div>Material de Apoyo...</div>"
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -2199,11 +251,10 @@ export default function SupportMaterials() {
   useEffect(() => {
     if (showEditModal && selectedMaterial) {
       setFormData({
-        nombre: selectedMaterial.nombre,
-        tema: selectedMaterial.tema,
-        creadoPor: "Yaritza lopez",
-        fecha: new Date().toISOString().split("T")[0],
-        estado: selectedMaterial.estado,
+        titulo: selectedMaterial.titulo || selectedMaterial.nombre || "",
+        tema: selectedMaterial.tema || "",
+        
+        estado: selectedMaterial.estado || "activo",
         contenido: selectedMaterial.contenido || "<div>Material de Apoyo...</div>",
       })
 
@@ -2211,6 +262,8 @@ export default function SupportMaterials() {
       setTimeout(() => {
         if (editEditorRef.current) {
           editEditorRef.current.innerHTML = selectedMaterial.contenido || "<div>Material de Apoyo...</div>"
+          // Hacer elementos eliminables
+          makeContentEditable(editEditorRef)
         }
       }, 100)
     }
@@ -2220,11 +273,10 @@ export default function SupportMaterials() {
   useEffect(() => {
     if (showAddModal) {
       setFormData({
-        nombre: "",
+        titulo: "",
         tema: "",
-        creadoPor: "Yaritza lopez",
         fecha: new Date().toISOString().split("T")[0],
-        estado: "Activo",
+        estado: "activo",
         contenido: "<div>Material de Apoyo...</div>",
       })
 
@@ -2232,6 +284,8 @@ export default function SupportMaterials() {
       setTimeout(() => {
         if (addEditorRef.current) {
           addEditorRef.current.innerHTML = "<div>Material de Apoyo...</div>"
+          // Hacer elementos eliminables
+          makeContentEditable(addEditorRef)
         }
       }, 100)
     }
@@ -2261,24 +315,25 @@ export default function SupportMaterials() {
     setShowDetailModal(true)
   }
 
-  const handleDelete = (material) => {
-    setItemToDelete(material.id)
-    setSelectedMaterial(material)
+  const handleDelete = (id) => {
+    setItemToDelete(id)
+    setSelectedMaterial(id)
     setShowDeleteConfirm(true)
   }
 
-  const confirmDeleteMaterial = () => {
+  const confirmDeleteMaterial = async () => {
     try {
-      // Eliminar de la lista local
-      const updatedMaterials = materials.filter((m) => m.id !== itemToDelete)
-      setMaterials(updatedMaterials)
+      console.log(`Eliminando material con ID: ${itemToDelete}`)
 
-      // Mostrar mensaje de éxito
-      setSuccessMessage("Material eliminado exitosamente")
+      await deleteMaterial(itemToDelete)
+
+      setSuccessMessage("Material eliminado exitosamente de la base de datos")
       setShowSuccessModal(true)
+
+      console.log("Material eliminado exitosamente")
     } catch (error) {
       console.error("Error al eliminar el material:", error)
-      setSuccessMessage("Ocurrió un error al eliminar el material")
+      setSuccessMessage(`Error al eliminar el material: ${error.message}`)
       setShowSuccessModal(true)
     } finally {
       setShowDeleteConfirm(false)
@@ -2295,64 +350,188 @@ export default function SupportMaterials() {
     }))
   }
 
-  // Guardar un nuevo material
-  const handleSaveNewMaterial = () => {
+  // Función para subir archivos
+  const uploadFile = async (file) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
     try {
+      setUploadingFile(true)
+      const response = await fetch("http://localhost:3000/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al subir el archivo")
+      }
+
+      const result = await response.json()
+      return result.data.url
+    } catch (error) {
+      console.error("Error al subir archivo:", error)
+      setSuccessMessage("Error al subir el archivo")
+      setShowSuccessModal(true)
+      return null
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
+  // Manejar subida de imágenes con tamaño fijo
+  const handleImageUpload = async (editorRef) => {
+    const file = imageInputRef.current?.files[0]
+    if (!file) return
+
+    const fileUrl = await uploadFile(file)
+    if (fileUrl) {
+      const fullUrl = `http://localhost:3000${fileUrl}`
+      // Crear imagen con tamaño fijo y responsive
+      const imageHtml = `<img src="${fullUrl}" alt="${file.name}" class="editor-image" style="max-width: 100%; height: auto; width: 400px; border-radius: 8px; margin: 10px 0;" />`
+      editorRef.current.focus()
+      document.execCommand("insertHTML", false, imageHtml)
+      // Aplicar funcionalidad de eliminación al nuevo contenido
+      setTimeout(() => makeContentEditable(editorRef), 100)
+    }
+
+    // Limpiar el input
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ""
+    }
+  }
+
+  // Manejar subida de documentos
+  const handleDocumentUpload = async (editorRef) => {
+    const file = documentInputRef.current?.files[0]
+    if (!file) return
+
+    const fileUrl = await uploadFile(file)
+    if (fileUrl) {
+      const fullUrl = `http://localhost:3000${fileUrl}`
+      const linkHtml = `<div class="document-link" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9fa;"><a href="${fullUrl}" target="_blank" download="${file.name}" style="color: #007bff; text-decoration: none; font-weight: 500;">📄 ${file.name}</a><br><small style="color: #6c757d;">Haz clic para descargar</small></div>`
+      editorRef.current.focus()
+      document.execCommand("insertHTML", false, linkHtml)
+      // Aplicar funcionalidad de eliminación al nuevo contenido
+      setTimeout(() => makeContentEditable(editorRef), 100)
+    }
+
+    // Limpiar el input
+    if (documentInputRef.current) {
+      documentInputRef.current.value = ""
+    }
+  }
+
+  // Manejar subida de audio
+  const handleAudioUpload = async (editorRef) => {
+    const file = audioInputRef.current?.files[0]
+    if (!file) return
+
+    const fileUrl = await uploadFile(file)
+    if (fileUrl) {
+      const fullUrl = `http://localhost:3000${fileUrl}`
+      const audioHtml = `<div class="audio-container" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9fa;"><audio controls style="width: 100%; max-width: 400px;"><source src="${fullUrl}" type="${file.type}">Tu navegador no soporta el elemento de audio.</audio><br><small style="color: #6c757d;">🎵 ${file.name}</small></div>`
+      editorRef.current.focus()
+      document.execCommand("insertHTML", false, audioHtml)
+      // Aplicar funcionalidad de eliminación al nuevo contenido
+      setTimeout(() => makeContentEditable(editorRef), 100)
+    }
+
+    // Limpiar el input
+    if (audioInputRef.current) {
+      audioInputRef.current.value = ""
+    }
+  }
+
+  // Guardar un nuevo material
+  const handleSaveNewMaterial = async () => {
+    try {
+      // Validar campos requeridos
+      if (!formData.titulo || formData.titulo.trim() === "") {
+        setSuccessMessage("El título es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
+
+      if (!formData.tema || formData.tema.trim() === "") {
+        setSuccessMessage("El tema es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
+
       // Obtener el contenido del editor
       const contenido = addEditorRef.current ? addEditorRef.current.innerHTML : formData.contenido
 
-      // Crear nuevo material
-      const newMaterial = {
-        id: materials.length > 0 ? Math.max(...materials.map((m) => m.id)) + 1 : 1,
-        nombre: formData.nombre,
-        tema: formData.tema,
+      // Validar que el contenido no esté vacío
+      if (!contenido || contenido.trim() === "" || contenido === "<div><br></div>") {
+        setSuccessMessage("El contenido es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
+
+      // Crear nuevo material (sin descripción, tipo y creado por)
+      const materialData = {
+        titulo: formData.titulo.trim(),
+        tema: formData.tema.trim(),
+        fecha: formData.fecha,
         estado: formData.estado,
         contenido: contenido,
       }
 
-      // Añadir a la lista
-      setMaterials([...materials, newMaterial])
+      console.log("Datos finales a enviar:", materialData)
 
-      // Mostrar mensaje de éxito
+      await createMaterial(materialData)
       setSuccessMessage("Material añadido exitosamente")
       setShowSuccessModal(true)
       setShowAddModal(false)
     } catch (error) {
       console.error("Error al añadir el material:", error)
-      setSuccessMessage("Ocurrió un error al añadir el material")
+      setSuccessMessage(`Error al añadir el material: ${error.message}`)
       setShowSuccessModal(true)
     }
   }
 
   // Actualizar un material existente
-  const handleUpdateMaterial = () => {
+  const handleUpdateMaterial = async () => {
     try {
+      // Validar campos requeridos
+      if (!formData.titulo || formData.titulo.trim() === "") {
+        setSuccessMessage("El título es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
+
+      if (!formData.tema || formData.tema.trim() === "") {
+        setSuccessMessage("El tema es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
+
       // Obtener el contenido del editor
       const contenido = editEditorRef.current ? editEditorRef.current.innerHTML : formData.contenido
 
-      // Actualizar el material
-      const updatedMaterials = materials.map((m) => {
-        if (m.id === selectedMaterial.id) {
-          return {
-            ...m,
-            nombre: formData.nombre,
-            tema: formData.tema,
-            estado: formData.estado,
-            contenido: contenido,
-          }
-        }
-        return m
-      })
+      // Validar que el contenido no esté vacío
+      if (!contenido || contenido.trim() === "" || contenido === "<div><br></div>") {
+        setSuccessMessage("El contenido es obligatorio")
+        setShowSuccessModal(true)
+        return
+      }
 
-      setMaterials(updatedMaterials)
+      // Actualizar el material (sin descripción, tipo y creado por)
+      const materialData = {
+        titulo: formData.titulo.trim(),
+        tema: formData.tema.trim(),
+        fecha: formData.fecha,
+        estado: formData.estado,
+        contenido: contenido,
+      }
 
-      // Mostrar mensaje de éxito
+      await updateMaterial(selectedMaterial._id, materialData)
       setSuccessMessage("Material actualizado exitosamente")
       setShowSuccessModal(true)
       setShowEditModal(false)
     } catch (error) {
       console.error("Error al actualizar el material:", error)
-      setSuccessMessage("Ocurrió un error al actualizar el material")
+      setSuccessMessage(`Error al actualizar el material: ${error.message}`)
       setShowSuccessModal(true)
     }
   }
@@ -2367,6 +546,57 @@ export default function SupportMaterials() {
     // Ejecutar el comando
     document.execCommand(command, false, value)
   }
+
+  // Mostrar loading si está cargando
+  if (loading && materials.length === 0) {
+    return (
+      <div className="min-h-screen">
+        <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-[#1f384c]">MATERIAL DE APOYO</h1>
+          </div>
+        </header>
+        <div className="container mx-auto px-6">
+          <LoadingSpinner size="large" message="Cargando materiales de apoyo..." />
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar error si hay error
+  if (error && materials.length === 0) {
+    return (
+      <div className="min-h-screen">
+        <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-[#1f384c]">MATERIAL DE APOYO</h1>
+          </div>
+        </header>
+        <div className="container mx-auto px-6">
+          <ErrorMessage
+            message={error}
+            onRetry={() => {
+              if (setError) setError(null)
+              window.location.reload()
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Asegurar que materials sea un array antes de pasarlo a GenericTable
+  // Si no hay materiales del backend, usar datos de prueba temporales
+  const materialsArray = Array.isArray(materials) && materials.length > 0 ? materials : testMaterials
+
+  // Mapear los datos para asegurar que tengan la estructura correcta
+  const mappedMaterials = materialsArray.map((material) => ({
+    ...material,
+    nombre: material.titulo || material.nombre, // Para mostrar en la tabla
+    _id: material._id || material.id,
+  }))
+
+  console.log("SupportMaterials - materialsArray final:", mappedMaterials)
 
   return (
     <div className="min-h-screen">
@@ -2398,7 +628,7 @@ export default function SupportMaterials() {
 
       <div className="container mx-auto px-6">
         <GenericTable
-          data={materials}
+          data={mappedMaterials}
           columns={columns}
           onShow={handleView}
           onEdit={handleEdit}
@@ -2409,53 +639,80 @@ export default function SupportMaterials() {
         />
       </div>
 
+      {/* Inputs ocultos para archivos */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={() => handleImageUpload(showAddModal ? addEditorRef : editEditorRef)}
+      />
+      <input
+        ref={documentInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+        style={{ display: "none" }}
+        onChange={() => handleDocumentUpload(showAddModal ? addEditorRef : editEditorRef)}
+      />
+      <input
+        ref={audioInputRef}
+        type="file"
+        accept="audio/*"
+        style={{ display: "none" }}
+        onChange={() => handleAudioUpload(showAddModal ? addEditorRef : editEditorRef)}
+      />
+
       {/* Add Material Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir material de apoyo</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header fijo */}
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-xl font-bold text-[#1f384c]">Añadir material de apoyo</h2>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Contenido con scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
+                  <label className="block text-sm text-[#627b87] mb-1">
+                    Título: <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="nombre"
-                    value={formData.nombre}
+                    name="titulo"
+                    value={formData.titulo}
                     onChange={handleInputChange}
-                    placeholder="Ingrese nombre"
+                    placeholder="Ingrese título"
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm text-[#627b87] mb-1">
+                    Tema: <span className="text-red-500">*</span>
+                  </label>
+                  <select
                     name="tema"
                     value={formData.tema}
                     onChange={handleInputChange}
-                    placeholder="Ingrese Tema"
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-                  <input
-                    type="text"
-                    name="creadoPor"
-                    value={formData.creadoPor}
-                    onChange={handleInputChange}
-                    placeholder="Yaritza lopez"
-                    className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-                  />
+                    required
+                  >
+                    <option value="">Seleccione un tema</option>
+                    {topics.map((topic) => (
+                      <option key={topic.id} value={topic.name}>
+                        {topic.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
                   <input
                     type="date"
                     name="fecha"
-                    value={formData.fecha}
+                    
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
                   />
@@ -2468,84 +725,101 @@ export default function SupportMaterials() {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
                   >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
                   </select>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm text-[#627b87] mb-1">Contenido:</label>
+              <div className="mb-6">
+                <label className="block text-sm text-[#627b87] mb-1">
+                  Contenido: <span className="text-red-500">*</span>
+                </label>
                 <div className="border border-[#d9d9d9] rounded">
-                  <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2 flex-wrap">
+                  <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2 flex-wrap bg-gray-50">
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("bold", null, addEditorRef)}
                     >
                       <Bold className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("italic", null, addEditorRef)}
                     >
                       <Italic className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("underline", null, addEditorRef)}
                     >
                       <Underline className="h-4 w-4" />
                     </button>
                     <span className="mx-1 text-[#d9d9d9]">|</span>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyLeft", null, addEditorRef)}
                     >
                       <AlignLeft className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyCenter", null, addEditorRef)}
                     >
                       <AlignCenter className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyRight", null, addEditorRef)}
                     >
                       <AlignRight className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyFull", null, addEditorRef)}
                     >
                       <AlignJustify className="h-4 w-4" />
                     </button>
                     <span className="mx-1 text-[#d9d9d9]">|</span>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("insertUnorderedList", null, addEditorRef)}
                     >
                       <List className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("insertOrderedList", null, addEditorRef)}
                     >
                       <ListOrdered className="h-4 w-4" />
                     </button>
                     <div className="ml-auto flex items-center gap-2">
                       <button
-                        className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-                        onClick={() => {
-                          const imageUrl = prompt("Ingrese la URL de la imagen:")
-                          if (imageUrl) execCommand("insertImage", imageUrl, addEditorRef)
-                        }}
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir imagen"
                       >
                         <ImageIcon className="h-4 w-4" />
                       </button>
                       <button
-                        className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => documentInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir documento"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => audioInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir audio"
+                      >
+                        <Music className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
                         onClick={() => {
                           const url = prompt("Ingrese la URL:")
                           const text = prompt("Ingrese el texto del enlace:")
@@ -2558,34 +832,49 @@ export default function SupportMaterials() {
                       >
                         <Link className="h-4 w-4" />
                       </button>
-                      <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
+                      <button className="p-1 text-[#627b87] hover:bg-white rounded">
                         <Maximize2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => clearAllContent(showAddModal ? addEditorRef : editEditorRef)}
+                        title="Limpiar todo el contenido"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                   <div
                     ref={addEditorRef}
-                    className="p-4 min-h-[200px] border-none outline-none"
+                    className="p-4 min-h-[300px] max-h-[400px] overflow-y-auto border-none outline-none bg-white"
                     contentEditable={true}
                     dangerouslySetInnerHTML={{ __html: formData.contenido }}
                   />
                 </div>
+                {uploadingFile && (
+                  <div className="mt-2 text-sm text-blue-600">
+                    <Upload className="inline h-4 w-4 mr-1" />
+                    Subiendo archivo...
+                  </div>
+                )}
               </div>
+            </div>
 
-              <div className="flex justify-between px-4">
-                <button
-                  className="bg-[#f44144] text-white text-sm py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="px-4 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600"
-                  onClick={handleSaveNewMaterial}
-                >
-                  Añadir
-                </button>
-              </div>
+            {/* Footer fijo */}
+            <div className="p-6 border-t border-gray-200 flex justify-between flex-shrink-0">
+              <button
+                className="bg-[#f44144] text-white text-sm py-2 px-6 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-6 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600 transition-colors"
+                onClick={handleSaveNewMaterial}
+                disabled={uploadingFile}
+              >
+                Añadir
+              </button>
             </div>
           </div>
         </div>
@@ -2593,41 +882,47 @@ export default function SupportMaterials() {
 
       {/* Edit Material Modal */}
       {showEditModal && selectedMaterial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar material de apoyo</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header fijo */}
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-xl font-bold text-[#1f384c]">Editar material de apoyo</h2>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Contenido con scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
+                  <label className="block text-sm text-[#627b87] mb-1">
+                    Título: <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="nombre"
-                    value={formData.nombre}
+                    name="titulo"
+                    value={formData.titulo}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Tema:</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm text-[#627b87] mb-1">
+                    Tema: <span className="text-red-500">*</span>
+                  </label>
+                  <select
                     name="tema"
                     value={formData.tema}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-                  <input
-                    type="text"
-                    name="creadoPor"
-                    value={formData.creadoPor}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-                  />
+                    required
+                  >
+                    <option value="">Seleccione un tema</option>
+                    {topics.map((topic) => (
+                      <option key={topic.id} value={topic.name}>
+                        {topic.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
@@ -2647,84 +942,101 @@ export default function SupportMaterials() {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
                   >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
                   </select>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm text-[#627b87] mb-1">Contenido:</label>
+              <div className="mb-6">
+                <label className="block text-sm text-[#627b87] mb-1">
+                  Contenido: <span className="text-red-500">*</span>
+                </label>
                 <div className="border border-[#d9d9d9] rounded">
-                  <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2 flex-wrap">
+                  <div className="flex items-center gap-2 border-b border-[#d9d9d9] p-2 flex-wrap bg-gray-50">
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("bold", null, editEditorRef)}
                     >
                       <Bold className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("italic", null, editEditorRef)}
                     >
                       <Italic className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("underline", null, editEditorRef)}
                     >
                       <Underline className="h-4 w-4" />
                     </button>
                     <span className="mx-1 text-[#d9d9d9]">|</span>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyLeft", null, editEditorRef)}
                     >
                       <AlignLeft className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyCenter", null, editEditorRef)}
                     >
                       <AlignCenter className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyRight", null, editEditorRef)}
                     >
                       <AlignRight className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("justifyFull", null, editEditorRef)}
                     >
                       <AlignJustify className="h-4 w-4" />
                     </button>
                     <span className="mx-1 text-[#d9d9d9]">|</span>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("insertUnorderedList", null, editEditorRef)}
                     >
                       <List className="h-4 w-4" />
                     </button>
                     <button
-                      className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                      className="p-1 text-[#627b87] hover:bg-white rounded"
                       onClick={() => execCommand("insertOrderedList", null, editEditorRef)}
                     >
                       <ListOrdered className="h-4 w-4" />
                     </button>
                     <div className="ml-auto flex items-center gap-2">
                       <button
-                        className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
-                        onClick={() => {
-                          const imageUrl = prompt("Ingrese la URL de la imagen:")
-                          if (imageUrl) execCommand("insertImage", imageUrl, editEditorRef)
-                        }}
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir imagen"
                       >
                         <ImageIcon className="h-4 w-4" />
                       </button>
                       <button
-                        className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded"
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => documentInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir documento"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => audioInputRef.current?.click()}
+                        disabled={uploadingFile}
+                        title="Subir audio"
+                      >
+                        <Music className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
                         onClick={() => {
                           const url = prompt("Ingrese la URL:")
                           const text = prompt("Ingrese el texto del enlace:")
@@ -2739,33 +1051,48 @@ export default function SupportMaterials() {
                       >
                         <Link className="h-4 w-4" />
                       </button>
-                      <button className="p-1 text-[#627b87] hover:bg-[#f6f6fb] rounded">
+                      <button className="p-1 text-[#627b87] hover:bg-white rounded">
                         <Maximize2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-1 text-[#627b87] hover:bg-white rounded"
+                        onClick={() => clearAllContent(showAddModal ? addEditorRef : editEditorRef)}
+                        title="Limpiar todo el contenido"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                   <div
                     ref={editEditorRef}
-                    className="p-4 min-h-[200px] border-none outline-none"
+                    className="p-4 min-h-[300px] max-h-[400px] overflow-y-auto border-none outline-none bg-white"
                     contentEditable={true}
                   />
                 </div>
+                {uploadingFile && (
+                  <div className="mt-2 text-sm text-blue-600">
+                    <Upload className="inline h-4 w-4 mr-1" />
+                    Subiendo archivo...
+                  </div>
+                )}
               </div>
+            </div>
 
-              <div className="flex justify-between px-4">
-                <button
-                  className="bg-[#f44144] text-white text-sm py-2 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="px-4 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600"
-                  onClick={handleUpdateMaterial}
-                >
-                  Guardar
-                </button>
-              </div>
+            {/* Footer fijo */}
+            <div className="p-6 border-t border-gray-200 flex justify-between flex-shrink-0">
+              <button
+                className="bg-[#f44144] text-white text-sm py-2 px-6 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                onClick={() => setShowEditModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-6 py-2 bg-[#46ae69] text-white rounded-lg text-sm hover:bg-green-600 transition-colors"
+                onClick={handleUpdateMaterial}
+                disabled={uploadingFile}
+              >
+                Guardar
+              </button>
             </div>
           </div>
         </div>
@@ -2773,16 +1100,20 @@ export default function SupportMaterials() {
 
       {/* Detail Material Modal */}
       {showDetailModal && selectedMaterial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-[#1f384c] mb-6">Detalle de material de apoyo</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header fijo */}
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-xl font-bold text-[#1f384c]">Detalle de material de apoyo</h2>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Contenido con scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Nombre:</label>
+                  <label className="block text-sm text-[#627b87] mb-1">Título:</label>
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-                    {selectedMaterial.nombre}
+                    {selectedMaterial.titulo || selectedMaterial.nombre}
                   </div>
                 </div>
                 <div>
@@ -2790,13 +1121,9 @@ export default function SupportMaterials() {
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">{selectedMaterial.tema}</div>
                 </div>
                 <div>
-                  <label className="block text-sm text-[#627b87] mb-1">Creado por:</label>
-                  <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">Yaritza lopez</div>
-                </div>
-                <div>
                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-                    {formData.fecha || "20-02-2025"}
+                    {selectedMaterial.fecha ? new Date(selectedMaterial.fecha).toLocaleDateString() : "20-02-2025"}
                   </div>
                 </div>
                 <div>
@@ -2804,7 +1131,9 @@ export default function SupportMaterials() {
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedMaterial.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        selectedMaterial.estado === "Activo" || selectedMaterial.estado === "activo"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {selectedMaterial.estado}
@@ -2813,12 +1142,12 @@ export default function SupportMaterials() {
                 </div>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-6">
                 <label className="block text-sm text-[#627b87] mb-1">Contenido:</label>
-                <div className="border border-[#d9d9d9] rounded">
-                  <div className="p-4 min-h-[200px] overflow-auto">
+                <div className="border border-[#d9d9d9] rounded bg-white">
+                  <div className="p-4 min-h-[300px] overflow-auto">
                     <div
-                      className="text-sm text-[#627b87]"
+                      className="text-sm text-[#627b87] editor-content"
                       dangerouslySetInnerHTML={{
                         __html: selectedMaterial.contenido || "<div>Material de Apoyo...</div>",
                       }}
@@ -2826,15 +1155,16 @@ export default function SupportMaterials() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end">
-                <button
-                  className="px-4 py-2 bg-[#dc3545] text-white rounded-lg hover:bg-red-600"
-                  onClick={() => setShowDetailModal(false)}
-                >
-                  Cerrar
-                </button>
-              </div>
+            {/* Footer fijo */}
+            <div className="p-6 border-t border-gray-200 flex justify-end flex-shrink-0">
+              <button
+                className="px-6 py-2 bg-[#dc3545] text-white rounded-lg hover:bg-red-600 transition-colors"
+                onClick={() => setShowDetailModal(false)}
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

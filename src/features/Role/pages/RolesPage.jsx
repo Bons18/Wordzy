@@ -106,9 +106,7 @@ const RolesPage = () => {
     try {
       setIsDeleting(true);
       await deleteRole(itemToDelete);
-      // Espera a que refetch termine Y devuelva los datos
-      const updatedRoles = await refetch();
-      console.log("Roles actualizados:", updatedRoles); // Verificación
+      await refetch();
       setSuccessMessage("Rol eliminado exitosamente");
       setShowSuccessModal(true);
     } catch (error) {

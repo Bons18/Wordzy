@@ -1,36 +1,29 @@
-"use client"
-
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
 import GenericTable from "../../../shared/components/Table"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// Datos predeterminados
-const defaultSchedules = [
-  { id: 1, nombre: "Programa 1", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-  { id: 2, nombre: "Programa 2", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-  { id: 3, nombre: "Programa 3", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-  { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-  { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-]
+import { useGetCourseProgrammings } from "../hooks/useGetCoursePrograming"
+import { formatDate } from "../../../shared/utils/dateFormatter"
+import { useDeleteCourseProgramming } from "../hooks/useDeleteCoursePrograming"
 
 const columns = [
-  { key: "id", label: "Id" },
-  { key: "nombre", label: "Nombre" },
-  { key: "fechaInicio", label: "Fecha Inicio" },
-  { key: "fechaFin", label: "Fecha Fin" },
   {
-    key: "estado",
+    key: "programId",
+    label: "Programa",
+    render: (item) => item.programId?.name || "Sin nombre"
+  },
+  { key: "startDate", label: "Fecha Inicio" },
+  { key: "endDate", label: "Fecha Fin" },
+  {
+    key: "status",
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-        }`}
-      >
-        {item.estado}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === true
+          ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        {item.status ? "Activo" : "Inactivo"}
       </span>
     ),
   },
@@ -38,7 +31,8 @@ const columns = [
 
 const CourseProgrammingPage = () => {
   const navigate = useNavigate()
-  const location = useLocation()
+  const { programmings, loading: fetchLoading, error: fetchError, refetch } = useGetCourseProgrammings()
+  const { deleteCourseProgramming } = useDeleteCourseProgramming()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -46,40 +40,32 @@ const CourseProgrammingPage = () => {
   const [successMessage, setSuccessMessage] = useState("")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const { logout } = useAuth()
-  const [schedules, setSchedules] = useState([...defaultSchedules])
-
   const dropdownRef = useRef(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("")
 
-  // Función para cargar las programaciones
-  const loadSchedules = () => {
-    try {
-      const savedSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
+  // Actualizar el estado de carga y error cuando cambien los hooks
+  useEffect(() => {
+    setIsLoading(fetchLoading)
+  }, [fetchLoading])
 
-      if (savedSchedules.length > 0) {
-        // Filtrar para evitar duplicados por ID
-        const existingIds = new Set(defaultSchedules.map((s) => s.id))
-        const filteredSavedSchedules = savedSchedules.filter((s) => !existingIds.has(s.id))
+  // Consolidar errores de los diferentes hooks
+  useEffect(() => {
+    const error = fetchError
+    setErrorMessage(error ? `Error: ${error}` : "")
+  }, [fetchError])
 
-        // Combinar con las programaciones predeterminadas
-        setSchedules([...defaultSchedules, ...filteredSavedSchedules])
-      } else {
-        setSchedules([...defaultSchedules])
-      }
-    } catch (error) {
-      console.error("Error al cargar programaciones:", error)
-      setSchedules([...defaultSchedules])
-    }
-  }
+  const formattedPrograms = programmings.map(programming => ({
+    ...programming,
+    startDate: formatDate(programming.startDate),
+    endDate: formatDate(programming.endDate)
+  }));
 
   // Cargar programaciones al montar el componente
   useEffect(() => {
-    loadSchedules()
-  }, [])
-
-  // Recargar programaciones cuando la ubicación cambia (volvemos a esta página)
-  useEffect(() => {
-    loadSchedules()
-  }, [location.pathname])
+    formattedPrograms
+  }, [formattedPrograms])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -119,25 +105,19 @@ const CourseProgrammingPage = () => {
     setShowDeleteConfirm(true)
   }
 
-  const confirmDeleteProgramming = () => {
+  const confirmDeleteProgramming = async () => {
     try {
-      // Eliminar de la lista local
-      const updatedSchedules = schedules.filter((s) => s.id !== itemToDelete)
-      setSchedules(updatedSchedules)
-
-      // Actualizar localStorage
-      const savedSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
-      const updatedSavedSchedules = savedSchedules.filter((s) => s.id !== itemToDelete)
-      localStorage.setItem("courseSchedules", JSON.stringify(updatedSavedSchedules))
-
+      setIsDeleting(true)
+      await deleteCourseProgramming(itemToDelete)
+      await refetch();
       // Mostrar mensaje de éxito
       setSuccessMessage("Programación eliminada exitosamente")
       setShowSuccessModal(true)
     } catch (error) {
-      console.error("Error al eliminar la programación:", error)
       setSuccessMessage("Ocurrió un error al eliminar la programación")
       setShowSuccessModal(true)
     } finally {
+      setIsDeleting(false);
       setShowDeleteConfirm(false)
       setItemToDelete(null)
     }
@@ -172,15 +152,28 @@ const CourseProgrammingPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        <GenericTable
-          data={schedules}
-          columns={columns}
-          onAdd={handleAddProgramming}
-          onShow={handleShowProgramming}
-          onEdit={handleEditProgramming}
-          onDelete={handleDeleteProgramming}
-          showActions={{ show: true, edit: true, delete: true, add: true }}
-        />
+        {/* Mostrar error si existe */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center my-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+            <span className="ml-2">Cargando...</span>
+          </div>
+        ) : (
+          <GenericTable
+            data={formattedPrograms}
+            columns={columns}
+            onAdd={handleAddProgramming}
+            onShow={handleShowProgramming}
+            onEdit={handleEditProgramming}
+            onDelete={handleDeleteProgramming}
+            showActions={{ show: true, edit: true, delete: true, add: true }}
+          />
+        )}
+
 
         {/* Modal de confirmación para cerrar sesión */}
         <ConfirmationModal
@@ -200,7 +193,7 @@ const CourseProgrammingPage = () => {
           onConfirm={confirmDeleteProgramming}
           title="Eliminar Programación"
           message="¿Está seguro que desea eliminar esta programación? Esta acción no se puede deshacer."
-          confirmText="Eliminar"
+          confirmText={isDeleting ? "Eliminando..." : "Eliminar"}
           confirmColor="bg-[#f44144] hover:bg-red-600"
         />
 
