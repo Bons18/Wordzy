@@ -6,19 +6,9 @@ import CustomSelect from "./ui/custom-select"
 import ActivitiesSection from "./activities-section"
 
 export default function ThemesList({ level, levels, setLevels, activeTabs, setActiveTabs, createdTopics = [] }) {
-  // Combinar temas predeterminados con los creados por el usuario
   const themeOptions = [
-    { value: "tema1", label: "Tema 1" },
-    { value: "tema2", label: "Tema 2" },
-    { value: "tema3", label: "Tema 3" },
-    ...(Array.isArray(createdTopics) ? createdTopics : []), // Verificar que createdTopics sea un array
+    ...(createdTopics || [])
   ]
-
-  // Función para depuración
-  const logThemeOptions = () => {
-    console.log("Opciones de temas disponibles:", themeOptions)
-    console.log("Temas creados:", createdTopics)
-  }
 
   const toggleThemeExpand = (levelId, themeId) => {
     setLevels(
@@ -35,13 +25,6 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   }
 
   const updateTheme = (levelId, themeId, selectedTheme) => {
-    // Log para depuración
-    console.log("Actualizando tema:", selectedTheme)
-    console.log(
-      "Tema seleccionado:",
-      themeOptions.find((opt) => opt.value === selectedTheme),
-    )
-
     setLevels(
       levels.map((level) => {
         if (level.id === levelId) {
@@ -81,16 +64,8 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
     )
   }
 
-  // Get theme display name
   const getThemeDisplayName = (theme) => {
-    if (theme.selectedTheme) {
-      // Buscar primero en los temas creados
-      const selectedOption = themeOptions.find((option) => option.value === theme.selectedTheme)
-      if (selectedOption) {
-        return selectedOption.label
-      }
-    }
-    return `Tema ${theme.id}`
+    return theme.selectedTheme?.label || "Tema"
   }
 
   const getLocalActiveTab = (levelId, themeId) => {
@@ -104,20 +79,16 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
     }))
   }
 
-  // Calcular el valor total de los temas en este nivel
   const calculateTotalThemeValue = () => {
-    return level.themes.reduce((total, theme) => total + (theme.progress || 0), 0)
+    return level.themes?.reduce((total, theme) => total + (theme.progress || 0), 0) || 0
   }
 
   const totalThemeValue = calculateTotalThemeValue()
   const isValueValid = totalThemeValue === 100
 
-  // Llamar a la función de depuración
-  logThemeOptions()
-
   return (
     <div className="space-y-3">
-      {level.themes.length > 0 && (
+      {level.themes?.length > 0 && (
         <div className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded">
           <span className="text-sm font-medium">Valor total de temas:</span>
           <span className={`text-sm font-medium ${isValueValid ? "text-green-600" : "text-red-600"}`}>
@@ -126,7 +97,7 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
         </div>
       )}
 
-      {level.themes.map((theme) => (
+      {level.themes?.map((theme) => (
         <div key={theme.id} className="border rounded-md">
           <div
             className="flex items-center justify-between p-2 cursor-pointer rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -172,8 +143,8 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                   <CustomSelect
                     placeholder="Seleccionar tema"
                     options={themeOptions}
-                    value={theme.selectedTheme}
-                    onChange={(value) => updateTheme(level.id, theme.id, value)}
+                    value={theme.selectedTheme} 
+                    onChange={(value) => updateTheme(level.id, theme.id, value)} 
                   />
                 </div>
                 <div className="flex items-end">
@@ -215,7 +186,6 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                 Añadir Evaluaciones y Material
               </button>
 
-              {/* Sección de actividades */}
               {theme.showActivities && (
                 <ActivitiesSection
                   levelId={level.id}

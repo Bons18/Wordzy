@@ -592,7 +592,7 @@ const ProgressView = () => {
               onClick={handleBack}
               className="flex items-center gap-1 bg-gray-200 text-black px-3 py-1.5 text-sm rounded-lg hover:bg-gray-300 transition-colors"
             >
-              ← Volver
+              ← Volver a Aprendices
             </button>
           </div>
           <div className="mb-8 flex flex-col items-center">

@@ -1,109 +1,57 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Eye, Trash } from "lucide-react"
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi"
 import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
 import EvaluationModal from "./evaluation-modal"
 import EvaluationDetailModal from "../../../Evaluations/components/EvaluationDetailModal"
-import SupportMaterialModal from "../../../SupportMaterials/pages/support-material-modal" // Importamos el nuevo componente
-// Importar el nuevo componente MaterialDetailModal
-import MaterialDetailModal from "../../../SupportMaterials/pages/material-detail-modal"
+import SupportMaterialModal from "../../../SupportMaterials/pages/support-material-modal"
+import MaterialDetail from "../../../SupportMaterials/pages/MaterialDetail"
+import useGetEvaluations from "../../../Evaluations/hooks/useGetEvaluations"
+import useSupportMaterials from "../../../../shared/hooks/useSupportMaterials"
 
 export default function ActivitiesSection({ levelId, themeId, localActiveTab, setLocalActiveTab, levels, setLevels }) {
   const [selectedActivity, setSelectedActivity] = useState("")
   const [activityValue, setActivityValue] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
-  const [showPagination, setShowPagination] = useState(true)
   const [showEvaluationModal, setShowEvaluationModal] = useState(false)
   const [evaluationType, setEvaluationType] = useState("")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedDetail, setSelectedDetail] = useState(null)
-  const [showSupportMaterialModal, setShowSupportMaterialModal] = useState(false) // Estado para mostrar el modal de material de apoyo
-  // Añadir un nuevo estado para el modal de detalle de material
+  const [showSupportMaterialModal, setShowSupportMaterialModal] = useState(false)
+
   const [showMaterialDetailModal, setShowMaterialDetailModal] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
 
-  // Estado para almacenar las actividades y exámenes creados pero no agregados a la tabla
-  const [createdActivities, setCreatedActivities] = useState([])
-  const [createdExams, setCreatedExams] = useState([])
-  const [createdMaterials, setCreatedMaterials] = useState([]) // Nuevo estado para materiales creados
+  const { evaluations } = useGetEvaluations()
+  const { materials } = useSupportMaterials()
 
-  // Opciones predeterminadas
-  const defaultActivityOptions = [
-    { value: "actividad1", label: "Completación" },
-    { value: "actividad2", label: "Selección Múltiple" },
-    { value: "actividad3", label: "Relacionar" },
-  ]
-
-  const defaultExamOptions = [
-    { value: "examen1", label: "Examen" },
-    { value: "examen2", label: "Examen Parcial" },
-    { value: "examen3", label: "Examen Final" },
-    { value: "examen4", label: "Quiz" },
-  ]
-
-  const defaultMaterialOptions = [
-    { value: "material1", label: "Imagenes" },
-    { value: "material2", label: "Documento PDF" },
-    { value: "material3", label: "Video Tutorial" },
-    { value: "material4", label: "Presentación" },
-  ]
-
-  // Encontrar el nivel y tema actual
   const currentLevel = levels.find((level) => level.id === levelId)
   const currentTheme = currentLevel?.themes.find((theme) => theme.id === themeId)
 
-  // Combinar opciones predeterminadas con las creadas por el usuario
-  const activityOptions = [
-    ...defaultActivityOptions,
-    ...createdActivities.map((activity) => ({
-      value: `custom-${activity.id}`,
-      label: activity.nombre,
-      customData: activity,
-    })),
-  ]
+  // Obtener actividades y exámenes del backend
+  const activityOptions = evaluations
+    ?.filter(e => e.tipoEvaluacion === 'Actividad')
+    .map(e => ({
+      value: e._id,
+      label: e.nombre,
+      customData: e
+    })) || []
 
-  const examOptions = [
-    ...defaultExamOptions,
-    ...createdExams.map((exam) => ({
-      value: `custom-${exam.id}`,
-      label: exam.nombre,
-      customData: exam,
-    })),
-  ]
+  const examOptions = evaluations
+    ?.filter(e => e.tipoEvaluacion === 'Examen')
+    .map(e => ({
+      value: e._id,
+      label: e.nombre,
+      customData: e
+    })) || []
 
-  const materialOptions = [
-    ...defaultMaterialOptions,
-    ...createdMaterials.map((material) => ({
-      value: `custom-${material.id}`,
-      label: material.nombre,
-      customData: material,
-    })),
-  ]
-
-  // Limpiar la selección cuando cambia la pestaña
-  useEffect(() => {
-    setSelectedActivity("")
-    setActivityValue("")
-  }, [localActiveTab])
-
-  if (!currentTheme) return null
-
-  const getOptionsForActiveTab = () => {
-    switch (localActiveTab) {
-      case "Actividades":
-        return activityOptions
-      case "Exámenes":
-        return examOptions
-      case "Material":
-        return materialOptions
-      default:
-        return activityOptions
-    }
-  }
+  const materialOptions = materials?.map(m => ({
+    value: m._id,
+    label: m.titulo,
+    customData: m
+  })) || []
 
   const addNewActivity = () => {
     if (localActiveTab !== "Material" && (!selectedActivity || activityValue <= 0)) return
@@ -112,22 +60,12 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     const options = getOptionsForActiveTab()
     const selectedOption = options.find((opt) => opt.value === selectedActivity)
 
-    // Verificar si es una actividad o examen personalizado
-    const isCustom = selectedOption?.value?.startsWith("custom-")
-
     const newActivity = {
-      id: Date.now(),
-      name: selectedOption
-        ? selectedOption.label
-        : localActiveTab === "Material"
-          ? "Material"
-          : localActiveTab === "Exámenes"
-            ? "Examen"
-            : "Actividad",
+      evaluationId: selectedOption.value,
+      name: selectedOption.label,
       value: localActiveTab === "Material" ? "N/A" : `${activityValue}%`,
       type: localActiveTab,
-      // Si es una actividad o examen personalizado, incluir los datos completos
-      ...(isCustom && { evaluationData: selectedOption.customData }),
+      evaluationData: selectedOption.customData
     }
 
     setLevels(
@@ -135,8 +73,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         if (level.id === levelId) {
           const updatedThemes = level.themes.map((theme) => {
             if (theme.id === themeId) {
-              const activities = theme.activities || []
-              return { ...theme, activities: [...activities, newActivity] }
+              return { ...theme, activities: [...(theme.activities || []), newActivity] }
             }
             return theme
           })
@@ -146,18 +83,6 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       }),
     )
 
-    // Si era una actividad o examen personalizado, eliminarlo de la lista de creados
-    if (isCustom) {
-      if (localActiveTab === "Actividades") {
-        setCreatedActivities((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
-      } else if (localActiveTab === "Exámenes") {
-        setCreatedExams((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
-      } else if (localActiveTab === "Material") {
-        setCreatedMaterials((prev) => prev.filter((item) => `custom-${item.id}` !== selectedActivity))
-      }
-    }
-
-    // Limpiar el formulario sin cambiar la pestaña activa
     setSelectedActivity("")
     if (localActiveTab !== "Material") {
       setActivityValue(0)
@@ -170,8 +95,10 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         if (level.id === levelId) {
           const updatedThemes = level.themes.map((theme) => {
             if (theme.id === themeId) {
-              const activities = theme.activities || []
-              return { ...theme, activities: activities.filter((a) => a.id !== activityId) }
+              return {
+                ...theme,
+                activities: (theme.activities || []).filter((a) => a.id !== activityId)
+              }
             }
             return theme
           })
@@ -182,11 +109,19 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     )
   }
 
-  const getFilteredActivities = () => {
-    return (currentTheme.activities || []).filter((activity) => activity.type === localActiveTab)
+  const getOptionsForActiveTab = () => {
+    switch (localActiveTab) {
+      case "Actividades": return activityOptions
+      case "Exámenes": return examOptions
+      case "Material": return materialOptions
+      default: return activityOptions
+    }
   }
 
-  // Calcular el valor total de las actividades o exámenes
+  const getFilteredActivities = () => {
+    return (currentTheme?.activities || []).filter((activity) => activity.type === localActiveTab)
+  }
+
   const calculateTotalValue = () => {
     const filteredActivities = getFilteredActivities()
     if (filteredActivities.length === 0 || localActiveTab === "Material") return 0
@@ -201,14 +136,8 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const totalValue = calculateTotalValue()
   const isValueValid = localActiveTab === "Material" || totalValue === 100
 
-  // Reemplazamos filteredData con el resultado de getFilteredActivities
   const filteredData = getFilteredActivities()
-
-  // Si showPagination es true, aplicamos la paginación
-  const currentData = showPagination
-    ? filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    : filteredData
-
+  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
   const handlePageChange = (pageNumber) => {
@@ -216,7 +145,6 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   }
 
   const handleCreateEvaluation = (type) => {
-    // Solo abrir el modal para Actividad o Examen, no para Material
     if (type === "Material") {
       setShowSupportMaterialModal(true)
       return
@@ -227,82 +155,103 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   }
 
   const handleEvaluationSubmit = (formData) => {
-    // En lugar de agregar directamente a la tabla, agregamos a la lista de creados
     const newItem = {
       ...formData,
-      id: Date.now(),
+      _id: `eval-${Date.now()}`,
+      tipoEvaluacion: evaluationType === "Examen" ? "Examen" : "Actividad"
     }
 
-    if (formData.tipoEvaluacion === "Examen") {
-      setCreatedExams((prev) => [...prev, newItem])
-      // Cambiar a la pestaña de exámenes
-      setLocalActiveTab("Exámenes")
-    } else {
-      setCreatedActivities((prev) => [...prev, newItem])
-      // Cambiar a la pestaña de actividades
-      setLocalActiveTab("Actividades")
+    const newActivity = {
+      evaluationId: selectedOption.value,
+      name: newItem.nombre,
+      value: "100%",
+      type: evaluationType === "Examen" ? "Exámenes" : "Actividades",
+      evaluationData: newItem
     }
+
+    setLevels(
+      levels.map((level) => {
+        if (level.id === levelId) {
+          const updatedThemes = level.themes.map((theme) => {
+            if (theme.id === themeId) {
+              return { ...theme, activities: [...(theme.activities || []), newActivity] }
+            }
+            return theme
+          })
+          return { ...level, themes: updatedThemes }
+        }
+        return level
+      }),
+    )
 
     setShowEvaluationModal(false)
   }
 
-  // Función para manejar la creación de un nuevo material de apoyo
   const handleSupportMaterialSubmit = (materialData) => {
     const newMaterial = {
       ...materialData,
-      id: Date.now(),
+      _id: `mat-${Date.now()}`
     }
 
-    setCreatedMaterials((prev) => [...prev, newMaterial])
+    const newActivity = {
+      id: newMaterial._id,
+      name: newMaterial.nombre,
+      value: "N/A",
+      type: "Material",
+      evaluationData: newMaterial
+    }
+
+    setLevels(
+      levels.map((level) => {
+        if (level.id === levelId) {
+          const updatedThemes = level.themes.map((theme) => {
+            if (theme.id === themeId) {
+              return { ...theme, activities: [...(theme.activities || []), newActivity] }
+            }
+            return theme
+          })
+          return { ...level, themes: updatedThemes }
+        }
+        return level
+      }),
+    )
+
     setShowSupportMaterialModal(false)
-
-    // Asegurarse de que estamos en la pestaña de Material
-    setLocalActiveTab("Material")
   }
 
-  // Modificar la función handleViewDetail para mostrar los detalles de los materiales
-  const handleViewDetail = (activity) => {
-    // Si la actividad tiene datos de evaluación, mostrarlos
-    if (activity.evaluationData) {
-      if (activity.type === "Material") {
-        // Si es un material, mostrar el modal de detalle de material
-        setSelectedMaterial(activity.evaluationData)
-        setShowMaterialDetailModal(true)
-      } else {
-        // Si es una actividad o examen, mostrar el modal de detalle de evaluación
-        setSelectedDetail(activity.evaluationData)
-        setShowDetailModal(true)
-      }
+    const handleViewDetail = (activity) => {
+    if (activity.type === "Material") {
+      setSelectedMaterial(activity.evaluationData);
+      setShowMaterialDetailModal(true);
     } else {
-      // Si no tiene datos de evaluación, mostrar un mensaje
-      alert("No hay detalles disponibles para esta evaluación")
+      setSelectedDetail(activity.evaluationData);
+      setShowDetailModal(true);
     }
-  }
+  };
+
+  if (!currentTheme) return null
 
   return (
     <div className="mt-4">
       <div className="border rounded-md">
         <div className="flex border-b">
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Actividades")}
           >
             Actividades
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Exámenes")}
           >
             Exámenes
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Material")}
           >
             Material de Apoyo
@@ -327,9 +276,8 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                   <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
-                  placeholder={`Seleccionar ${
-                    localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
-                  }`}
+                  placeholder={`Seleccionar ${localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
+                    }`}
                   options={getOptionsForActiveTab()}
                   value={selectedActivity}
                   onChange={setSelectedActivity}
@@ -476,7 +424,6 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         </div>
       </div>
 
-      {/* Modal para el formulario de evaluación */}
       <EvaluationModal
         isOpen={showEvaluationModal}
         onClose={() => setShowEvaluationModal(false)}
@@ -484,26 +431,28 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         evaluation={evaluationType === "Examen" ? { tipoEvaluacion: "Examen" } : { tipoEvaluacion: "Actividad" }}
       />
 
-      {/* Modal para ver detalles de la evaluación */}
       <EvaluationDetailModal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
         evaluation={selectedDetail}
       />
 
-      {/* Modal para crear material de apoyo */}
       <SupportMaterialModal
         isOpen={showSupportMaterialModal}
         onClose={() => setShowSupportMaterialModal(false)}
         onSubmit={handleSupportMaterialSubmit}
       />
 
-      {/* Modal para ver detalles del material */}
-      <MaterialDetailModal
-        isOpen={showMaterialDetailModal}
-        onClose={() => setShowMaterialDetailModal(false)}
-        material={selectedMaterial}
-      />
+       {/* Modal de detalle del material - Versión mejorada */}
+      {showMaterialDetailModal && selectedMaterial && (
+        <MaterialDetail 
+          material={selectedMaterial} 
+          onClose={() => {
+            setShowMaterialDetailModal(false);
+            setSelectedMaterial(null);
+          }} 
+        />
+      )}
     </div>
   )
 }

@@ -18,7 +18,7 @@ const ConfirmationModal = ({
         <div className="p-6">
           <div className="text-center mb-6">
             <h3 className="text-xl font-semibold text-[#1f384c]">{title}</h3>
-            <p className="mt-2 text-[#627b87]">{message}</p>
+            <div className="mt-2 text-[#627b87]">{message}</div>
           </div>
 
           <div className="flex justify-center gap-6">

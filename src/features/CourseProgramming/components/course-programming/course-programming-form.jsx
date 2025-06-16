@@ -1,14 +1,25 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { formatDate } from "../../../../shared/utils/dateFormatter"
+import { format, parseISO } from "date-fns"
 import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
 import LevelsList from "./levels-list"
 import CustomSelect from "./ui/custom-select"
 import ToggleSwitch from "./ui/toggle-switch"
+import { useGetPrograms } from "../../../Programs/hooks/useGetPrograms"
+import { usePostCourseProgramming } from "../../hooks/usePostCoursePrograming"
+import { usePutCourseProgramming } from "../../hooks/usePutCoursePrograming"
+import { useGetCourseProgrammingById } from "../../hooks/useGetCourseProgrammingById"
+
 
 export default function CourseProgrammingForm() {
   const navigate = useNavigate()
-  const { id } = useParams() // Para edición
+  const { id } = useParams()
+  const { programming } = useGetCourseProgrammingById(id)
+  const { programs } = useGetPrograms()
+  const { postCourseProgramming, loading: postLoading, error: postError } = usePostCourseProgramming()
+  const { putCourseProgramming, loading: putLoading, error: putError } = usePutCourseProgramming()
+
+
   const [selectedProgram, setSelectedProgram] = useState("")
   const [levels, setLevels] = useState([])
   const [activeStatus, setActiveStatus] = useState(true)
@@ -23,84 +34,245 @@ export default function CourseProgrammingForm() {
   const [validationErrors, setValidationErrors] = useState([])
   const [showValidationModal, setShowValidationModal] = useState(false)
 
-  // Cargar datos si estamos en modo edición
+  // Cargar datos de programación existente para edición
   useEffect(() => {
-    if (id) {
+    if (id && programming) {
       setIsEditMode(true)
-      loadProgrammingData(id)
+      setSelectedProgram(programming.programId._id)
+      setStartDate(format(parseISO(programming.startDate), "yyyy-MM-dd"))
+      setEndDate(programming.endDate ? format(parseISO(programming.endDate), "yyyy-MM-dd") : "")
+      setActiveStatus(programming.status)
+
+      const transformedLevels = (programming.levels || []).map(level => ({
+        _id: level._id,
+        id: level._id,
+        name: level.name,
+        expanded: false,
+        themes: (level.topics || []).map(topic => {
+          const selectedOption = topic.topicId
+            ? { value: topic.topicId._id, label: topic.topicId.name }
+            : null
+
+          return {
+            _id: topic._id,
+            id: topic._id,
+            selectedTheme: selectedOption,
+            progress: topic.value,
+            expanded: false,
+            showActivities: false,
+            activities: [
+              ...(topic.activities || []).map(act => ({
+                id: act._id,
+                name: act.evaluationId?.nombre || "Actividad",
+                value: `${act.value}%`,
+                type: "Actividades",
+                evaluationData: act.evaluationId ? { ...act, ...act.evaluationId } : act,
+                evaluationId: act.evaluationId?._id || act.evaluationId,
+              })),
+              ...(topic.exams || []).map(exam => ({
+                id: exam._id,
+                name: exam.evaluationId?.nombre || "Examen",
+                value: `${exam.value}%`,
+                type: "Exámenes",
+                evaluationData: exam.evaluationId ? { ...exam, ...exam.evaluationId } : exam,
+                evaluationId: exam.evaluationId?._id || exam.evaluationId,
+              })),
+              ...(topic.materials || []).map(mat => ({
+                id: mat._id,
+                name: mat.materialId?.titulo || "Material",
+                value: "N/A",
+                type: "Material",
+                evaluationData: mat.materialId ? { ...mat, ...mat.materialId } : mat
+              }))
+            ]
+          }
+        })
+      }))
+
+      setLevels(transformedLevels)
     }
-  }, [id])
+  }, [id, programming])
 
-  const loadProgrammingData = (programmingId) => {
-    try {
-      // Obtener programaciones existentes
-      const existingSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
-      const defaultSchedules = [
-        { id: 1, nombre: "Programa 1", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 2, nombre: "Programa 2", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 3, nombre: "Programa 3", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-      ]
+  const transformDataForBackend = () => {
+    return {
+      programId: selectedProgram,
+      startDate: new Date(startDate).toISOString(),
+      endDate: endDate ? new Date(endDate).toISOString() : null,
+      status: activeStatus,
+      levels: levels.map(level => ({
+        name: level.name,
+        topics: level.themes.map(theme => {
+          const activities = theme.activities?.filter(a => a.type === "Actividades") || []
+          const exams = theme.activities?.filter(a => a.type === "Exámenes") || []
+          const materials = theme.activities?.filter(a => a.type === "Material") || []
 
-      // Combinar programaciones predeterminadas y guardadas
-      const allSchedules = [...defaultSchedules, ...existingSchedules]
-
-      // Buscar la programación por ID
-      const programming = allSchedules.find((p) => p.id.toString() === programmingId.toString())
-
-      if (programming) {
-        // Encontrar el programa correspondiente en las opciones
-        const programOptions = [
-          { value: "programa1", label: "Programa 1" },
-          { value: "programa2", label: "Programa 2" },
-          { value: "programa3", label: "Programa 3" },
-        ]
-
-        const programOption = programOptions.find((p) => p.label === programming.nombre)
-
-        // Establecer los valores del formulario
-        setSelectedProgram(programOption ? programOption.value : "")
-        setActiveStatus(programming.estado === "Activo")
-
-        // Convertir fechas al formato esperado por el input date
-        if (programming.fechaInicio) {
-          const [day, month, year] = programming.fechaInicio.split("-")
-          setStartDate(`${year}-${month}-${day}`)
-        }
-
-        if (programming.fechaFin) {
-          const [day, month, year] = programming.fechaFin.split("-")
-          setEndDate(`${year}-${month}-${day}`)
-        }
-
-        // Cargar niveles si existen
-        if (programming.levels) {
-          setLevels(programming.levels)
-        }
-      } else {
-        console.error("Programación no encontrada")
-      }
-    } catch (error) {
-      console.error("Error al cargar datos de programación:", error)
+          return {
+            topicId: typeof theme.selectedTheme === 'object' && theme.selectedTheme?.value
+              ? theme.selectedTheme.value
+              : theme.selectedTheme, // esto evita que se mande un objeto entero
+            value: theme.progress || 0,
+            activities: activities.map(a => ({
+              evaluationId: a.evaluationData._id,
+              value: parseInt(a.value.replace('%', ''))
+            })),
+            exams: exams.map(e => ({
+              evaluationId: e.evaluationData._id,
+              value: parseInt(e.value.replace('%', ''))
+            })),
+            materials: materials.map(m => ({
+              materialId: m.evaluationData._id
+            }))
+          }
+        })
+      }))
     }
   }
 
-  // Marcar el formulario como modificado cuando cambia cualquier valor importante
-  useEffect(() => {
-    if (selectedProgram || levels.length > 0 || startDate || endDate) {
-      setIsFormDirty(true)
-    }
-  }, [selectedProgram, levels, startDate, endDate])
 
-  const programOptions = [
-    { value: "programa1", label: "Programa 1" },
-    { value: "programa2", label: "Programa 2" },
-    { value: "programa3", label: "Programa 3" },
-  ]
+  const validateForm = () => {
+    const errors = []
+
+    // Validaciones básicas
+    if (!selectedProgram) {
+      errors.push("Debe seleccionar un programa")
+    }
+
+    if (!startDate) {
+      errors.push("Debe ingresar una fecha de inicio")
+    }
+
+    // Validar que existan al menos 3 niveles
+    if (levels.length < 3) {
+      errors.push("Debe añadir al menos tres niveles")
+    }
+
+    // Validar que cada uno de los tres primeros niveles tenga nombre
+    levels.slice(0, 3).forEach((level, index) => {
+      if (!level.name || level.name.trim() === "") {
+        errors.push(`El nivel ${index + 1} debe tener un nombre`)
+      }
+    })
+
+    // Validar solo el primer nivel
+    if (levels.length > 0) {
+      const firstLevel = levels[0]
+      const firstLevelName = firstLevel.name || "Nivel 1"
+
+      // 1. Validar que tenga al menos un tema
+      if (!firstLevel.themes || firstLevel.themes.length === 0) {
+        errors.push(`${firstLevelName} debe tener al menos un tema`)
+      } else {
+        // 2. Validar que la suma de valores de los temas sea 100%
+        const themeSum = firstLevel.themes.reduce((sum, theme) => sum + (theme.progress || 0), 0)
+        if (themeSum !== 100) {
+          errors.push(`La suma de valores de los temas en ${firstLevelName} debe ser 100% (actual: ${themeSum}%)`)
+        }
+
+        // 3. Validar actividades, exámenes y materiales por tema
+        firstLevel.themes.forEach((theme, themeIndex) => {
+          const activities = (theme.activities || []).filter(a => a.type === "Actividades")
+          const exams = (theme.activities || []).filter(a => a.type === "Exámenes")
+          const materials = (theme.activities || []).filter(a => a.type === "Material")
+
+          // Actividades
+          if (activities.length === 0) {
+            errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos una actividad`)
+          } else {
+            const actSum = activities.reduce((sum, a) => {
+              const value = parseInt(a.value?.replace('%', '') || 0)
+              return sum + value
+            }, 0)
+            if (actSum !== 100) {
+              errors.push(`Las actividades del tema ${themeIndex + 1} (${firstLevelName}) suman ${actSum}% (deben sumar 100%)`)
+            }
+
+            activities.forEach((a, i) => {
+              if (!a.evaluationId) {
+                errors.push(`La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`)
+              }
+              if (a.value == null || a.value === "") {
+                errors.push(`La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`)
+              }
+            })
+          }
+
+          // Exámenes
+          if (exams.length === 0) {
+            errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos un examen`)
+          } else {
+            const examSum = exams.reduce((sum, e) => {
+              const value = parseInt(e.value?.replace('%', '') || 0)
+              return sum + value
+            }, 0)
+            if (examSum !== 100) {
+              errors.push(`Los exámenes del tema ${themeIndex + 1} (${firstLevelName}) suman ${examSum}% (deben sumar 100%)`)
+            }
+
+            exams.forEach((e, i) => {
+              if (!e.evaluationId) {
+                errors.push(`El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`)
+              }
+              if (e.value == null || e.value === "") {
+                errors.push(`El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`)
+              }
+            })
+          }
+
+          // Materiales de apoyo
+          if (materials.length === 0) {
+            errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos un material de apoyo`)
+          }
+        })
+      }
+    }
+
+    return errors
+  }
+
+
+
+  const handleSaveProgramming = async () => {
+    const errors = validateForm()
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setShowValidationModal(true)
+      return
+    }
+
+    const programmingData = transformDataForBackend()
+
+    try {
+      let result
+      if (isEditMode) {
+        result = await putCourseProgramming(id, programmingData)
+        setSuccessMessage("Programación actualizada exitosamente")
+      } else {
+        console.log("🟢 Payload enviado al backend:", JSON.stringify(programmingData, null, 2));
+        result = await postCourseProgramming(programmingData)
+        setSuccessMessage("Programación creada exitosamente")
+      }
+
+      setShowSuccessModal(true)
+      setTimeout(() => {
+        navigate("/programacion/programacionCursos")
+      }, 1500)
+    } catch (error) {
+      setSuccessMessage(error.message || "Ocurrió un error al guardar")
+      setShowSuccessModal(true)
+    }
+  }
+
+  const addLevel = () => {
+    const newLevel = {
+      id: `level-${Date.now()}`,
+      name: "",
+      expanded: true,
+      themes: []
+    }
+    setLevels([...levels, newLevel])
+  }
 
   const handleCancel = () => {
-    // Confirmar si hay cambios sin guardar
     if (isFormDirty) {
       setShowCancelConfirm(true)
     } else {
@@ -112,323 +284,9 @@ export default function CourseProgrammingForm() {
     navigate("/programacion/programacionCursos")
   }
 
-  // Función para verificar duplicados en nombres de niveles
-  const checkDuplicateLevelNames = () => {
-    const levelNames = levels.map((level) => level.name?.trim()).filter((name) => name && name.length > 0)
-
-    const duplicateNames = levelNames.filter((name, index) => levelNames.indexOf(name) !== index)
-
-    if (duplicateNames.length > 0) {
-      return [`Nombres de niveles duplicados: ${[...new Set(duplicateNames)].join(", ")}`]
-    }
-    return []
-  }
-
-  // Función para verificar temas duplicados
-  const checkDuplicateThemes = () => {
-    const allThemes = []
-    const duplicateThemes = []
-
-    levels.forEach((level) => {
-      if (level.themes) {
-        level.themes.forEach((theme) => {
-          if (theme.selectedTheme) {
-            if (allThemes.includes(theme.selectedTheme)) {
-              // Encontrar el nombre del tema para el mensaje de error
-              const themeOptions = [
-                { value: "tema1", label: "Tema 1" },
-                { value: "tema2", label: "Tema 2" },
-                { value: "tema3", label: "Tema 3" },
-              ]
-              const themeName = themeOptions.find((t) => t.value === theme.selectedTheme)?.label || theme.selectedTheme
-
-              if (!duplicateThemes.includes(themeName)) {
-                duplicateThemes.push(themeName)
-              }
-            } else {
-              allThemes.push(theme.selectedTheme)
-            }
-          }
-        })
-      }
-    })
-
-    if (duplicateThemes.length > 0) {
-      return [`Temas duplicados: ${duplicateThemes.join(", ")}`]
-    }
-    return []
-  }
-
-  // Función para verificar actividades, exámenes y materiales duplicados
-  const checkDuplicateActivities = () => {
-    const errors = []
-    const activities = { Actividades: [], Exámenes: [], Material: [] }
-
-    levels.forEach((level) => {
-      if (level.themes) {
-        level.themes.forEach((theme) => {
-          if (theme.activities) {
-            theme.activities.forEach((activity) => {
-              const type = activity.type
-              const activityKey = `${activity.name}-${type}`
-
-              if (activities[type].includes(activityKey)) {
-                // Verificar si ya hemos reportado este tipo de duplicado
-                const errorMsg = `${activity.name} duplicado en la sección de ${type}`
-                if (!errors.some((e) => e.includes(errorMsg))) {
-                  errors.push(errorMsg)
-                }
-              } else {
-                activities[type].push(activityKey)
-              }
-            })
-          }
-        })
-      }
-    })
-
-    return errors
-  }
-
-  // Función para validar el formulario
-  const validateForm = () => {
-    const errors = []
-
-    // 1. Validar que se haya seleccionado un programa
-    if (!selectedProgram) {
-      errors.push("Debe seleccionar un programa")
-    }
-
-    // 2. Validar que se haya ingresado una fecha de inicio
-    if (!startDate) {
-      errors.push("Debe ingresar una fecha de inicio")
-    }
-
-    // 3. Validar que haya al menos 3 niveles
-    if (levels.length < 3) {
-      errors.push(`Debe añadir al menos 3 niveles (actualmente tiene ${levels.length})`)
-    }
-
-    // 4, 5, 6, 7, 8, 9, 10. Validaciones para niveles, temas, actividades y exámenes
-    let totalThemeValue = 0
-    const levelsWithoutThemes = []
-    const themesWithoutValue = []
-    const themesWithoutMaterial = []
-    const themesWithoutEvaluations = []
-    const activitiesNotSum100 = []
-    const examsNotSum100 = []
-
-    levels.forEach((level, levelIndex) => {
-      // Determinar si es el primer nivel
-      const isFirstLevel = levelIndex === 0
-
-      // 4. Validar que cada nivel tenga al menos un tema (solo obligatorio para el primer nivel)
-      if (isFirstLevel && (!level.themes || level.themes.length === 0)) {
-        levelsWithoutThemes.push(`Nivel ${level.name || levelIndex + 1}`)
-      } else if (level.themes && level.themes.length > 0) {
-        let levelThemeValue = 0
-
-        level.themes.forEach((theme, themeIndex) => {
-          // 5. Validar que cada tema tenga un valor asignado
-          if (!theme.progress || theme.progress <= 0) {
-            themesWithoutValue.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
-          } else {
-            levelThemeValue += theme.progress
-          }
-
-          // 7. Validar que cada tema tenga material y evaluaciones (solo obligatorio para el primer nivel)
-          if (isFirstLevel) {
-            if (!theme.activities || !theme.activities.some((a) => a.type === "Material")) {
-              themesWithoutMaterial.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
-            }
-
-            if (!theme.activities || !theme.activities.some((a) => a.type === "Actividades" || a.type === "Exámenes")) {
-              themesWithoutEvaluations.push(`Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1}`)
-            }
-          }
-
-          // 8, 9, 10. Validar valores de actividades y exámenes
-          if (theme.activities && theme.activities.length > 0) {
-            // Calcular suma de valores para actividades
-            const activities = theme.activities.filter((a) => a.type === "Actividades")
-            if (activities.length > 0) {
-              let activityValueSum = 0
-              let allHaveValues = true
-
-              activities.forEach((activity) => {
-                const valueStr = activity.value.replace("%", "")
-                const value = Number.parseInt(valueStr)
-                if (isNaN(value) || value <= 0) {
-                  allHaveValues = false
-                } else {
-                  activityValueSum += value
-                }
-              })
-
-              if (!allHaveValues) {
-                errors.push(
-                  `Algunas actividades en el Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1} no tienen valor asignado`,
-                )
-              } else if (activityValueSum !== 100) {
-                activitiesNotSum100.push(
-                  `Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1} (suma: ${activityValueSum}%)`,
-                )
-              }
-            }
-
-            // Calcular suma de valores para exámenes
-            const exams = theme.activities.filter((a) => a.type === "Exámenes")
-            if (exams.length > 0) {
-              let examValueSum = 0
-              let allHaveValues = true
-
-              exams.forEach((exam) => {
-                const valueStr = exam.value.replace("%", "")
-                const value = Number.parseInt(valueStr)
-                if (isNaN(value) || value <= 0) {
-                  allHaveValues = false
-                } else {
-                  examValueSum += value
-                }
-              })
-
-              if (!allHaveValues) {
-                errors.push(
-                  `Algunos exámenes en el Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1} no tienen valor asignado`,
-                )
-              } else if (examValueSum !== 100) {
-                examsNotSum100.push(
-                  `Tema ${themeIndex + 1} del Nivel ${level.name || levelIndex + 1} (suma: ${examValueSum}%)`,
-                )
-              }
-            }
-          }
-        })
-
-        // 6. Validar que la suma de valores de temas sea 100
-        totalThemeValue += levelThemeValue
-        if (levelThemeValue !== 100) {
-          errors.push(
-            `La suma de valores de los temas en el Nivel ${level.name || levelIndex + 1} debe ser 100% (actual: ${levelThemeValue}%)`,
-          )
-        }
-      }
-    })
-
-    // Agregar errores específicos a la lista
-    if (levelsWithoutThemes.length > 0) {
-      errors.push(`Los siguientes niveles no tienen temas: ${levelsWithoutThemes.join(", ")}`)
-    }
-
-    if (themesWithoutValue.length > 0) {
-      errors.push(`Los siguientes temas no tienen valor asignado: ${themesWithoutValue.join(", ")}`)
-    }
-
-    if (themesWithoutMaterial.length > 0) {
-      errors.push(`Los siguientes temas no tienen material de apoyo: ${themesWithoutMaterial.join(", ")}`)
-    }
-
-    if (themesWithoutEvaluations.length > 0) {
-      errors.push(`Los siguientes temas no tienen actividades o exámenes: ${themesWithoutEvaluations.join(", ")}`)
-    }
-
-    if (activitiesNotSum100.length > 0) {
-      errors.push(`Las actividades de los siguientes temas no suman 100%: ${activitiesNotSum100.join(", ")}`)
-    }
-
-    if (examsNotSum100.length > 0) {
-      errors.push(`Los exámenes de los siguientes temas no suman 100%: ${examsNotSum100.join(", ")}`)
-    }
-
-    // Validar duplicados
-    errors.push(...checkDuplicateLevelNames())
-    errors.push(...checkDuplicateThemes())
-    errors.push(...checkDuplicateActivities())
-
-    return errors
-  }
-
-  // Función para obtener el siguiente ID disponible
-  const getNextId = () => {
-    try {
-      const existingSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
-      const defaultSchedules = [
-        { id: 1, nombre: "Programa 1", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 2, nombre: "Programa 2", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 3, nombre: "Programa 3", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-      ]
-
-      // Combinar programaciones y encontrar el ID máximo
-      const allSchedules = [...defaultSchedules, ...existingSchedules]
-      const maxId = Math.max(...allSchedules.map((s) => s.id), 0)
-      return maxId + 1
-    } catch (error) {
-      console.error("Error al obtener el siguiente ID:", error)
-      return Math.floor(Math.random() * 1000) + 6 // Fallback
-    }
-  }
-
-  const handleSaveProgramming = () => {
-    // Validar el formulario
-    const errors = validateForm()
-
-    if (errors.length > 0) {
-      setValidationErrors(errors)
-      setShowValidationModal(true)
-      return
-    }
-
-    const formattedStartDate = startDate ? formatDate(new Date(startDate)) : formatDate(new Date())
-    const formattedEndDate = endDate ? formatDate(new Date(endDate)) : ""
-
-    const programmingData = {
-      id: isEditMode ? Number.parseInt(id) : getNextId(),
-      nombre: selectedProgram ? programOptions.find((p) => p.value === selectedProgram)?.label : "Nueva Programación",
-      fechaInicio: formattedStartDate,
-      fechaFin: formattedEndDate,
-      estado: activeStatus ? "Activo" : "Inactivo",
-      levels: levels, // Guardar los niveles
-    }
-
-    try {
-      // Obtener programaciones existentes
-      const existingSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
-
-      if (isEditMode) {
-        // Actualizar programación existente
-        const updatedSchedules = existingSchedules.map((s) => (s.id.toString() === id.toString() ? programmingData : s))
-        localStorage.setItem("courseSchedules", JSON.stringify(updatedSchedules))
-        setSuccessMessage("Programación actualizada exitosamente")
-      } else {
-        // Agregar nueva programación
-        const updatedSchedules = [...existingSchedules, programmingData]
-        localStorage.setItem("courseSchedules", JSON.stringify(updatedSchedules))
-        setSuccessMessage("Programación creada exitosamente")
-      }
-
-      setShowSuccessModal(true)
-    } catch (error) {
-      console.error("Error al guardar la programación:", error)
-      setSuccessMessage("Ocurrió un error al guardar la programación")
-      setShowSuccessModal(true)
-    }
-  }
-
   const handleSuccessConfirm = () => {
     setShowSuccessModal(false)
     navigate("/programacion/programacionCursos")
-  }
-
-  const addLevel = () => {
-    const newLevel = {
-      id: levels.length + 1,
-      name: "",
-      expanded: false, // Nivel colapsado por defecto
-      themes: [],
-    }
-    setLevels([...levels, newLevel])
   }
 
   return (
@@ -446,9 +304,12 @@ export default function CourseProgrammingForm() {
           </label>
           <CustomSelect
             placeholder="Selecciona un Programa"
-            options={programOptions}
+            options={programs.map(program => ({
+              value: program._id,
+              label: program.name
+            }))}
             value={selectedProgram}
-            onChange={(value) => setSelectedProgram(value)}
+            onChange={setSelectedProgram}
           />
         </div>
 
@@ -485,6 +346,7 @@ export default function CourseProgrammingForm() {
           <button
             onClick={addLevel}
             className="flex items-center px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md"
+            disabled={postLoading || putLoading}
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -494,26 +356,41 @@ export default function CourseProgrammingForm() {
           <div className="text-sm text-gray-500">{levels.length} de 3 niveles mínimos requeridos</div>
         </div>
 
-        <LevelsList levels={levels} setLevels={setLevels} activeTabs={activeTabs} setActiveTabs={setActiveTabs} />
+        <LevelsList
+          levels={levels}
+          setLevels={setLevels}
+          activeTabs={activeTabs}
+          setActiveTabs={setActiveTabs}
+        />
 
-        {/* Botones fijos en la parte inferior */}
         <div className="bg-white py-4 border-t mt-8 flex justify-between">
           <button
             onClick={handleCancel}
             className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+            disabled={postLoading || putLoading}
           >
             Cancelar
           </button>
           <button
             onClick={handleSaveProgramming}
             className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
+            disabled={postLoading || putLoading}
           >
-            {isEditMode ? "Guardar Cambios" : "Añadir Programación"}
+            {(postLoading || putLoading) ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {isEditMode ? "Guardando..." : "Creando..."}
+              </span>
+            ) : (
+              isEditMode ? "Guardar Cambios" : "Añadir Programación"
+            )}
           </button>
         </div>
       </div>
 
-      {/* Modal de confirmación para cancelar */}
       <ConfirmationModal
         isOpen={showCancelConfirm}
         onClose={() => setShowCancelConfirm(false)}
@@ -524,7 +401,6 @@ export default function CourseProgrammingForm() {
         confirmColor="bg-[#f44144] hover:bg-red-600"
       />
 
-      {/* Modal de éxito */}
       <ConfirmationModal
         isOpen={showSuccessModal}
         onConfirm={handleSuccessConfirm}
@@ -535,7 +411,6 @@ export default function CourseProgrammingForm() {
         showButtonCancel={false}
       />
 
-      {/* Modal de errores de validación */}
       <ConfirmationModal
         isOpen={showValidationModal}
         onConfirm={() => setShowValidationModal(false)}
@@ -543,7 +418,7 @@ export default function CourseProgrammingForm() {
         message={
           <div className="max-h-96 overflow-y-auto">
             <p className="mb-2">Por favor corrija los siguientes errores antes de continuar:</p>
-            <ul className="list-disc pl-5 space-y-1">
+            <ul className="list-disc list-inside space-y-1 pl-0">
               {validationErrors.map((error, index) => (
                 <li key={index} className="text-sm text-red-600">
                   {error}
@@ -553,7 +428,7 @@ export default function CourseProgrammingForm() {
           </div>
         }
         confirmText="Entendido"
-        confirmColor="bg-blue-500 hover:bg-blue-600"
+        confirmColor="bg-green-500 hover:bg-green-600"
         showButtonCancel={false}
       />
     </div>

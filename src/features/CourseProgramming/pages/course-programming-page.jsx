@@ -15,7 +15,15 @@ const columns = [
     render: (item) => item.programId?.name || "Sin nombre"
   },
   { key: "startDate", label: "Fecha Inicio" },
-  { key: "endDate", label: "Fecha Fin" },
+  {
+    key: "endDate",
+    label: "Fecha Fin",
+    render: (item) => (
+      <span className="text-gray-600">
+        {item.endDate || "Sin fecha"}
+      </span>
+    )
+  },
   {
     key: "status",
     label: "Estado",
@@ -59,7 +67,7 @@ const CourseProgrammingPage = () => {
   const formattedPrograms = programmings.map(programming => ({
     ...programming,
     startDate: formatDate(programming.startDate),
-    endDate: formatDate(programming.endDate)
+    endDate: formatDate(programming.endDate ),
   }));
 
   // Cargar programaciones al montar el componente
@@ -91,13 +99,14 @@ const CourseProgrammingPage = () => {
   const handleAddProgramming = () => {
     navigate("/programacion/programacionCursos/registrarProgramacion")
   }
+  
 
   const handleShowProgramming = (programming) => {
-    navigate(`/programacion/programacionCursos/detalle/${programming.id}`)
+    navigate(`/programacion/programacionCursos/detalle/${programming._id}`)
   }
 
   const handleEditProgramming = (programming) => {
-    navigate(`/programacion/programacionCursos/editar/${programming.id}`)
+    navigate(`/programacion/programacionCursos/editar/${programming._id}`)
   }
 
   const handleDeleteProgramming = (id) => {

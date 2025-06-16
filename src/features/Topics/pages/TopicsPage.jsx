@@ -108,7 +108,7 @@ const TopicsPage = () => {
       await postTopic(newTopic);
       setIsModalOpen(false);
       await refetch(); // Refresca la lista de temas
-      setSuccessMessage("Tema agregado exitosamente");
+      setSuccessMessage(`Tema "${newTopic.name}" agregado exitosamente`);
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Error al agregar el tema:", error);

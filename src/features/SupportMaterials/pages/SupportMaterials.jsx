@@ -26,6 +26,7 @@ import LoadingSpinner from "../../../shared/components/LoadingSpinner"
 import ErrorMessage from "../../../shared/components/ErrorMessage"
 import useSupportMaterials from "../../../shared/hooks/useSupportMaterials"
 import { useGetTopics } from "../../Topics/hooks/useGetTopics"
+import { format, parseISO } from "date-fns";
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -35,11 +36,10 @@ const columns = [
     label: "Estado",
     render: (item) => (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.estado === "Activo" || item.estado === "activo"
+        className={`px-2 py-1 rounded-full text-xs font-medium ${item.estado === "Activo" || item.estado === "activo"
             ? "bg-green-100 text-green-800"
             : "bg-red-100 text-red-800"
-        }`}
+          }`}
       >
         {item.estado}
       </span>
@@ -49,20 +49,20 @@ const columns = [
 
 // Datos de prueba temporales para cuando no hay conexión
 const testMaterials = [
-//   {
-//     _id: "1",
-//     nombre: "Material de prueba 1",
-//     tema: "Verb to be",
-//     estado: "Activo",
-//     contenido: "<p>Contenido de prueba</p>",
-//   },
-//   {
-//     _id: "2",
-//     nombre: "Material de prueba 2",
-//     tema: "Pronunciador",
-//     estado: "Inactivo",
-//     contenido: "<p>Otro contenido de prueba</p>",
-//   },
+  //   {
+  //     _id: "1",
+  //     nombre: "Material de prueba 1",
+  //     tema: "Verb to be",
+  //     estado: "Activo",
+  //     contenido: "<p>Contenido de prueba</p>",
+  //   },
+  //   {
+  //     _id: "2",
+  //     nombre: "Material de prueba 2",
+  //     tema: "Pronunciador",
+  //     estado: "Inactivo",
+  //     contenido: "<p>Otro contenido de prueba</p>",
+  //   },
 ]
 
 export default function SupportMaterials() {
@@ -253,7 +253,7 @@ export default function SupportMaterials() {
       setFormData({
         titulo: selectedMaterial.titulo || selectedMaterial.nombre || "",
         tema: selectedMaterial.tema || "",
-        
+
         estado: selectedMaterial.estado || "activo",
         contenido: selectedMaterial.contenido || "<div>Material de Apoyo...</div>",
       })
@@ -275,7 +275,7 @@ export default function SupportMaterials() {
       setFormData({
         titulo: "",
         tema: "",
-        fecha: new Date().toISOString().split("T")[0],
+        fecha_creacion: format(new Date(), "yyyy-MM-dd"),
         estado: "activo",
         contenido: "<div>Material de Apoyo...</div>",
       })
@@ -472,7 +472,7 @@ export default function SupportMaterials() {
       const materialData = {
         titulo: formData.titulo.trim(),
         tema: formData.tema.trim(),
-        fecha: formData.fecha,
+        fecha_creacion: formData.fecha_creacion,
         estado: formData.estado,
         contenido: contenido,
       }
@@ -520,7 +520,7 @@ export default function SupportMaterials() {
       const materialData = {
         titulo: formData.titulo.trim(),
         tema: formData.tema.trim(),
-        fecha: formData.fecha,
+        fecha_creacion: formData.fecha_creacion,
         estado: formData.estado,
         contenido: contenido,
       }
@@ -712,7 +712,7 @@ export default function SupportMaterials() {
                   <input
                     type="date"
                     name="fecha"
-                    
+
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
                   />
@@ -929,7 +929,11 @@ export default function SupportMaterials() {
                   <input
                     type="date"
                     name="fecha"
-                    value={formData.fecha}
+                    value={
+                      formData.fecha_creacion
+                        ? format(parseISO(formData.fecha_creacion), "yyyy-MM-dd")
+                        : ""
+                    }
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
                   />
@@ -1123,18 +1127,17 @@ export default function SupportMaterials() {
                 <div>
                   <label className="block text-sm text-[#627b87] mb-1">Fecha:</label>
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
-                    {selectedMaterial.fecha ? new Date(selectedMaterial.fecha).toLocaleDateString() : "20-02-2025"}
+                    {selectedMaterial.fecha_creacion ? new Date(selectedMaterial.fecha_creacion).toLocaleDateString() : "Sin fecha"}
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm text-[#627b87] mb-1">Estado:</label>
                   <div className="px-3 py-2 border border-[#d9d9d9] rounded bg-[#f6f6fb]">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedMaterial.estado === "Activo" || selectedMaterial.estado === "activo"
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${selectedMaterial.estado === "Activo" || selectedMaterial.estado === "activo"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {selectedMaterial.estado}
                     </span>

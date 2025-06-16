@@ -18,16 +18,6 @@ export default function CustomSelect({ placeholder, options = [], value, onChang
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Log para depuración
-  useEffect(() => {
-    console.log("CustomSelect - Opciones:", options)
-    console.log("CustomSelect - Valor seleccionado:", value)
-    console.log(
-      "CustomSelect - Opción seleccionada:",
-      options.find((opt) => opt.value === value),
-    )
-  }, [options, value])
-
   // Find the selected option label
   const selectedOption = options.find((option) => option.value === value)
   const displayText = selectedOption ? selectedOption.label : placeholder
@@ -54,7 +44,6 @@ export default function CustomSelect({ placeholder, options = [], value, onChang
                   key={option.value}
                   className={`cursor-pointer select-none text-sm px-3 py-2 hover:bg-gray-100 ${value === option.value ? "bg-gray-100" : ""}`}
                   onClick={() => {
-                    console.log("Seleccionando opción:", option)
                     onChange(option.value)
                     setIsOpen(false)
                   }}

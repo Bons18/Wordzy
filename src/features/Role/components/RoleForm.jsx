@@ -13,6 +13,12 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
   const [formError, setFormError] = useState("")
   const [permissionsLoaded, setPermissionsLoaded] = useState(false)
   const [permissionsMap, setPermissionsMap] = useState({}) // Nuevo: mapa de ID -> módulo
+  const [selectAll, setSelectAll] = useState({
+    ver: false,
+    crear: false,
+    editar: false,
+    eliminar: false,
+  })
 
   // Validar si el nombre ya existe mientras se escribe
   useEffect(() => {
@@ -142,6 +148,21 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
     setHasChanges(true)
   }
 
+  const handleSelectAllChange = (accion) => {
+    const newValue = !selectAll[accion]
+
+    const updatedPermissions = Object.fromEntries(
+      Object.entries(allPermissions).map(([modulo, acciones]) => [
+        modulo,
+        { ...acciones, [accion]: newValue }
+      ])
+    )
+
+    setAllPermissions(updatedPermissions)
+    setSelectAll((prev) => ({ ...prev, [accion]: newValue }))
+    setHasChanges(true)
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     if (name === "name") setName(value)
@@ -162,6 +183,17 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
     })
     setHasChanges(true)
   }
+
+  useEffect(() => {
+      const acciones = ["ver", "crear", "editar", "eliminar"]
+      const newSelectAll = {}
+
+      for (const accion of acciones) {
+        newSelectAll[accion] = Object.values(allPermissions).every((mod) => mod[accion])
+      }
+
+      setSelectAll(newSelectAll)
+    }, [allPermissions])
 
   const validarFormulario = () => {
     const errores = {}
@@ -289,19 +321,20 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
           <table className="w-full bg-white border border-gray-200">
             <thead>
               <tr className="bg-[#1F384C] text-white">
-                <th colSpan="1" className="px-2 py-2 font-medium text-center">
-                  Permisos
-                </th>
-                <th colSpan="4" className="px-2 py-2 font-medium text-center">
-                  Privilegios
-                </th>
-              </tr>
-              <tr>
-                <th className="px-2 py-1 border border-gray-200">Módulos</th>
-                <th className="px-2 py-1 border border-gray-200">Ver</th>
-                <th className="px-2 py-1 border border-gray-200">Crear</th>
-                <th className="px-2 py-1 border border-gray-200">Editar</th>
-                <th className="px-2 py-1 border border-gray-200">Eliminar</th>
+                <th className="px-2 py-2 border border-gray-200 font-medium ">Módulos</th>
+                {["ver", "crear", "editar", "eliminar"].map((accion) => (
+                  <th key={accion} className="px-2 py-1 border border-gray-200 font-medium">
+                    <div className="flex flex-col items-center">
+                      <span className="capitalize">{accion}</span>
+                      <input
+                        type="checkbox"
+                        checked={selectAll[accion]}
+                        onChange={() => handleSelectAllChange(accion)}
+                        className="mt-1 mb-1 cursor-pointer"
+                      />
+                    </div>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -315,6 +348,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
                       type="checkbox"
                       checked={acciones.ver || false}
                       onChange={() => handlePermisoChange(modulo, "ver")}
+                      className="cursor-pointer"
                     />
                   </td>
                   <td className="px-2 py-1 border border-gray-200 text-center">
@@ -322,6 +356,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
                       type="checkbox"
                       checked={acciones.crear || false}
                       onChange={() => handlePermisoChange(modulo, "crear")}
+                      className="cursor-pointer"
                     />
                   </td>
                   <td className="px-2 py-1 border border-gray-200 text-center">
@@ -329,6 +364,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
                       type="checkbox"
                       checked={acciones.editar || false}
                       onChange={() => handlePermisoChange(modulo, "editar")}
+                      className="cursor-pointer"
                     />
                   </td>
                   <td className="px-2 py-1 border border-gray-200 text-center">
@@ -336,6 +372,7 @@ const RoleForm = ({ onSubmit, onCancel, initialData }) => {
                       type="checkbox"
                       checked={acciones.eliminar || false}
                       onChange={() => handlePermisoChange(modulo, "eliminar")}
+                      className="cursor-pointer"
                     />
                   </td>
                 </tr>

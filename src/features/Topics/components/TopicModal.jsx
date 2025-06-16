@@ -24,17 +24,6 @@ const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] })
       return
     }
 
-    const normalizedName = normalizeText(trimmedName)
-
-    // Verificar si existingTopics es un array antes de usar some
-    const exists =
-      Array.isArray(existingTopics) && existingTopics.some((t) => normalizeText(t.name) === normalizedName)
-
-    if (exists) {
-      setError("El tema ya existe")
-      return
-    }
-
     // Llamar a onSubmit con los datos del tema
     onSubmit({
       name: trimmedName,
@@ -64,6 +53,10 @@ const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] })
   // Validar si el nombre ya existe mientras se escribe
   useEffect(() => {
     const trimmed = name.trim()
+    if (!trimmed) {
+      setError("")
+      return
+    }
     const normalized = normalizeText(trimmed)
 
     const exists = existingTopics.some(
@@ -73,7 +66,7 @@ const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] })
     if (exists) {
       setError("El tema ya existe")
     } else {
-      setError("") // Limpia el error si el nombre ya no está duplicado
+      setError("")
     }
   }, [name, existingTopics])
 
@@ -89,9 +82,8 @@ const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] })
             type="text"
             value={name}
             onChange={handleInputChange(setName)}
-            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
-              error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            }`}
+            className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${error ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              }`}
             required
           />
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -116,11 +108,10 @@ const TopicModal = ({ isOpen, onClose, onSubmit, loading, existingTopics = [] })
           <button
             type="submit"
             disabled={!hasChanges || loading}
-            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
-              hasChanges && !loading
+            className={`px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${hasChanges && !loading
                 ? "bg-green-500 hover:bg-green-600"
                 : "bg-gray-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             {loading ? "Guardando..." : "Añadir Tema"}
           </button>

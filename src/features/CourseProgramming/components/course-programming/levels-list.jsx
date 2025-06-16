@@ -1,72 +1,38 @@
-"use client"
-
 import { Trash } from "lucide-react"
 import Tooltip from "../../../../shared/components/Tooltip"
 import ThemesList from "./themes-list"
 import TopicModal from "../../../Topics/components/TopicModal"
 import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useGetTopics } from "../../../Topics/hooks/useGetTopics"
+import { usePostTopic } from "../../../Topics/hooks/usePostTopic"
+
 
 export default function LevelsList({ levels, setLevels, activeTabs, setActiveTabs }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [selectedLevelId, setSelectedLevelId] = useState(null)
-  const [createdTopics, setCreatedTopics] = useState([])
-
-  // Cargar temas guardados al iniciar
-  useEffect(() => {
-    try {
-      const savedTopics = JSON.parse(localStorage.getItem("createdTopics") || "[]")
-      if (savedTopics.length > 0) {
-        setCreatedTopics(savedTopics)
-      }
-    } catch (error) {
-      console.error("Error al cargar temas:", error)
-    }
-  }, [])
-
-  // Guardar temas creados en localStorage cuando cambian
-  useEffect(() => {
-    if (createdTopics.length > 0) {
-      localStorage.setItem("createdTopics", JSON.stringify(createdTopics))
-    }
-  }, [createdTopics])
+  const { topics, refetch } = useGetTopics()
+  const { postTopic } = usePostTopic()
 
   const handleAddTopic = (levelId) => {
     setSelectedLevelId(levelId)
     setIsModalOpen(true)
   }
 
-  // Modificar la función handleSubmitTopic para adaptarse al formato del TopicModal
-  const handleSubmitTopic = (topicData) => {
-    console.log("Datos recibidos del TopicModal:", topicData)
-
-    // Crear un nuevo tema con los datos del modal
-    const newTopic = {
-      id: `topic-${Date.now()}`,
-      value: `topic-${Date.now()}`, // Asegurarnos de que value sea único
-      label: topicData.nombre || "Nuevo tema", // Usar nombre del TopicModal como label
-      description: topicData.descripcion || "", // Usar descripción del TopicModal
+  const handleSubmitTopic = async (topicData) => {
+    try {
+      await postTopic(topicData)
+      await refetch() // actualiza los temas disponibles
+      setIsModalOpen(false)
+      setSuccessMessage(`Tema "${topicData.name}" creado exitosamente`)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error("Error al agregar el tema:", error);
+      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
+      setShowSuccessModal(true);
     }
-
-    console.log("Nuevo tema creado:", newTopic)
-
-    // Agregar el tema a la lista de temas creados
-    const updatedTopics = [...createdTopics, newTopic]
-    setCreatedTopics(updatedTopics)
-
-    // Guardar inmediatamente en localStorage para asegurar persistencia
-    localStorage.setItem("createdTopics", JSON.stringify(updatedTopics))
-
-    // Si se seleccionó un nivel, agregar el tema automáticamente
-    if (selectedLevelId) {
-      addThemeWithTopic(selectedLevelId, newTopic.value)
-    }
-
-    setIsModalOpen(false)
-    setSuccessMessage(`Tema "${newTopic.label}" creado exitosamente`)
-    setShowSuccessModal(true)
   }
 
   const toggleLevelExpand = (levelId) => {
@@ -82,10 +48,10 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
       levels.map((level) => {
         if (level.id === levelId) {
           const newTheme = {
-            id: level.themes.length + 1,
+            id: `theme-${Date.now()}`,
             name: "",
             selectedTheme: "",
-            expanded: false,
+            expanded: true,
             progress: 0,
             activities: [],
             showActivities: false,
@@ -97,15 +63,12 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     )
   }
 
-  // Función para agregar un tema con un tópico ya seleccionado
   const addThemeWithTopic = (levelId, topicValue) => {
-    console.log("Agregando tema con tópico:", topicValue, "al nivel:", levelId)
-
     setLevels(
       levels.map((level) => {
         if (level.id === levelId) {
           const newTheme = {
-            id: level.themes.length + 1,
+            id: `theme-${Date.now()}`,
             name: "",
             selectedTheme: topicValue,
             expanded: true,
@@ -124,17 +87,15 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     setLevels(levels.filter((level) => level.id !== levelId))
   }
 
-  // Get level display name
   const getLevelDisplayName = (level) => {
-    return level.name ? level.name : `Nivel ${level.id}`
+    return level.name ? level.name : `Nivel ${levels.findIndex(l => l.id === level.id) + 1}`
   }
 
-  // Obtener temas existentes para validación
   const getExistingTopics = () => {
-    return createdTopics.map((topic) => ({
-      nombre: topic.label,
+    return topics?.map(topic => ({
+      nombre: topic.name,
       descripcion: topic.description || "",
-    }))
+    })) || []
   }
 
   return (
@@ -207,37 +168,38 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                   </button>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {level.themes.length} {level.themes.length === 1 ? "tema" : "temas"}
+                  {level.themes?.length || 0} {level.themes?.length === 1 ? "tema" : "temas"}
                 </div>
               </div>
 
-              <ThemesList
-                level={level}
-                levels={levels}
-                setLevels={setLevels}
-                activeTabs={activeTabs}
-                setActiveTabs={setActiveTabs}
-                createdTopics={createdTopics}
-              />
+              {level.themes?.length > 0 && (
+                <ThemesList
+                  level={level}
+                  levels={levels}
+                  setLevels={setLevels}
+                  activeTabs={activeTabs}
+                  setActiveTabs={setActiveTabs}
+                  createdTopics={topics?.map(t => ({
+                    value: t._id,
+                    label: t.name,
+                    description: t.description
+                  }))}
+                />
+              )}
             </div>
           )}
         </div>
       ))}
 
-      {/* Versión modificada del TopicModal para depuración */}
       {isModalOpen && (
         <TopicModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={(data) => {
-            console.log("TopicModal submit:", data)
-            handleSubmitTopic(data)
-          }}
+          onSubmit={handleSubmitTopic}
           existingTopics={getExistingTopics()}
         />
       )}
 
-      {/* Modal de éxito */}
       <ConfirmationModal
         isOpen={showSuccessModal}
         onConfirm={() => setShowSuccessModal(false)}

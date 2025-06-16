@@ -14,11 +14,7 @@ export function usePutTopic() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        name: topicData.name,
-        description: topicData.description,
-        status: topicData.status
-      })
+      body: JSON.stringify(topicData)
     });
 
     if (!response.ok) {

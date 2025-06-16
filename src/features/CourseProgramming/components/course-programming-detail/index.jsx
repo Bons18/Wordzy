@@ -4,64 +4,32 @@ import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
 import ProgrammingDetails from "./programming-details"
+import { useGetCourseProgrammingById } from "../../hooks/useGetCourseProgrammingById"
+import EvaluationDetailModal from "../../../Evaluations/components/EvaluationDetailModal"
+import MaterialDetail from "../../../SupportMaterials/pages/MaterialDetail"
 
 export default function CourseProgrammingDetail() {
-  const { id } = useParams()
   const navigate = useNavigate()
-  const [programming, setProgramming] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { id } = useParams()
+  const { programming, loading: isLoading, error, refetch } = useGetCourseProgrammingById(id)
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [selectedDetail, setSelectedDetail] = useState(null)
   const { logout } = useAuth()
   const dropdownRef = useRef(null)
 
   useEffect(() => {
-    // Cerrar dropdown al hacer clic fuera
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
-
-  useEffect(() => {
-    // Cargar datos de programación
-    const loadProgramming = async () => {
-      try {
-        // Obtener programaciones existentes
-        const existingSchedules = JSON.parse(localStorage.getItem("courseSchedules") || "[]")
-        const defaultSchedules = [
-          { id: 1, nombre: "Programa 1", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-          { id: 2, nombre: "Programa 2", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-          { id: 3, nombre: "Programa 3", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-          { id: 4, nombre: "Programa 4", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-          { id: 5, nombre: "Programa 5", fechaInicio: "01-01-2023", fechaFin: "01-06-2025", estado: "Activo" },
-        ]
-
-        // Combinar programaciones predeterminadas y guardadas
-        const allSchedules = [...defaultSchedules, ...existingSchedules]
-
-        // Buscar la programación por ID
-        const foundProgramming = allSchedules.find((p) => p.id.toString() === id.toString())
-
-        if (foundProgramming) {
-          setProgramming(foundProgramming)
-        } else {
-          console.error("Programación no encontrada")
-        }
-
-        setIsLoading(false)
-      } catch (error) {
-        console.error("Error al cargar la programación:", error)
-        setIsLoading(false)
-      }
-    }
-
-    loadProgramming()
-  }, [id])
 
   const handleLogoutClick = () => {
     setIsDropdownOpen(false)
@@ -76,6 +44,17 @@ export default function CourseProgrammingDetail() {
   const handleBackClick = () => {
     navigate("/programacion/programacionCursos")
   }
+
+  const handleShowEvaluationDetail = (evaluation) => {
+    setSelectedDetail(evaluation)
+    setShowDetailModal(true)
+  }
+
+  // Para mostrar el detalle
+  const handleView = (material) => {
+    setSelectedMaterial(material);
+    setShowDetail(true);
+  };
 
   if (isLoading) {
     return (
@@ -94,6 +73,45 @@ export default function CourseProgrammingDetail() {
         </button>
       </div>
     )
+  }
+
+  const adaptedProgramming = {
+    nombre: programming.programId.name,
+    estado: programming.status ? "Activo" : "Inactivo",
+    fechaInicio: new Date(programming.startDate).toLocaleDateString(),
+    fechaFin: programming.endDate ? new Date(programming.endDate).toLocaleDateString() : null,
+    levels: (programming.levels || []).map((level) => ({
+      ...level,
+      id: level._id,
+      themes: (level.topics || []).map((topic) => ({
+        id: topic._id,
+        selectedTheme: topic.topicId, // ya poblado
+        progress: topic.value,
+        activities: [
+          ...(topic.activities || []).map((act) => ({
+            id: act._id,
+            value: act.value,
+            type: "Actividades",
+            evaluationId: act.evaluationId,
+            onDetail: () => handleShowEvaluationDetail(act.evaluationId)
+          })),
+          ...(topic.exams || []).map((exam) => ({
+            id: exam._id,
+            value: exam.value,
+            type: "Exámenes",
+            evaluationId: exam.evaluationId,
+            onDetail: () => handleShowEvaluationDetail(exam.evaluationId)
+          })),
+          ...(topic.materials || []).map((mat) => ({
+            id: mat._id,
+            value: "-",
+            type: "Material",
+            materialId: mat.materialId,
+            onDetail: () => handleView(mat.materialId)
+          }))
+        ]
+      }))
+    }))
   }
 
   return (
@@ -125,7 +143,7 @@ export default function CourseProgrammingDetail() {
       </header>
 
       <div className="container mx-auto px-6">
-        <ProgrammingDetails programming={programming} />
+        <ProgrammingDetails programming={adaptedProgramming} />
 
         <div className="max-w-3xl mx-auto mt-6 flex justify-between">
           <button
@@ -136,7 +154,6 @@ export default function CourseProgrammingDetail() {
           </button>
         </div>
 
-        {/* Modal de confirmación para cerrar sesión */}
         <ConfirmationModal
           isOpen={showLogoutConfirm}
           onClose={() => setShowLogoutConfirm(false)}
@@ -146,6 +163,22 @@ export default function CourseProgrammingDetail() {
           confirmText="Cerrar Sesión"
           confirmColor="bg-[#f44144] hover:bg-red-600"
         />
+
+        <EvaluationDetailModal
+          isOpen={showDetailModal}
+          onClose={() => setShowDetailModal(false)}
+          evaluation={selectedDetail}
+        />
+
+        {showDetail && selectedMaterial && (
+          <MaterialDetail 
+            material={selectedMaterial} 
+            onClose={() => {
+              setShowDetail(false);
+              setSelectedMaterial(null);
+            }} 
+          />
+        )}
       </div>
     </div>
   )
