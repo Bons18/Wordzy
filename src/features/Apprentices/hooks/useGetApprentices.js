@@ -11,6 +11,7 @@ const useGetApprentices = () => {
   const fallbackData = [
     {
       id: 1,
+      tipoUsuario: "aprendiz",
       nombre: "Carlita",
       apellido: "Pérez",
       documento: "1023456789",
@@ -30,6 +31,7 @@ const useGetApprentices = () => {
     },
     {
       id: 2,
+      tipoUsuario: "aprendiz",
       nombre: "Ana",
       apellido: "Gómez",
       documento: "1029876543",
@@ -49,6 +51,7 @@ const useGetApprentices = () => {
     },
     {
       id: 3,
+      tipoUsuario: "aprendiz",
       nombre: "Luis",
       apellido: "Martínez",
       documento: "1034567890",
@@ -68,6 +71,7 @@ const useGetApprentices = () => {
     },
     {
       id: 4,
+      tipoUsuario: "aprendiz",
       nombre: "María",
       apellido: "gonzales",
       documento: "2345447567",
@@ -92,6 +96,9 @@ const useGetApprentices = () => {
       setLoading(true)
       setError(null)
 
+      console.log("🔍 Obteniendo aprendices desde API...")
+
+      // Usar la ruta específica de aprendices en puerto 3000
       const response = await fetch("http://localhost:3000/api/apprentice")
 
       if (!response.ok) {
@@ -99,20 +106,29 @@ const useGetApprentices = () => {
       }
 
       const data = await response.json()
+      console.log("✅ Datos de aprendices recibidos:", data)
 
       // Normalizar datos (convertir _id a id si es necesario)
       const normalizedData = data.map((apprentice) => ({
         ...apprentice,
         id: apprentice._id || apprentice.id,
+        // Asegurar que los campos específicos de aprendiz existan
+        ficha: Array.isArray(apprentice.ficha) ? apprentice.ficha : [apprentice.ficha],
+        progresoNiveles: apprentice.progresoNiveles || [
+          { nivel: 1, porcentaje: 0 },
+          { nivel: 2, porcentaje: 0 },
+          { nivel: 3, porcentaje: 0 },
+        ],
       }))
 
       setApprentices(normalizedData)
+      console.log(`✅ ${normalizedData.length} aprendices cargados exitosamente`)
     } catch (err) {
-      console.error("Error al obtener aprendices:", err)
+      console.error("❌ Error al obtener aprendices:", err)
       setError(err.message)
 
       // Usar datos de fallback en caso de error
-      console.log("Usando datos de ejemplo como fallback")
+      console.log("🔄 Usando datos de ejemplo como fallback")
       setApprentices(fallbackData)
     } finally {
       setLoading(false)
@@ -124,6 +140,7 @@ const useGetApprentices = () => {
   }, [])
 
   const refetch = () => {
+    console.log("🔄 Refrescando datos de aprendices...")
     fetchApprentices()
   }
 

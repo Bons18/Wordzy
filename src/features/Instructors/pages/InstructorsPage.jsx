@@ -1,14 +1,18 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, RefreshCw } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
 import FichaDetailModal from "./FichaDetailModal"
+import InstructorForm from "../components/InstructorForm"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 import useGetInstructors from "../hooks/useGetInstructors"
+import usePostInstructor from "../hooks/usePostInstructor"
+import usePutInstructor from "../hooks/usePutInstructor"
+import useDeleteInstructor from "../hooks/useDeleteInstructor"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -35,15 +39,22 @@ const InstructorsPage = () => {
   const [selectedFicha, setSelectedFicha] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [instructorToDelete, setInstructorToDelete] = useState(null)
 
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
 
-  // Hook para API
+  // Hooks para API
   const { instructors, loading, error, refetch } = useGetInstructors()
+  const { createInstructor, loading: creating } = usePostInstructor()
+  const { updateInstructor, loading: updating } = usePutInstructor()
+  const { deleteInstructor, loading: deleting } = useDeleteInstructor()
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -74,6 +85,85 @@ const InstructorsPage = () => {
     setIsFichaModalOpen(false)
   }
 
+  const handleCreateInstructor = () => {
+    setSelectedInstructor(null)
+    setIsEditMode(false)
+    setIsFormModalOpen(true)
+  }
+
+  const handleEditInstructor = (instructor) => {
+    setSelectedInstructor(instructor)
+    setIsEditMode(true)
+    setIsFormModalOpen(true)
+  }
+
+  const handleDeleteInstructor = (instructorData) => {
+    console.log("Datos recibidos para eliminar:", instructorData) // Debug
+
+    // Si instructorData es un string (ID), buscar el instructor completo
+    let instructorToDelete
+    if (typeof instructorData === "string") {
+      instructorToDelete = instructors.find((inst) => inst._id === instructorData || inst.id === instructorData)
+      console.log("Instructor encontrado por ID:", instructorToDelete)
+    } else {
+      instructorToDelete = instructorData
+    }
+
+    if (!instructorToDelete) {
+      console.error("No se pudo encontrar el instructor")
+      return
+    }
+
+    setInstructorToDelete(instructorToDelete)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (instructorToDelete) {
+      try {
+        // Si instructorToDelete es un objeto, extraer el ID
+        let instructorId
+        if (typeof instructorToDelete === "object") {
+          instructorId = instructorToDelete._id || instructorToDelete.id
+        } else {
+          // Si es un string, usar directamente
+          instructorId = instructorToDelete
+        }
+
+        console.log("ID del instructor a eliminar:", instructorId) // Debug
+
+        if (!instructorId) {
+          console.error("No se encontró ID del instructor:", instructorToDelete)
+          return
+        }
+
+        await deleteInstructor(instructorId)
+        refetch()
+        setShowDeleteConfirm(false)
+        setInstructorToDelete(null)
+      } catch (error) {
+        console.error("Error al eliminar instructor:", error)
+      }
+    }
+  }
+
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (isEditMode && selectedInstructor) {
+        const instructorId = selectedInstructor._id || selectedInstructor.id
+        await updateInstructor(instructorId, formData)
+      } else {
+        await createInstructor(formData)
+      }
+
+      setIsFormModalOpen(false)
+      setSelectedInstructor(null)
+      refetch()
+    } catch (error) {
+      console.error("Error en el formulario:", error)
+    }
+  }
+
   const handleLogoutClick = () => {
     setIsDropdownOpen(false)
     setShowLogoutConfirm(true)
@@ -82,11 +172,6 @@ const InstructorsPage = () => {
   const handleLogout = () => {
     logout()
     navigate("/login")
-  }
-
-  const handleMassiveUpdate = () => {
-    // Función placeholder para actualización masiva
-    console.log("Actualización masiva de instructores - Funcionalidad pendiente")
   }
 
   // Mostrar estado de carga
@@ -138,26 +223,19 @@ const InstructorsPage = () => {
           <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Error: {displayError}</div>
         )}
 
-        {/* Botón de Actualización Masiva */}
-        <div className="mb-6 flex justify-end">
-          <button
-            onClick={handleMassiveUpdate}
-            className="flex items-center gap-2 bg-[#1f384c] text-white px-4 py-2 rounded-lg hover:bg-[#2a4a5e] transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Actualización Masiva
-          </button>
-        </div>
-
         <GenericTable
           data={instructors}
           columns={columns}
+          onAdd={handleCreateInstructor}
           onShow={handleShowInstructor}
+          onEdit={handleEditInstructor}
+          onDelete={handleDeleteInstructor}
           title="LISTA DE INSTRUCTORES"
-          showActions={{ show: true }}
+          showActions={{ show: true, edit: true, delete: true, add: true }}
           tooltipText="Ver detalle del instructor"
         />
 
+        {/* Modal de Detalle */}
         {selectedInstructor && (
           <InstructorDetailModal
             instructor={selectedInstructor}
@@ -167,9 +245,20 @@ const InstructorsPage = () => {
           />
         )}
 
+        {/* Modal de Ficha */}
         {selectedFicha && (
           <FichaDetailModal ficha={selectedFicha} isOpen={isFichaModalOpen} onClose={handleCloseFichaModal} />
         )}
+
+        {/* Modal de Formulario */}
+        <InstructorForm
+          isOpen={isFormModalOpen}
+          onClose={() => setIsFormModalOpen(false)}
+          onSubmit={handleFormSubmit}
+          instructor={isEditMode ? selectedInstructor : null}
+          isEditMode={isEditMode}
+          loading={creating || updating}
+        />
       </div>
 
       {/* Modal de confirmación para cerrar sesión */}
@@ -181,6 +270,18 @@ const InstructorsPage = () => {
         message="¿Está seguro de que desea cerrar la sesión actual?"
         confirmText="Cerrar Sesión"
         confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
+
+      {/* Modal de confirmación para eliminar */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        title="Eliminar Instructor"
+        message={`¿Está seguro de que desea eliminar al instructor ${instructorToDelete?.nombre} ${instructorToDelete?.apellido}?`}
+        confirmText="Eliminar"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+        loading={deleting}
       />
     </div>
   )

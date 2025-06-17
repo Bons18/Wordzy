@@ -11,6 +11,7 @@ const useGetInstructors = () => {
   const fallbackData = [
     {
       id: 1,
+      tipoUsuario: "instructor",
       nombre: "Carlos",
       apellido: "Gómez",
       documento: "12345678",
@@ -47,6 +48,7 @@ const useGetInstructors = () => {
     },
     {
       id: 2,
+      tipoUsuario: "instructor",
       nombre: "Laura",
       apellido: "Martínez",
       documento: "87654321",
@@ -81,6 +83,9 @@ const useGetInstructors = () => {
       setLoading(true)
       setError(null)
 
+      console.log("🔍 Obteniendo instructores desde API...")
+
+      // Usar la ruta específica de instructores en puerto 3000
       const response = await fetch("http://localhost:3000/api/instructor")
 
       if (!response.ok) {
@@ -88,20 +93,24 @@ const useGetInstructors = () => {
       }
 
       const data = await response.json()
+      console.log("✅ Datos de instructores recibidos:", data)
 
       // Normalizar datos (convertir _id a id si es necesario)
       const normalizedData = data.map((instructor) => ({
         ...instructor,
         id: instructor._id || instructor.id,
+        // Asegurar que los campos específicos de instructor existan
+        fichas: instructor.fichas || [],
       }))
 
       setInstructors(normalizedData)
+      console.log(`✅ ${normalizedData.length} instructores cargados exitosamente`)
     } catch (err) {
-      console.error("Error al obtener instructores:", err)
+      console.error("❌ Error al obtener instructores:", err)
       setError(err.message)
 
       // Usar datos de fallback en caso de error
-      console.log("Usando datos de ejemplo como fallback")
+      console.log("🔄 Usando datos de ejemplo como fallback")
       setInstructors(fallbackData)
     } finally {
       setLoading(false)
@@ -113,6 +122,7 @@ const useGetInstructors = () => {
   }, [])
 
   const refetch = () => {
+    console.log("🔄 Refrescando datos de instructores...")
     fetchInstructors()
   }
 

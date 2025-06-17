@@ -2,56 +2,50 @@
 
 import { useState } from "react"
 
-const useDeleteInstructor = () => {
+const usePutInstructor = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
 
-  const deleteInstructor = async (id) => {
+  const updateInstructor = async (id, instructorData) => {
     try {
       setLoading(true)
       setError(null)
       setSuccess(false)
 
-      console.log("ID recibido para eliminar:", id)
+      console.log("Actualizando instructor con ID:", id)
+      console.log("Datos a enviar:", instructorData)
 
       if (!id) {
         throw new Error("ID de instructor requerido")
       }
 
-      // Validar que el ID sea una cadena válida
-      if (typeof id !== "string" || id.trim() === "") {
-        throw new Error("ID de instructor inválido")
+      // Asegurar que el tipo de usuario sea instructor
+      const dataToSend = {
+        ...instructorData,
+        tipoUsuario: "instructor",
       }
 
-      console.log("Eliminando instructor con ID:", id)
-
       const response = await fetch(`http://localhost:3000/api/instructor/${id}`, {
-        method: "DELETE",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(dataToSend),
       })
 
-      console.log("Respuesta del servidor:", response.status, response.statusText)
-
       if (!response.ok) {
-        let errorData
-        try {
-          errorData = await response.json()
-        } catch (e) {
-          errorData = { message: `Error ${response.status}: ${response.statusText}` }
-        }
+        const errorData = await response.json()
         console.error("Error del servidor:", errorData)
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
       }
 
       const result = await response.json()
-      console.log("Instructor eliminado exitosamente:", result)
+      console.log("Instructor actualizado exitosamente:", result)
       setSuccess(true)
-      return true
+      return result
     } catch (err) {
-      console.error("Error al eliminar instructor:", err)
+      console.error("Error al actualizar instructor:", err)
       setError(err.message)
       throw err
     } finally {
@@ -66,7 +60,7 @@ const useDeleteInstructor = () => {
   }
 
   return {
-    deleteInstructor,
+    updateInstructor,
     loading,
     error,
     success,
@@ -74,4 +68,4 @@ const useDeleteInstructor = () => {
   }
 }
 
-export default useDeleteInstructor
+export default usePutInstructor

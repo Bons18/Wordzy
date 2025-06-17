@@ -9,6 +9,7 @@ import ApprenticeProgressModal from "./ApprenticeProgressModal"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 import useGetApprentices from "../hooks/useGetApprentices"
+import MassiveUpdateModal from "../components/MassiveUpdateModal"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -44,6 +45,7 @@ const Apprentices = () => {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showMassiveUpdateModal, setShowMassiveUpdateModal] = useState(false)
 
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -85,9 +87,13 @@ const Apprentices = () => {
   }
 
   const handleMassiveUpdate = () => {
-    // Función placeholder para actualización masiva
-    console.log("Actualización masiva - Funcionalidad pendiente de implementar")
-    // Aquí irá la lógica para traer datos de la API externa en el futuro
+    setShowMassiveUpdateModal(true)
+  }
+
+  const handleMassiveUpdateComplete = (results) => {
+    console.log("Actualización masiva completada:", results)
+    // Refrescar la lista de aprendices
+    refetch()
   }
 
   const handleLogoutClick = () => {
@@ -191,6 +197,12 @@ const Apprentices = () => {
           message="¿Está seguro de que desea cerrar la sesión actual?"
           confirmText="Cerrar Sesión"
           confirmColor="bg-[#f44144] hover:bg-red-600"
+        />
+        {/* Modal de actualización masiva */}
+        <MassiveUpdateModal
+          isOpen={showMassiveUpdateModal}
+          onClose={() => setShowMassiveUpdateModal(false)}
+          onComplete={handleMassiveUpdateComplete}
         />
       </div>
     </div>
