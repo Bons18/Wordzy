@@ -45,7 +45,8 @@ const Apprentices = () => {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showMassiveUpdateModal, setShowMassiveUpdateModal] = useState(false)
+  const [showMassiveUpdateModal, setShowMassiveUpdateModal] = useState(false) // Inicializado explícitamente en false
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -53,6 +54,11 @@ const Apprentices = () => {
 
   // Solo hook para obtener datos
   const { apprentices, loading, error, refetch } = useGetApprentices()
+
+  // Debug: Log del estado del modal
+  useEffect(() => {
+    console.log("🔍 Estado showMassiveUpdateModal:", showMassiveUpdateModal)
+  }, [showMassiveUpdateModal])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -87,20 +93,35 @@ const Apprentices = () => {
   }
 
   const handleMassiveUpdate = () => {
+    console.log("🚀 Abriendo modal de actualización masiva")
     setShowMassiveUpdateModal(true)
   }
 
-  const handleMassiveUpdateComplete = (results) => {
-    console.log("📊 Actualización masiva completada en componente padre:", results)
+  const handleMassiveUpdateComplete = async (results) => {
+    console.log("📊 Actualización masiva completada:", results)
 
-    // Refrescar la lista de aprendices de forma segura
     try {
+      setIsRefreshing(true)
       console.log("🔄 Refrescando lista de aprendices...")
-      refetch()
+
+      // Delay para asegurar que los datos se hayan guardado
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      await refetch()
       console.log("✅ Lista refrescada exitosamente")
+
+      // Delay adicional para mostrar el loading
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     } catch (error) {
       console.error("❌ Error al refrescar lista:", error)
+    } finally {
+      setIsRefreshing(false)
     }
+  }
+
+  const handleMassiveUpdateModalClose = () => {
+    console.log("🔒 Cerrando modal de actualización masiva desde componente padre")
+    setShowMassiveUpdateModal(false)
   }
 
   const handleLogoutClick = () => {
@@ -114,12 +135,14 @@ const Apprentices = () => {
   }
 
   // Mostrar loading
-  if (loading) {
+  if (loading || isRefreshing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1f384c] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando aprendices...</p>
+          <p className="mt-4 text-gray-600">
+            {isRefreshing ? "Actualizando lista de aprendices..." : "Cargando aprendices..."}
+          </p>
         </div>
       </div>
     )
@@ -161,10 +184,15 @@ const Apprentices = () => {
         <div className="mb-6 flex justify-end">
           <button
             onClick={handleMassiveUpdate}
-            className="flex items-center gap-2 bg-[#1f384c] text-white px-4 py-2 rounded-lg hover:bg-[#2a4a5e] transition-colors"
+            disabled={isRefreshing || showMassiveUpdateModal}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              isRefreshing || showMassiveUpdateModal
+                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                : "bg-[#1f384c] text-white hover:bg-[#2a4a5e]"
+            }`}
           >
-            <RefreshCw className="w-4 h-4" />
-            Actualización Masiva
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Actualizando..." : "Actualización Masiva"}
           </button>
         </div>
 
@@ -209,7 +237,7 @@ const Apprentices = () => {
         {/* Modal de actualización masiva */}
         <MassiveUpdateModal
           isOpen={showMassiveUpdateModal}
-          onClose={() => setShowMassiveUpdateModal(false)}
+          onClose={handleMassiveUpdateModalClose}
           onComplete={handleMassiveUpdateComplete}
         />
       </div>

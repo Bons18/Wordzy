@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { X, Download, Database, CheckCircle, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react"
-import Modal from "../../../shared/components/Modal"
+import { processMassiveUpdate, checkApiConnectivity } from "../services/massiveUpdateService"
 
 const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
   const [isProcessing, setIsProcessing] = useState(false)
@@ -16,11 +16,10 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
   const [showDetails, setShowDetails] = useState(false)
   const [connectivity, setConnectivity] = useState(null)
   const [connectivityVerified, setConnectivityVerified] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   // useEffect para manejar cuando se completa la sincronización
   useEffect(() => {
-    if (progress.phase === "completed" && !results && !showSuccessModal) {
+    if (progress.phase === "completed" && !results) {
       console.log("🎉 Sincronización completada, procesando resultados...")
 
       try {
@@ -34,23 +33,14 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
 
         console.log("📊 Resultados procesados:", finalResults)
         setResults(finalResults)
-
-        // Mostrar modal de éxito después de un delay
-        const timer = setTimeout(() => {
-          console.log("✅ Mostrando modal de éxito...")
-          setShowSuccessModal(true)
-        }, 1500)
-
-        return () => clearTimeout(timer)
       } catch (error) {
         console.error("❌ Error procesando resultados:", error)
       }
     }
-  }, [progress.phase, results, showSuccessModal, progress.details])
+  }, [progress.phase, results, progress.details])
 
   const checkConnectivity = async () => {
     try {
-      const { checkApiConnectivity } = await import("../services/massiveUpdateService")
       const result = await checkApiConnectivity()
       setConnectivity(result)
       setConnectivityVerified(true)
@@ -70,7 +60,6 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
   const handleStartUpdate = async () => {
     setIsProcessing(true)
     setResults(null)
-    setShowSuccessModal(false)
     setProgress({
       phase: "starting",
       message: "Verificando conectividad...",
@@ -84,8 +73,6 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
       if (!connectivityResult || !connectivityResult.external || !connectivityResult.local) {
         throw new Error("Error de conectividad con las APIs")
       }
-
-      const { processMassiveUpdate } = await import("../services/massiveUpdateService")
 
       await processMassiveUpdate((progressData) => {
         setProgress(progressData)
@@ -103,43 +90,48 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     }
   }
 
-  const handleClose = () => {
-    if (!isProcessing) {
-      console.log("🔒 Cerrando modal principal...")
-      onClose()
-      // Reset state
-      setProgress({
-        phase: "idle",
-        message: "",
-        percentage: 0,
-        details: "",
-      })
-      setResults(null)
-      setShowDetails(false)
-      setConnectivity(null)
-      setConnectivityVerified(false)
-      setShowSuccessModal(false)
+  const handleClose = async () => {
+    console.log("🔒 Intentando cerrar modal...")
+
+    if (isProcessing) {
+      console.log("⚠️ No se puede cerrar durante el procesamiento")
+      return
     }
-  }
 
-  const handleSuccessModalClose = () => {
-    console.log("✅ Cerrando modal de éxito...")
-    setShowSuccessModal(false)
-
-    // Llamar onComplete solo cuando el usuario cierre el modal de éxito
-    if (onComplete && results) {
+    // Si hay resultados, ejecutar onComplete antes de cerrar
+    if (results && onComplete) {
       try {
-        console.log("📞 Llamando onComplete con resultados:", results)
-        onComplete(results)
+        console.log("📞 Ejecutando onComplete con resultados:", results)
+        await onComplete(results)
+        console.log("✅ onComplete ejecutado exitosamente")
       } catch (error) {
         console.error("❌ Error en onComplete:", error)
       }
     }
 
-    // Cerrar el modal principal después de un pequeño delay
-    setTimeout(() => {
+    // Reset state
+    console.log("🔄 Reseteando estado del modal...")
+    setProgress({
+      phase: "idle",
+      message: "",
+      percentage: 0,
+      details: "",
+    })
+    setResults(null)
+    setShowDetails(false)
+    setConnectivity(null)
+    setConnectivityVerified(false)
+
+    // Cerrar modal
+    console.log("🚪 Cerrando modal...")
+    onClose()
+  }
+
+  const handleBackdropClick = (e) => {
+    // Solo cerrar si se hace clic en el backdrop, no en el contenido del modal
+    if (e.target === e.currentTarget && !isProcessing) {
       handleClose()
-    }, 100)
+    }
   }
 
   const getPhaseIcon = () => {
@@ -172,204 +164,194 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     }
   }
 
+  // No renderizar nada si el modal no está abierto
+  if (!isOpen) {
+    return null
+  }
+
   return (
-    <>
-      <Modal isOpen={isOpen} onClose={handleClose}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()} // Prevenir cierre al hacer clic en el contenido
+      >
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             {getPhaseIcon()}
             <h1 className="text-xl font-bold text-[#1f384c]">{getPhaseTitle()}</h1>
           </div>
           {!isProcessing && (
-            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors" type="button">
               <X className="w-6 h-6" />
             </button>
           )}
         </div>
 
         {/* Content */}
-        {!isProcessing && !results && (
-          <div className="text-center py-6">
-            <div className="mb-6">
-              <RefreshCw className="w-16 h-16 text-[#1f384c] mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Sincronización Masiva de Aprendices</h3>
-              <p className="text-sm font-medium text-gray-700 mb-4">
-                Esta operación descargará todos los aprendices de la API externa y los sincronizará con tu base de datos
-                local.
-              </p>
+        <div className="p-6">
+          {!isProcessing && !results && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Columna izquierda - Información principal */}
+              <div className="space-y-4">
+                <div className="text-center lg:text-left">
+                  <RefreshCw className="w-16 h-16 text-[#1f384c] mx-auto lg:mx-0 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Sincronización Masiva de Aprendices</h3>
+                  <p className="text-sm font-medium text-gray-700">
+                    Esta operación descargará todos los aprendices de la API externa y los sincronizará con tu base de
+                    datos local.
+                  </p>
+                </div>
 
-              {/* Información de conectividad */}
-              {connectivity && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-300">
-                  <div className="flex items-center justify-center gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      {connectivity.external ? (
-                        <Wifi className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className={connectivity.external ? "text-green-700" : "text-red-700"}>
-                        API Externa: {connectivity.external ? "Conectada" : "Error"}
-                      </span>
+                {/* Información de conectividad */}
+                {connectivity && (
+                  <div className="p-4 bg-gray-50 rounded-md border border-gray-300">
+                    <h4 className="font-medium text-gray-800 mb-3">Estado de Conectividad</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        {connectivity.external ? (
+                          <Wifi className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <WifiOff className="w-4 h-4 text-red-500" />
+                        )}
+                        <span className={connectivity.external ? "text-green-700" : "text-red-700"}>
+                          API Externa: {connectivity.external ? "Conectada" : "Error"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {connectivity.local ? (
+                          <Wifi className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <WifiOff className="w-4 h-4 text-red-500" />
+                        )}
+                        <span className={connectivity.local ? "text-green-700" : "text-red-700"}>
+                          API Local: {connectivity.local ? "Conectada" : "Error"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {connectivity.local ? (
-                        <Wifi className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className={connectivity.local ? "text-green-700" : "text-red-700"}>
-                        API Local: {connectivity.local ? "Conectada" : "Error"}
-                      </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Columna derecha - Advertencias y acciones */}
+              <div className="space-y-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-yellow-800">
+                      <p className="font-medium mb-2">Importante:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Se sugiere realizar la actualización en horario nocturno</li>
+                        <li>Esta operación puede tardar varios minutos</li>
+                        <li>Los duplicados se actualizarán automáticamente</li>
+                        <li>No cierres esta ventana durante el proceso</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
+
+                {/* Botones de acción */}
+                <div className="space-y-3">
+                  <button
+                    onClick={checkConnectivity}
+                    type="button"
+                    className="w-full px-4 py-3 text-sm text-white rounded-[10px] focus:outline-none focus:ring-2 bg-blue-500 hover:bg-blue-600 focus:ring-blue-500 transition-colors"
+                  >
+                    Verificar Conectividad
+                  </button>
+                  <button
+                    onClick={handleStartUpdate}
+                    type="button"
+                    disabled={
+                      !connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))
+                    }
+                    className={`w-full px-4 py-3 text-sm text-white rounded-[10px] focus:outline-none focus:ring-2 transition-colors ${
+                      !connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600 focus:ring-green-500"
+                    }`}
+                  >
+                    {!connectivityVerified ? "Verificar Conectividad Primero" : "Iniciar Sincronización"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Progress */}
+          {isProcessing && (
+            <div className="max-w-2xl mx-auto">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">{progress.message}</span>
+                  <span className="text-sm text-gray-500">{progress.percentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-[#1f384c] h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${progress.percentage}%` }}
+                  />
+                </div>
+              </div>
+              {progress.details && (
+                <p className="text-sm font-medium text-gray-700 text-center bg-gray-50 p-3 rounded-md">
+                  {progress.details}
+                </p>
               )}
+            </div>
+          )}
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-1">Importante:</p>
-                    <ul className="list-disc list-inside space-y-1 text-left">
-                      <li>Se sugiere realizar la actualización en horario nocturno</li>
-                      <li>Esta operación puede tardar varios minutos</li>
-                      <li>Los duplicados se actualizarán automáticamente</li>
-                      <li>No cierres esta ventana durante el proceso</li>
-                    </ul>
+          {/* Results */}
+          {results && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-green-50 border border-green-200 rounded-md p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <h3 className="text-lg font-semibold text-green-800">Sincronización Completada</h3>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center p-3 bg-white rounded-md">
+                    <span className="block text-gray-700 font-medium">Total procesados</span>
+                    <span className="block text-xl font-bold text-gray-900 mt-1">{results.total}</span>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-md">
+                    <span className="block text-gray-700 font-medium">Creados</span>
+                    <span className="block text-xl font-bold text-green-600 mt-1">{results.created}</span>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-md">
+                    <span className="block text-gray-700 font-medium">Actualizados</span>
+                    <span className="block text-xl font-bold text-blue-600 mt-1">{results.updated}</span>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-md">
+                    <span className="block text-gray-700 font-medium">Sin cambios</span>
+                    <span className="block text-xl font-bold text-gray-600 mt-1">{results.skipped}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col space-y-3 mt-6">
-              <button
-                onClick={checkConnectivity}
-                className="w-full px-4 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
-              >
-                Verificar Conectividad
-              </button>
-              <button
-                onClick={handleStartUpdate}
-                disabled={!connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))}
-                className={`w-full px-4 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 transition-colors ${
-                  !connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-500 hover:bg-green-600 focus:ring-green-500"
-                }`}
-              >
-                {!connectivityVerified ? "Verificar Conectividad Primero" : "Iniciar Sincronización"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Progress */}
-        {isProcessing && (
-          <div className="py-6">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">{progress.message}</span>
-                <span className="text-sm text-gray-500">{progress.percentage}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-[#1f384c] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress.percentage}%` }}
-                />
-              </div>
-            </div>
-            {progress.details && <p className="text-sm font-medium text-gray-700 text-center">{progress.details}</p>}
-          </div>
-        )}
-
-        {/* Results - Solo mostrar si no hay modal de éxito */}
-        {results && !showSuccessModal && (
-          <div className="py-4">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <h3 className="font-semibold text-green-800">Sincronización Completada</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-700 font-medium">Total procesados:</span>
-                  <span className="font-bold ml-2">{results.total}</span>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Creados:</span>
-                  <span className="font-bold ml-2 text-green-600">{results.created}</span>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Actualizados:</span>
-                  <span className="font-bold ml-2 text-blue-600">{results.updated}</span>
-                </div>
-                <div>
-                  <span className="text-gray-700 font-medium">Sin cambios:</span>
-                  <span className="font-bold ml-2 text-gray-600">{results.skipped}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-gray-700 font-medium">Errores:</span>
-                  <span className="font-bold ml-2 text-red-600">{results.errors}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={handleClose}
-                className="px-3 py-2 text-sm text-white rounded-[10px] focus:outline-none focus:ring-1 bg-green-500 hover:bg-green-600 focus:ring-green-500"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Modal de éxito - Renderizado independiente */}
-      {showSuccessModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">¡Actualización Completada Exitosamente!</h3>
-              <p className="text-sm text-gray-600 mb-6">
-                La sincronización masiva de aprendices se ha ejecutado correctamente.
-              </p>
-              {results && (
-                <div className="bg-gray-50 rounded-md p-3 mb-4 text-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      Creados: <span className="font-bold text-green-600">{results.created}</span>
-                    </div>
-                    <div>
-                      Actualizados: <span className="font-bold text-blue-600">{results.updated}</span>
-                    </div>
-                    <div>
-                      Sin cambios: <span className="font-bold text-gray-600">{results.skipped}</span>
-                    </div>
-                    <div>
-                      Errores: <span className="font-bold text-red-600">{results.errors}</span>
-                    </div>
+                {Number.parseInt(results.errors) > 0 && (
+                  <div className="mt-4 text-center p-3 bg-red-50 rounded-md border border-red-200">
+                    <span className="block text-gray-700 font-medium">Errores</span>
+                    <span className="block text-xl font-bold text-red-600 mt-1">{results.errors}</span>
                   </div>
-                </div>
-              )}
-              <button
-                onClick={handleSuccessModalClose}
-                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-              >
-                Cerrar
-              </button>
+                )}
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={handleClose}
+                  type="button"
+                  className="px-6 py-3 text-sm text-white rounded-[10px] focus:outline-none focus:ring-2 bg-green-500 hover:bg-green-600 focus:ring-green-500 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   )
 }
 

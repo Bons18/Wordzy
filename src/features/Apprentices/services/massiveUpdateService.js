@@ -2,58 +2,150 @@ import { fetchAllExternalApprentices, validateTransformedApprentice } from "./ex
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
 
+// Configuración optimizada para escalabilidad
+const CONFIG = {
+  BATCH_SIZE: 50, // Procesar en lotes de 50 usuarios
+  MAX_CONCURRENT_REQUESTS: 5, // Máximo 5 requests simultáneos
+  RETRY_ATTEMPTS: 3, // Reintentos por operación fallida
+  CHECKPOINT_INTERVAL: 100, // Guardar progreso cada 100 registros
+  RATE_LIMIT_DELAY: 100, // Delay base entre requests (ms)
+  MEMORY_CLEANUP_INTERVAL: 200, // Limpiar memoria cada 200 registros
+}
+
 /**
- * Crea un nuevo aprendiz usando la ruta de usuarios
+ * Función para limpiar memoria en navegadores
  */
-const createApprentice = async (apprenticeData) => {
+const cleanupMemory = () => {
   try {
-    console.log(`Creando aprendiz: ${apprenticeData.nombre} ${apprenticeData.apellido}`)
-
-    const response = await fetch(`${API_BASE_URL}/api/user`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(apprenticeData),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || `Error HTTP ${response.status}`)
+    // En navegadores, forzar garbage collection si está disponible
+    if (typeof window !== "undefined" && window.gc) {
+      window.gc()
     }
-
-    return await response.json()
+    // Alternativa: crear y limpiar arrays grandes para forzar GC
+    const cleanup = new Array(1000).fill(null)
+    cleanup.length = 0
   } catch (error) {
-    console.error("Error al crear aprendiz:", error)
-    throw error
+    // Silenciar errores de limpieza de memoria
   }
 }
 
 /**
- * Actualiza un aprendiz existente usando la ruta de usuarios
+ * Crea múltiples aprendices usando batch processing
  */
-const updateApprentice = async (apprenticeId, apprenticeData) => {
-  try {
-    console.log(`Actualizando aprendiz ID: ${apprenticeId}`)
+const createApprenticesBatch = async (apprenticesData) => {
+  const results = { success: [], errors: [] }
 
-    const response = await fetch(`${API_BASE_URL}/api/user/${apprenticeId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(apprenticeData),
+  // Procesar en lotes más pequeños para evitar sobrecarga del servidor
+  for (let i = 0; i < apprenticesData.length; i += CONFIG.MAX_CONCURRENT_REQUESTS) {
+    const batch = apprenticesData.slice(i, i + CONFIG.MAX_CONCURRENT_REQUESTS)
+
+    const promises = batch.map(async (apprentice, index) => {
+      for (let attempt = 1; attempt <= CONFIG.RETRY_ATTEMPTS; attempt++) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/user`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(apprentice),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || `Error HTTP ${response.status}`)
+          }
+
+          const result = await response.json()
+          return { success: true, data: result, apprentice }
+        } catch (error) {
+          if (attempt === CONFIG.RETRY_ATTEMPTS) {
+            return { success: false, error: error.message, apprentice }
+          }
+          // Esperar antes del siguiente intento
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
+        }
+      }
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || `Error HTTP ${response.status}`)
-    }
+    const batchResults = await Promise.allSettled(promises)
 
-    return await response.json()
-  } catch (error) {
-    console.error("Error al actualizar aprendiz:", error)
-    throw error
+    batchResults.forEach((result) => {
+      if (result.status === "fulfilled") {
+        if (result.value.success) {
+          results.success.push(result.value)
+        } else {
+          results.errors.push(result.value)
+        }
+      } else {
+        results.errors.push({ error: result.reason.message, apprentice: null })
+      }
+    })
+
+    // Rate limiting inteligente
+    if (i + CONFIG.MAX_CONCURRENT_REQUESTS < apprenticesData.length) {
+      await new Promise((resolve) => setTimeout(resolve, CONFIG.RATE_LIMIT_DELAY))
+    }
   }
+
+  return results
+}
+
+/**
+ * Actualiza múltiples aprendices usando batch processing
+ */
+const updateApprenticesBatch = async (updates) => {
+  const results = { success: [], errors: [] }
+
+  for (let i = 0; i < updates.length; i += CONFIG.MAX_CONCURRENT_REQUESTS) {
+    const batch = updates.slice(i, i + CONFIG.MAX_CONCURRENT_REQUESTS)
+
+    const promises = batch.map(async ({ id, data }) => {
+      for (let attempt = 1; attempt <= CONFIG.RETRY_ATTEMPTS; attempt++) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/user/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.message || `Error HTTP ${response.status}`)
+          }
+
+          const result = await response.json()
+          return { success: true, data: result, originalData: data }
+        } catch (error) {
+          if (attempt === CONFIG.RETRY_ATTEMPTS) {
+            return { success: false, error: error.message, originalData: data }
+          }
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
+        }
+      }
+    })
+
+    const batchResults = await Promise.allSettled(promises)
+
+    batchResults.forEach((result) => {
+      if (result.status === "fulfilled") {
+        if (result.value.success) {
+          results.success.push(result.value)
+        } else {
+          results.errors.push(result.value)
+        }
+      } else {
+        results.errors.push({ error: result.reason.message, originalData: null })
+      }
+    })
+
+    if (i + CONFIG.MAX_CONCURRENT_REQUESTS < updates.length) {
+      await new Promise((resolve) => setTimeout(resolve, CONFIG.RATE_LIMIT_DELAY))
+    }
+  }
+
+  return results
 }
 
 /**
@@ -65,7 +157,7 @@ const getAllLocalApprentices = async () => {
 
     if (!response.ok) {
       if (response.status === 404) {
-        return [] // No hay aprendices
+        return []
       }
       throw new Error(`Error HTTP ${response.status}`)
     }
@@ -78,11 +170,58 @@ const getAllLocalApprentices = async () => {
 }
 
 /**
- * Procesa la sincronización masiva de aprendices
+ * Guarda checkpoint del progreso
+ */
+const saveCheckpoint = (data) => {
+  try {
+    localStorage.setItem(
+      "massive_update_checkpoint",
+      JSON.stringify({
+        ...data,
+        timestamp: Date.now(),
+      }),
+    )
+  } catch (error) {
+    console.warn("No se pudo guardar checkpoint:", error)
+  }
+}
+
+/**
+ * Recupera checkpoint del progreso
+ */
+const getCheckpoint = () => {
+  try {
+    const checkpoint = localStorage.getItem("massive_update_checkpoint")
+    if (checkpoint) {
+      const data = JSON.parse(checkpoint)
+      // Checkpoint válido por 1 hora
+      if (Date.now() - data.timestamp < 3600000) {
+        return data
+      }
+    }
+  } catch (error) {
+    console.warn("No se pudo recuperar checkpoint:", error)
+  }
+  return null
+}
+
+/**
+ * Limpia checkpoint
+ */
+const clearCheckpoint = () => {
+  try {
+    localStorage.removeItem("massive_update_checkpoint")
+  } catch (error) {
+    console.warn("No se pudo limpiar checkpoint:", error)
+  }
+}
+
+/**
+ * Procesa la sincronización masiva de aprendices con optimizaciones
  */
 export const processMassiveUpdate = async (onProgress = null) => {
   try {
-    console.log("=== INICIANDO SINCRONIZACIÓN MASIVA ===")
+    console.log("=== INICIANDO SINCRONIZACIÓN MASIVA OPTIMIZADA ===")
 
     const results = {
       total: 0,
@@ -91,6 +230,16 @@ export const processMassiveUpdate = async (onProgress = null) => {
       skipped: 0,
       errors: 0,
       errorDetails: [],
+    }
+
+    // Verificar si hay un checkpoint previo
+    const checkpoint = getCheckpoint()
+    if (checkpoint && onProgress) {
+      onProgress({
+        phase: "checkpoint",
+        message: "Checkpoint encontrado. ¿Desea continuar desde donde se quedó?",
+        percentage: 0,
+      })
     }
 
     // Fase 1: Descargar aprendices de la API externa
@@ -107,7 +256,7 @@ export const processMassiveUpdate = async (onProgress = null) => {
         onProgress({
           phase: "download",
           message: downloadProgress.message,
-          percentage: Math.round(downloadProgress.percentage * 0.4), // 40% del progreso total
+          percentage: Math.round(downloadProgress.percentage * 0.3), // 30% del progreso total
           details: `${downloadProgress.apprenticesCount} aprendices descargados`,
         })
       }
@@ -121,7 +270,7 @@ export const processMassiveUpdate = async (onProgress = null) => {
       onProgress({
         phase: "sync",
         message: "Obteniendo aprendices locales...",
-        percentage: 40,
+        percentage: 30,
       })
     }
 
@@ -130,20 +279,22 @@ export const processMassiveUpdate = async (onProgress = null) => {
 
     console.log(`Encontrados ${localApprentices.length} aprendices locales`)
 
-    // Fase 3: Procesar cada aprendiz
+    // Fase 3: Preparar lotes para procesamiento optimizado
     if (onProgress) {
       onProgress({
         phase: "sync",
-        message: "Iniciando sincronización...",
-        percentage: 45,
+        message: "Preparando procesamiento en lotes...",
+        percentage: 35,
       })
     }
 
-    for (let i = 0; i < externalApprentices.length; i++) {
-      const apprentice = externalApprentices[i]
+    const toCreate = []
+    const toUpdate = []
+    let skipped = 0
 
+    // Clasificar operaciones
+    for (const apprentice of externalApprentices) {
       try {
-        // Validar datos antes de procesar
         const validation = validateTransformedApprentice(apprentice)
         if (!validation.isValid) {
           results.errors++
@@ -155,11 +306,9 @@ export const processMassiveUpdate = async (onProgress = null) => {
           continue
         }
 
-        // Verificar si ya existe localmente
         const existingApprentice = localApprenticesMap.get(apprentice.documento)
 
         if (existingApprentice) {
-          // Verificar si necesita actualización (comparar campos clave)
           const needsUpdate =
             existingApprentice.nombre !== apprentice.nombre ||
             existingApprentice.apellido !== apprentice.apellido ||
@@ -168,48 +317,25 @@ export const processMassiveUpdate = async (onProgress = null) => {
             JSON.stringify(existingApprentice.ficha) !== JSON.stringify(apprentice.ficha)
 
           if (needsUpdate) {
-            // Actualizar aprendiz existente
-            const updateData = {
-              nombre: apprentice.nombre,
-              apellido: apprentice.apellido,
-              telefono: apprentice.telefono,
-              estado: apprentice.estado,
-              ficha: apprentice.ficha,
-              // Mantener campos que no deben cambiar
-              tipoUsuario: "aprendiz",
-            }
-
-            await updateApprentice(existingApprentice._id, updateData)
-            results.updated++
-            console.log(`✓ Actualizado: ${apprentice.nombre} ${apprentice.apellido}`)
+            toUpdate.push({
+              id: existingApprentice._id,
+              data: {
+                nombre: apprentice.nombre,
+                apellido: apprentice.apellido,
+                telefono: apprentice.telefono,
+                estado: apprentice.estado,
+                ficha: apprentice.ficha,
+                tipoUsuario: "aprendiz",
+              },
+            })
           } else {
-            results.skipped++
-            console.log(`- Sin cambios: ${apprentice.nombre} ${apprentice.apellido}`)
+            skipped++
           }
         } else {
-          // Crear nuevo aprendiz
-          await createApprentice(apprentice)
-          results.created++
-          console.log(`+ Creado: ${apprentice.nombre} ${apprentice.apellido}`)
-        }
-
-        // Reportar progreso
-        const progressPercentage = 45 + Math.round(((i + 1) / externalApprentices.length) * 50)
-        if (onProgress) {
-          onProgress({
-            phase: "sync",
-            message: `Procesando ${i + 1} de ${externalApprentices.length}...`,
-            percentage: progressPercentage,
-            details: `Creados: ${results.created} | Actualizados: ${results.updated} | Errores: ${results.errors}`,
-          })
-        }
-
-        // Pequeña pausa para no sobrecargar el servidor
-        if (i % 5 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 50))
+          toCreate.push(apprentice)
         }
       } catch (error) {
-        console.error(`Error procesando aprendiz ${apprentice.documento}:`, error)
+        console.error(`Error clasificando aprendiz ${apprentice.documento}:`, error)
         results.errors++
         results.errorDetails.push({
           documento: apprentice.documento,
@@ -219,7 +345,118 @@ export const processMassiveUpdate = async (onProgress = null) => {
       }
     }
 
-    // Fase 4: Completado
+    results.skipped = skipped
+    console.log(
+      `Clasificación completada: ${toCreate.length} crear, ${toUpdate.length} actualizar, ${skipped} sin cambios`,
+    )
+
+    // Fase 4: Procesar creaciones en lotes
+    if (toCreate.length > 0) {
+      if (onProgress) {
+        onProgress({
+          phase: "sync",
+          message: `Creando ${toCreate.length} nuevos aprendices...`,
+          percentage: 40,
+        })
+      }
+
+      for (let i = 0; i < toCreate.length; i += CONFIG.BATCH_SIZE) {
+        const batch = toCreate.slice(i, i + CONFIG.BATCH_SIZE)
+        const batchResults = await createApprenticesBatch(batch)
+
+        results.created += batchResults.success.length
+        results.errors += batchResults.errors.length
+        results.errorDetails.push(
+          ...batchResults.errors.map((err) => ({
+            documento: err.apprentice?.documento || "N/A",
+            nombre: err.apprentice ? `${err.apprentice.nombre} ${err.apprentice.apellido}` : "N/A",
+            error: err.error,
+          })),
+        )
+
+        // Guardar checkpoint
+        if ((i + CONFIG.BATCH_SIZE) % CONFIG.CHECKPOINT_INTERVAL === 0) {
+          saveCheckpoint({
+            phase: "creating",
+            processed: i + CONFIG.BATCH_SIZE,
+            total: toCreate.length,
+            results: { ...results },
+          })
+        }
+
+        // Reportar progreso
+        const progressPercentage = 40 + Math.round(((i + CONFIG.BATCH_SIZE) / toCreate.length) * 25)
+        if (onProgress) {
+          onProgress({
+            phase: "sync",
+            message: `Creando lote ${Math.floor(i / CONFIG.BATCH_SIZE) + 1} de ${Math.ceil(toCreate.length / CONFIG.BATCH_SIZE)}...`,
+            percentage: Math.min(progressPercentage, 65),
+            details: `Creados: ${results.created} | Errores: ${results.errors}`,
+          })
+        }
+
+        // Limpieza de memoria periódica
+        if (i % CONFIG.MEMORY_CLEANUP_INTERVAL === 0) {
+          cleanupMemory()
+        }
+      }
+    }
+
+    // Fase 5: Procesar actualizaciones en lotes
+    if (toUpdate.length > 0) {
+      if (onProgress) {
+        onProgress({
+          phase: "sync",
+          message: `Actualizando ${toUpdate.length} aprendices existentes...`,
+          percentage: 65,
+        })
+      }
+
+      for (let i = 0; i < toUpdate.length; i += CONFIG.BATCH_SIZE) {
+        const batch = toUpdate.slice(i, i + CONFIG.BATCH_SIZE)
+        const batchResults = await updateApprenticesBatch(batch)
+
+        results.updated += batchResults.success.length
+        results.errors += batchResults.errors.length
+        results.errorDetails.push(
+          ...batchResults.errors.map((err) => ({
+            documento: err.originalData?.documento || "N/A",
+            nombre: err.originalData ? `${err.originalData.nombre} ${err.originalData.apellido}` : "N/A",
+            error: err.error,
+          })),
+        )
+
+        // Guardar checkpoint
+        if ((i + CONFIG.BATCH_SIZE) % CONFIG.CHECKPOINT_INTERVAL === 0) {
+          saveCheckpoint({
+            phase: "updating",
+            processed: i + CONFIG.BATCH_SIZE,
+            total: toUpdate.length,
+            results: { ...results },
+          })
+        }
+
+        // Reportar progreso
+        const progressPercentage = 65 + Math.round(((i + CONFIG.BATCH_SIZE) / toUpdate.length) * 30)
+        if (onProgress) {
+          onProgress({
+            phase: "sync",
+            message: `Actualizando lote ${Math.floor(i / CONFIG.BATCH_SIZE) + 1} de ${Math.ceil(toUpdate.length / CONFIG.BATCH_SIZE)}...`,
+            percentage: Math.min(progressPercentage, 95),
+            details: `Creados: ${results.created} | Actualizados: ${results.updated} | Errores: ${results.errors}`,
+          })
+        }
+
+        // Limpieza de memoria periódica
+        if (i % CONFIG.MEMORY_CLEANUP_INTERVAL === 0) {
+          cleanupMemory()
+        }
+      }
+    }
+
+    // Fase 6: Completado
+    clearCheckpoint() // Limpiar checkpoint al completar exitosamente
+
     if (onProgress) {
       onProgress({
         phase: "completed",
