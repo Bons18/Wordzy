@@ -164,7 +164,6 @@ export const processMassiveUpdate = async (onProgress = null) => {
             existingApprentice.nombre !== apprentice.nombre ||
             existingApprentice.apellido !== apprentice.apellido ||
             existingApprentice.telefono !== apprentice.telefono ||
-            existingApprentice.correo !== apprentice.correo ||
             existingApprentice.estado !== apprentice.estado ||
             JSON.stringify(existingApprentice.ficha) !== JSON.stringify(apprentice.ficha)
 
@@ -174,7 +173,6 @@ export const processMassiveUpdate = async (onProgress = null) => {
               nombre: apprentice.nombre,
               apellido: apprentice.apellido,
               telefono: apprentice.telefono,
-              correo: apprentice.correo,
               estado: apprentice.estado,
               ficha: apprentice.ficha,
               // Mantener campos que no deben cambiar
