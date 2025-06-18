@@ -11,6 +11,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
   const [audioPlaying, setAudioPlaying] = useState(null)
   const [audioProgress, setAudioProgress] = useState({})
   const [audioMuted, setAudioMuted] = useState({})
+  const [downloadingMaterial, setDownloadingMaterial] = useState(false)
   const audioRefs = useRef({})
   const progressIntervals = useRef({})
 
@@ -105,6 +106,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
       const rect = progressBar.getBoundingClientRect()
       const x = e.clientX - rect.left
       const width = rect.width
+
       const percentage = x / width
 
       audio.currentTime = percentage * audio.duration
@@ -127,18 +129,55 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
     }
   }
 
-  const handleDownload = (url, filename = "material") => {
+  const handleDownload = async (url, filename = "material") => {
     if (!url) return
 
-    const fullUrl = getFullUrl(url)
+    try {
+      setDownloadingMaterial(true)
+      const fullUrl = getFullUrl(url)
 
-    // Crear un enlace temporal y simular clic
-    const link = document.createElement("a")
-    link.href = fullUrl
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      // Obtener el archivo como blob para forzar la descarga
+      const response = await fetch(fullUrl)
+
+      if (!response.ok) {
+        throw new Error(`Error al descargar: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+
+      // Obtener el nombre del archivo desde la URL o usar el filename proporcionado
+      let downloadFilename = filename
+      if (typeof url === "string") {
+        const urlParts = url.split("/")
+        const fileNameFromUrl = urlParts[urlParts.length - 1]
+        if (fileNameFromUrl && fileNameFromUrl.includes(".")) {
+          downloadFilename = fileNameFromUrl
+        }
+      }
+
+      // Crear URL temporal del blob
+      const blobUrl = window.URL.createObjectURL(blob)
+
+      // Crear enlace temporal y forzar descarga
+      const link = document.createElement("a")
+      link.href = blobUrl
+      link.download = downloadFilename
+      link.style.display = "none"
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Limpiar la URL del blob después de un momento
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl)
+      }, 100)
+    } catch (error) {
+      console.error("Error al descargar el archivo:", error)
+      alert("Error al descargar el archivo. Por favor, inténtalo de nuevo.")
+    } finally {
+      setDownloadingMaterial(false)
+    }
   }
 
   const renderCompletarEspacios = (pregunta) => {
@@ -225,10 +264,16 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
                   </span>
                 </div>
                 <button
-                  className="text-gray-600 hover:text-gray-800"
+                  className={`text-gray-600 hover:text-gray-800 transition-colors ${downloadingMaterial ? "opacity-50 cursor-not-allowed" : ""}`}
                   onClick={() => handleDownload(evaluation.material, "material")}
+                  disabled={downloadingMaterial}
+                  title={downloadingMaterial ? "Descargando..." : "Descargar material"}
                 >
-                  <FiDownload size={20} />
+                  {downloadingMaterial ? (
+                    <div className="animate-spin w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full"></div>
+                  ) : (
+                    <FiDownload size={20} />
+                  )}
                 </button>
               </div>
             </div>

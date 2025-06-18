@@ -91,9 +91,16 @@ const Apprentices = () => {
   }
 
   const handleMassiveUpdateComplete = (results) => {
-    console.log("Actualización masiva completada:", results)
-    // Refrescar la lista de aprendices
-    refetch()
+    console.log("📊 Actualización masiva completada en componente padre:", results)
+
+    // Refrescar la lista de aprendices de forma segura
+    try {
+      console.log("🔄 Refrescando lista de aprendices...")
+      refetch()
+      console.log("✅ Lista refrescada exitosamente")
+    } catch (error) {
+      console.error("❌ Error al refrescar lista:", error)
+    }
   }
 
   const handleLogoutClick = () => {
@@ -198,6 +205,7 @@ const Apprentices = () => {
           confirmText="Cerrar Sesión"
           confirmColor="bg-[#f44144] hover:bg-red-600"
         />
+
         {/* Modal de actualización masiva */}
         <MassiveUpdateModal
           isOpen={showMassiveUpdateModal}
