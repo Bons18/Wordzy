@@ -1,3 +1,5 @@
+"use client"
+
 import { Trash } from "lucide-react"
 import Tooltip from "../../../../shared/components/Tooltip"
 import ThemesList from "./themes-list"
@@ -6,7 +8,6 @@ import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
 import { useState } from "react"
 import { useGetTopics } from "../../../Topics/hooks/useGetTopics"
 import { usePostTopic } from "../../../Topics/hooks/usePostTopic"
-
 
 export default function LevelsList({ levels, setLevels, activeTabs, setActiveTabs }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -29,9 +30,9 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
       setSuccessMessage(`Tema "${topicData.name}" creado exitosamente`)
       setShowSuccessModal(true)
     } catch (error) {
-      console.error("Error al agregar el tema:", error);
-      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema");
-      setShowSuccessModal(true);
+      console.error("Error al agregar el tema:", error)
+      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema")
+      setShowSuccessModal(true)
     }
   }
 
@@ -50,7 +51,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
           const newTheme = {
             id: `theme-${Date.now()}`,
             name: "",
-            selectedTheme: "",
+            selectedTheme: null, // Cambiar a null en lugar de string vacío
             expanded: true,
             progress: 0,
             activities: [],
@@ -70,7 +71,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
           const newTheme = {
             id: `theme-${Date.now()}`,
             name: "",
-            selectedTheme: topicValue,
+            selectedTheme: topicValue, // Esto debería ser el objeto completo {value, label}
             expanded: true,
             progress: 0,
             activities: [],
@@ -88,14 +89,61 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   }
 
   const getLevelDisplayName = (level) => {
-    return level.name ? level.name : `Nivel ${levels.findIndex(l => l.id === level.id) + 1}`
+    return level.name ? level.name : `Nivel ${levels.findIndex((l) => l.id === level.id) + 1}`
   }
 
   const getExistingTopics = () => {
-    return topics?.map(topic => ({
-      nombre: topic.name,
-      descripcion: topic.description || "",
-    })) || []
+    return (
+      topics?.map((topic) => ({
+        nombre: topic.name,
+        descripcion: topic.description || "",
+      })) || []
+    )
+  }
+
+  // Función para obtener temas ya utilizados en toda la programación
+  const getUsedTopicIds = () => {
+    const usedIds = new Set()
+
+    levels.forEach((level) => {
+      level.themes?.forEach((theme) => {
+        if (theme.selectedTheme) {
+          if (typeof theme.selectedTheme === "string") {
+            usedIds.add(theme.selectedTheme)
+          } else if (theme.selectedTheme.value) {
+            usedIds.add(theme.selectedTheme.value)
+          }
+        }
+      })
+    })
+
+    return usedIds
+  }
+
+  // Función para obtener TODOS los temas (no filtrados) - necesarios para el display
+  const getAllTopicsForDisplay = () => {
+    return (
+      topics?.map((topic) => ({
+        value: topic._id,
+        label: topic.name, // Usar topic.name que es el nombre real
+        description: topic.description || "",
+      })) || []
+    )
+  }
+
+  // Función para obtener temas disponibles (no utilizados) - para el select
+  const getAvailableTopics = () => {
+    const usedIds = getUsedTopicIds()
+
+    return (
+      topics
+        ?.filter((topic) => !usedIds.has(topic._id))
+        .map((topic) => ({
+          value: topic._id,
+          label: topic.name, // Usar topic.name que es el nombre real
+          description: topic.description || "",
+        })) || []
+    )
   }
 
   return (
@@ -167,9 +215,6 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                     Añadir Tema
                   </button>
                 </div>
-                <div className="text-sm text-gray-500">
-                  {level.themes?.length || 0} {level.themes?.length === 1 ? "tema" : "temas"}
-                </div>
               </div>
 
               {level.themes?.length > 0 && (
@@ -179,11 +224,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
                   setLevels={setLevels}
                   activeTabs={activeTabs}
                   setActiveTabs={setActiveTabs}
-                  createdTopics={topics?.map(t => ({
-                    value: t._id,
-                    label: t.name,
-                    description: t.description
-                  }))}
+                  createdTopics={getAllTopicsForDisplay()} // Pasar TODOS los temas para el display correcto
                 />
               )}
             </div>
