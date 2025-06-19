@@ -39,6 +39,7 @@ const transformExternalApprentice = (externalApprentice) => {
     tipoDocumento: externalApprentice.document_type || "CC",
     telefono: telefono,
     correo: externalApprentice.email?.toLowerCase().trim() || "",
+    contraseña: externalApprentice.document?.toString().trim() || "", // Contraseña igual al documento
     estado: mapExternalStateToLocal(externalApprentice.state),
 
     // Campos específicos de aprendices - FORMATO CORRECTO
@@ -46,6 +47,7 @@ const transformExternalApprentice = (externalApprentice) => {
     nivel: 1, // Nivel por defecto
     programa: "Programa por definir", // Programa por defecto
     progresoActual: 0,
+    puntos: 200, // Puntos iniciales para todos los aprendices
     progresoNiveles: [
       { nivel: 1, porcentaje: 0 },
       { nivel: 2, porcentaje: 0 },

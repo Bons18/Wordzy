@@ -196,6 +196,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
   const closeImagePreview = (e) => {
     e?.stopPropagation()
+    e?.preventDefault()
     setImagePreview(null)
   }
 
@@ -513,20 +514,20 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
       {/* Modal de previsualización de imagen */}
       {imagePreview && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60]"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4"
           onClick={closeImagePreview}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh] p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={closeImagePreview}
-              className="absolute top-2 right-2 text-white hover:text-gray-300 text-2xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center"
+              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center"
             >
               ×
             </button>
             <img
               src={imagePreview || "/placeholder.svg"}
               alt="Vista previa de imagen"
-              className="max-w-full max-h-full object-contain"
+              className="max-w-[90vw] max-h-[90vh] object-contain"
               onError={(e) => {
                 console.error("Error cargando imagen en preview:", e)
                 e.target.onerror = null
