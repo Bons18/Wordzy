@@ -36,7 +36,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 
   // Función para calcular progreso por niveles basado en el progreso actual del aprendiz
   const getProgressByLevels = (currentProgress, currentLevel) => {
-    const levels = ["Principiante", "Intermedio", "Avanzado"]
+    const levels = ["Nivel 1", "Nivel 2", "Nivel 3"]
     const progressData = []
 
     levels.forEach((level, index) => {
@@ -66,9 +66,9 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden">
+      <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Detalle del Aprendiz</h2>
           <button
             onClick={onClose}
@@ -88,40 +88,40 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1f384c]"></div>
             </div>
           ) : apprenticeData ? (
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-6">
+            <div className="p-4">
+              <h3 className="text-sm font-bold mb-4">
                 {apprenticeData.nombre} {apprenticeData.apellido}
               </h3>
 
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold mb-4">Información General</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-3">Información General</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div>
-                    <p className="text-gray-600 text-sm">Nombre:</p>
-                    <p className="font-medium">{apprenticeData.nombre}</p>
+                    <p className="font-bold text-sm">Nombre:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.nombre}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Apellido:</p>
-                    <p className="font-medium">{apprenticeData.apellido}</p>
+                    <p className="font-bold text-sm">Apellido:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.apellido}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Documento:</p>
-                    <p className="font-medium">{apprenticeData.documento}</p>
+                    <p className="font-bold text-sm">Documento:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.documento}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Tipo Documento:</p>
-                    <p className="font-medium">{apprenticeData.tipoDocumento}</p>
+                    <p className="font-bold text-sm">Tipo Documento:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.tipoDocumento}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Teléfono:</p>
-                    <p className="font-medium">{apprenticeData.telefono}</p>
+                    <p className="font-bold text-sm">Teléfono:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.telefono}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Correo:</p>
-                    <p className="font-medium">{apprenticeData.correo}</p>
+                    <p className="font-bold text-sm">Correo:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.correo}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Estado:</p>
+                    <p className="font-bold text-sm">Estado:</p>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         apprenticeData.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
@@ -131,32 +131,32 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                     </span>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Nivel Actual:</p>
-                    <p className="font-medium">{apprenticeData.nivel}</p>
+                    <p className="font-bold text-sm">Nivel Actual:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.nivel}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Ficha:</p>
-                    <p className="font-medium">{apprenticeData.ficha?.[0] || "No asignada"}</p>
+                    <p className="font-bold text-sm">Ficha:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.ficha?.[0] || "No asignada"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Programa:</p>
-                    <p className="font-medium">{apprenticeData.programa}</p>
+                    <p className="font-bold text-sm">Programa:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.programa}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 text-sm">Progreso Actual:</p>
-                    <p className="font-medium">{apprenticeData.progresoActual}%</p>
+                    <p className="font-bold text-sm">Progreso Actual:</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.progresoActual}%</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-lg font-semibold mb-4">Progreso por Niveles</h4>
+                <h4 className="text-sm font-semibold mb-3">Progreso por Niveles</h4>
                 {apprenticeData ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {getProgressByLevels(apprenticeData.progresoActual, apprenticeData.nivel).map((level, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-center mb-3">
-                          <h5 className="font-medium text-gray-800">{level.level}</h5>
+                      <div key={index} className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-center mb-2">
+                          <h5 className="font-bold text-sm text-gray-800">{level.level}</h5>
                         </div>
                         <div className="flex flex-col items-center">
                           <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
@@ -179,7 +179,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg">
+                  <div className="text-center py-4 bg-gray-50 rounded-lg">
                     <p className="text-gray-500 text-sm">No hay información de progreso disponible</p>
                   </div>
                 )}
@@ -187,7 +187,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
             </div>
           ) : (
             <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500">No se ha seleccionado ningún aprendiz</p>
+              <p className="text-gray-500 text-sm">No se ha seleccionado ningún aprendiz</p>
             </div>
           )}
         </div>

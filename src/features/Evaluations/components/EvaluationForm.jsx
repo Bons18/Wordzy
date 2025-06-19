@@ -78,10 +78,10 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }))
   }
 
-  const handleRadioChange = (name, value) => {
+  const handleToggleEstado = () => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      estado: prev.estado === "Activo" ? "Inactivo" : "Activo",
     }))
   }
 
@@ -479,55 +479,41 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Tipo evaluación</label>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="tipoEvaluacion"
-                  checked={formData.tipoEvaluacion === "Examen"}
-                  onChange={() => handleRadioChange("tipoEvaluacion", "Examen")}
-                  className="mr-2"
-                />
-                <span className="text-[14px]">Examen</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="tipoEvaluacion"
-                  checked={formData.tipoEvaluacion === "Actividad"}
-                  onChange={() => handleRadioChange("tipoEvaluacion", "Actividad")}
-                  className="mr-2"
-                />
-                <span className="text-[14px]">Actividad</span>
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[14px] font-medium mb-1">Tipo evaluación</label>
+              <select
+                name="tipoEvaluacion"
+                value={formData.tipoEvaluacion}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                required
+              >
+                <option value="Examen">Examen</option>
+                <option value="Actividad">Actividad</option>
+              </select>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Estado</label>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="estado"
-                  checked={formData.estado === "Activo"}
-                  onChange={() => handleRadioChange("estado", "Activo")}
-                  className="mr-2"
-                />
-                <span className="text-[14px]">Activo</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="estado"
-                  checked={formData.estado === "Inactivo"}
-                  onChange={() => handleRadioChange("estado", "Inactivo")}
-                  className="mr-2"
-                />
-                <span className="text-[14px]">Inactivo</span>
-              </label>
+            <div>
+              <label className="block text-[14px] font-medium mb-1">Estado</label>
+              <div className="flex items-center pt-1">
+                <button
+                  type="button"
+                  onClick={handleToggleEstado}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                    formData.estado === "Activo" ? "bg-green-600" : "bg-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      formData.estado === "Activo" ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <span className="ml-3 text-[14px] font-medium">
+                  {formData.estado === "Activo" ? "Activo" : "Inactivo"}
+                </span>
+              </div>
             </div>
           </div>
 
