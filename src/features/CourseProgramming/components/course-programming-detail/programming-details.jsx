@@ -42,17 +42,17 @@ export default function ProgrammingDetails({ programming }) {
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
       <header className="mb-6">
-        <h1 className="text-xl font-bold text-[#1f384c] mb-4">DETALLE DE PROGRAMACIÓN</h1>
+        <h1 className="text-xl font-bold text-[#1f384c] mb-4">Información Básica</h1>
       </header>
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Programa</label>
+            <label className="block text-sm font-bold text-gray-700">Programa</label>
             <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-700 text-sm">{programming.nombre}</div>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Estado</label>
+            <label className="block text-sm font-bold text-gray-700">Estado</label>
             <span className={`px-2 py-1 rounded-full text-xs font-medium inline-block ${
               programming.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             }`}>
@@ -63,11 +63,11 @@ export default function ProgrammingDetails({ programming }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+            <label className="block text-sm font-bold text-gray-700">Fecha de Inicio</label>
             <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-700 text-sm">{programming.fechaInicio}</div>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+            <label className="block text-sm font-bold text-gray-700">Fecha de Fin</label>
             <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-700 text-sm">
               {programming.fechaFin || "No definida"}
             </div>
@@ -75,7 +75,7 @@ export default function ProgrammingDetails({ programming }) {
         </div>
 
         <div className="border-t pt-4 mt-4">
-          <h2 className="text-lg font-medium text-[#1f384c] mb-4">Niveles y Temas</h2>
+          <h2 className="text-lg font-bold text-[#1f384c] mb-4">Niveles y Temas</h2>
 
           {programming.levels?.length > 0 ? (
             <div className="space-y-4">
@@ -85,7 +85,7 @@ export default function ProgrammingDetails({ programming }) {
                     className="flex items-center justify-between p-2 cursor-pointer"
                     onClick={() => toggleLevelExpand(level.id)}
                   >
-                    <h3 className="text-sm font-medium text-gray-700">{level.name}</h3>
+                    <h3 className="text-sm font-bold text-gray-700">{level.name}</h3>
                     {expandedLevels[level.id] ? <FiChevronUp /> : <FiChevronDown />}
                   </div>
 
@@ -129,9 +129,9 @@ export default function ProgrammingDetails({ programming }) {
                                         <table className="w-full table-fixed">
                                           <thead>
                                             <tr className="border-b border-gray-200">
-                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-medium text-gray-600">Nombre</th>
-                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-medium text-gray-600">Valor</th>
-                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-medium text-gray-600 w-20">Acción</th>
+                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-bold text-gray-600">Nombre</th>
+                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-bold text-gray-600">Valor</th>
+                                              <th className="bg-gray-100 px-2 py-2 text-left text-sm font-bold text-gray-600 w-20">Acción</th>
                                             </tr>
                                           </thead>
                                           <tbody>
