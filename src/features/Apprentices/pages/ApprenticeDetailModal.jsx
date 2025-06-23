@@ -69,7 +69,9 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
       <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Detalle del Aprendiz</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {apprenticeData ? `${apprenticeData.nombre} ${apprenticeData.apellido}` : "Aprendiz"}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -89,10 +91,6 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
             </div>
           ) : apprenticeData ? (
             <div className="p-4">
-              <h3 className="text-sm font-bold mb-4">
-                {apprenticeData.nombre} {apprenticeData.apellido}
-              </h3>
-
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-3">Información General</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -187,7 +185,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
             </div>
           ) : (
             <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500 text-sm">No se ha seleccionado ningún aprendiz</p>
+              <p className="text-gray-500 text-sm">Error al buscar los usuarios</p>
             </div>
           )}
         </div>
