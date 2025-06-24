@@ -8,6 +8,7 @@ const API_BASE_URL = "http://localhost:3000"
 
 const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
   const modalRef = useRef(null)
+  const imagePreviewRef = useRef(null)
   const [audioPlaying, setAudioPlaying] = useState(null)
   const [audioProgress, setAudioProgress] = useState({})
   const [audioMuted, setAudioMuted] = useState({})
@@ -18,6 +19,16 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Si hay una imagen en preview, no cerrar el modal principal
+      if (imagePreview) {
+        // Solo cerrar el preview si se hace click fuera del contenedor de la imagen
+        if (imagePreviewRef.current && !imagePreviewRef.current.contains(event.target)) {
+          setImagePreview(null)
+        }
+        return
+      }
+
+      // Si no hay preview de imagen, comportamiento normal del modal principal
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose()
       }
@@ -25,9 +36,6 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside)
-    } else {
-      // Limpiar el preview de imagen cuando se cierre el modal principal
-      setImagePreview(null)
     }
 
     return () => {
@@ -43,7 +51,14 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
         clearInterval(interval)
       })
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, imagePreview])
+
+  // Limpiar preview cuando se cierre el modal principal
+  useEffect(() => {
+    if (!isOpen) {
+      setImagePreview(null)
+    }
+  }, [isOpen])
 
   // Función para convertir URLs relativas a absolutas
   const getFullUrl = (url) => {
@@ -194,10 +209,15 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
     setImagePreview(getFullUrl(imageUrl))
   }
 
-  const closeImagePreview = (e) => {
-    e?.stopPropagation()
-    e?.preventDefault()
+  const closeImagePreview = () => {
     setImagePreview(null)
+  }
+
+  const handleImagePreviewBackgroundClick = (e) => {
+    // Solo cerrar si se hace click en el fondo, no en la imagen o el botón
+    if (e.target === e.currentTarget) {
+      closeImagePreview()
+    }
   }
 
   const renderCompletarEspacios = (pregunta) => {
@@ -515,9 +535,12 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
       {imagePreview && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4"
-          onClick={closeImagePreview}
+          onClick={handleImagePreviewBackgroundClick}
         >
-          <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={imagePreviewRef}
+            className="relative w-full h-full flex items-center justify-center max-w-[90vw] max-h-[90vh]"
+          >
             <button
               onClick={closeImagePreview}
               className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center"
@@ -527,7 +550,7 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
             <img
               src={imagePreview || "/placeholder.svg"}
               alt="Vista previa de imagen"
-              className="max-w-[90vw] max-h-[90vh] object-contain"
+              className="max-w-full max-h-full object-contain"
               onError={(e) => {
                 console.error("Error cargando imagen en preview:", e)
                 e.target.onerror = null

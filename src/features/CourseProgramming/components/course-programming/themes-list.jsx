@@ -1,11 +1,14 @@
 "use client"
 
-import { Trash } from "lucide-react"
+import { CircleAlert, Trash, Check } from "lucide-react"
 import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
 import ActivitiesSection from "./activities-section"
+import { useState } from "react"
+
 
 export default function ThemesList({ level, levels, setLevels, activeTabs, setActiveTabs, createdTopics = [] }) {
+  const [themeValidationErrors, setThemeValidationErrors] = useState({})
   // Función para obtener temas ya utilizados en TODA la programación
   const getUsedTopicIds = () => {
     const usedIds = new Set()
@@ -97,7 +100,6 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   }
 
   const getThemeDisplayName = (theme) => {
-    // Mejorar la lógica para mostrar el nombre del tema
     if (theme.selectedTheme) {
       // Si selectedTheme es un objeto con label
       if (typeof theme.selectedTheme === "object" && theme.selectedTheme.label) {
@@ -114,7 +116,7 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
         return foundTopic ? foundTopic.label : "Tema no encontrado"
       }
     }
-    return "Tema sin seleccionar"
+    return "Seleccionar tema"
   }
 
   const getLocalActiveTab = (levelId, themeId) => {
@@ -136,15 +138,19 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   const isValueValid = totalThemeValue === 100
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 p-3">
       {level.themes?.length > 0 && (
-        <div className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded">
+        <div className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded-[10px]">
           <span className="text-sm font-medium">Valor total de temas:</span>
           <span className={`text-sm font-medium ${isValueValid ? "text-green-600" : "text-red-600"}`}>
-            {totalThemeValue}% {isValueValid ? "✓" : `(debe ser 100%)`}
+            <span className="inline-flex items-center gap-1">
+              {totalThemeValue}% {!isValueValid && <CircleAlert className="h-5 w-7" />}
+              {isValueValid && <Check className="h-5 w-7" />}
+            </span>
           </span>
         </div>
       )}
+
 
       {level.themes?.map((theme) => {
         const availableOptions = getAvailableThemeOptions(theme.id)
@@ -195,7 +201,7 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                     <CustomSelect
                       placeholder="Seleccionar tema"
                       options={availableOptions}
-                      value={theme.selectedTheme}
+                      value={theme.selectedTheme?.value || theme.selectedTheme || ""}
                       onChange={(value) => updateTheme(level.id, theme.id, value)}
                     />
                     {availableOptions.length === 0 && (
@@ -209,32 +215,57 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Valor <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        className="w-full rounded-l-md border border-gray-300 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        value={theme.progress || ""}
-                        onChange={(e) => {
-                          const value = Number.parseInt(e.target.value) || 0
-                          const updatedLevels = levels.map((l) => {
-                            if (l.id === level.id) {
-                              const updatedThemes = l.themes.map((t) =>
-                                t.id === theme.id ? { ...t, progress: value } : t,
-                              )
-                              return { ...l, themes: updatedThemes }
+                      <div className="flex">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className={`w-full rounded-l-md border px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${themeValidationErrors[`${level.id}-${theme.id}`] ? "border-red-300" : "border-gray-300"
+                            }`}
+                          value={theme.progress || ""}
+                          onChange={(e) => {
+                            const value = Number.parseInt(e.target.value) || 0
+                            const themeKey = `${level.id}-${theme.id}`
+
+                            // Clear previous error
+                            setThemeValidationErrors((prev) => ({
+                              ...prev,
+                              [themeKey]: "",
+                            }))
+
+                            // Validate value
+                            if (value > 100) {
+                              setThemeValidationErrors((prev) => ({
+                                ...prev,
+                                [themeKey]: "El valor no puede ser mayor a 100%",
+                              }))
                             }
-                            return l
-                          })
-                          setLevels(updatedLevels)
-                        }}
-                      />
+
+                            const updatedLevels = levels.map((l) => {
+                              if (l.id === level.id) {
+                                const updatedThemes = l.themes.map((t) =>
+                                  t.id === theme.id ? { ...t, progress: value } : t,
+                                )
+                                return { ...l, themes: updatedThemes }
+                              }
+                              return l
+                            })
+                            setLevels(updatedLevels)
+                          }}
+                        />
+                        <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">
+                          %
+                        </span>
+                      </div>
+                      {themeValidationErrors[`${level.id}-${theme.id}`] && (
+                        <p className="text-xs text-red-600 mt-1">{themeValidationErrors[`${level.id}-${theme.id}`]}</p>
+                      )}
                     </div>
-                    <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">%</span>
                   </div>
                 </div>
                 <button
-                  className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md"
+                  className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={totalThemeValue > 100}
                   onClick={() => toggleActivitiesSection(level.id, theme.id)}
                 >
                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
