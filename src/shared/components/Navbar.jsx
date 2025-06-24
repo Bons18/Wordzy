@@ -9,18 +9,22 @@ import {
   ChevronDown,
   LayoutDashboard,
   GraduationCap,
-  Calendar,
-  BookOpen,
   Users,
   Settings,
-  FileText,
-  User,
   Award,
-  Star,
-  List,
-  TrendingUp,
   MessageSquare,
-  Shield,
+  CalendarCheck,
+  LayoutList,
+  Notebook,
+  BadgeCheck,
+  TestTubes,
+  ClipboardList,
+  BarChart,
+  BookOpenText,
+  UserCog,
+  CalendarClock,
+  ShieldCheck,
+  Trophy,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -104,22 +108,22 @@ const Navbar = () => {
           {openSections.formacion && (
             <div className="ml-4 border-l border-[#3a5d7a] pl-4 py-1 space-y-1">
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<GraduationCap size={16} />}
                 text="Programas"
                 onClick={() => handleNavigation("/formacion/programas")}
               />
               <NavSubItem
-                icon={<List size={16} />}
+                icon={<ClipboardList size={16} />}
                 text="Fichas"
                 onClick={() => handleNavigation("/formacion/fichas")}
               />
               <NavSubItem
-                icon={<Users size={16} />}
+                icon={<UserCog size={16} />}
                 text="Instructores"
                 onClick={() => handleNavigation("/formacion/instructores")}
               />
               <NavSubItem
-                icon={<User size={16} />}
+                icon={<Users size={16} />}
                 text="Aprendices"
                 onClick={() => handleNavigation("/formacion/aprendices")}
               />
@@ -130,7 +134,7 @@ const Navbar = () => {
         {/* Programación */}
         <div>
           <NavItem
-            icon={<Calendar size={18} />}
+            icon={<CalendarClock size={18} />}
             text="Programación"
             hasSubmenu={true}
             isOpen={openSections.programacion}
@@ -148,29 +152,36 @@ const Navbar = () => {
           {openSections.programacion && (
             <div className="ml-4 border-l border-[#707fdd] pl-4">
               <NavSubItem
-                icon={<BookOpen size={16} />}
+                icon={<BookOpenText size={16} />}
                 text="Temas"
                 onClick={() => handleNavigation("/programacion/temas")}
               />
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<Notebook size={16} />}
                 text="Materiales de Apoyo"
                 onClick={() => handleNavigation("/programacion/materiales")}
               />
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<TestTubes size={16} />}
                 text="Evaluaciones"
                 onClick={() => handleNavigation("/programacion/evaluaciones")}
               />
               <NavSubItem
-                icon={<Calendar size={16} />}
+                icon={<CalendarCheck size={16} />}
                 text="Programación de Cursos"
                 onClick={() =>
                   handleNavigation("/programacion/programacionCursos")
                 }
               />
               <NavSubItem
-                icon={<Star size={16} />}
+                icon={<BadgeCheck size={16} />}
+                text="Asignación de Niveles"
+                onClick={() =>
+                  handleNavigation("/programacion/asignacionNiveles")
+                }
+              />
+              <NavSubItem
+                icon={<BarChart size={16} />}
                 text="Escala de valoración"
                 onClick={() => handleNavigation("/programacion/escala")}
               />
@@ -186,7 +197,7 @@ const Navbar = () => {
         {/* Progreso */}
         <div>
           <NavItem
-            icon={<BookOpen size={18} />}
+            icon={<ClipboardList size={18} />}
             text="Progreso"
             hasSubmenu={true}
             isOpen={openSections.progreso}
@@ -204,12 +215,12 @@ const Navbar = () => {
           {openSections.progreso && (
             <div className="ml-4 border-l border-[#707fdd] pl-4">
               <NavSubItem
-                icon={<List size={16} />}
+                icon={<LayoutList size={16} />}
                 text="Cursos Programados"
                 onClick={() => handleNavigation("/progreso/cursosProgramados")}
               />
               <NavSubItem
-                icon={<TrendingUp size={16} />}
+                icon={<Trophy size={16} />}
                 text="Ranking"
                 onClick={() => handleNavigation("/progreso/ranking")}
               />
@@ -242,7 +253,7 @@ const Navbar = () => {
           {openSections.configuracion && (
             <div className="ml-4 border-l border-[#707fdd] pl-4">
               <NavSubItem
-                icon={<Shield size={16} />}
+                icon={<ShieldCheck size={16} />}
                 text="Roles"
                 onClick={() => handleNavigation("/configuracion/roles")}
               />

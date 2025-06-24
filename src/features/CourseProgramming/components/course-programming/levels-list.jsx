@@ -89,7 +89,8 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   }
 
   const getLevelDisplayName = (level) => {
-    return level.name ? level.name : `Nivel ${levels.findIndex((l) => l.id === level.id) + 1}`
+    const levelIndex = levels.findIndex((l) => l.id === level.id) + 1
+    return level.name && level.name.trim() !== "" ? level.name : `Nivel ${levelIndex}`
   }
 
   const getExistingTopics = () => {
@@ -146,8 +147,67 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     )
   }
 
+  // Función para verificar si un nivel está completado
+  const isLevelCompleted = (level) => {
+    // Verificar que el nivel tenga nombre
+    if (!level.name || level.name.trim() === "") {
+      return false
+    }
+
+    // Verificar que tenga al menos un tema
+    if (!level.themes || level.themes.length === 0) {
+      return false
+    }
+
+    // Verificar cada tema
+    for (const theme of level.themes) {
+      // Verificar que el tema tenga un tema seleccionado
+      if (!theme.selectedTheme) {
+        return false
+      }
+
+      // Verificar que tenga actividades
+      const activities = (theme.activities || []).filter((a) => a.type === "Actividades")
+      if (activities.length === 0) {
+        return false
+      }
+
+      // Verificar que las actividades sumen 100%
+      const actSum = activities.reduce((sum, a) => {
+        const value = Number.parseInt(a.value?.replace("%", "") || 0)
+        return sum + value
+      }, 0)
+      if (actSum !== 100) {
+        return false
+      }
+
+      // Verificar que tenga exámenes
+      const exams = (theme.activities || []).filter((a) => a.type === "Exámenes")
+      if (exams.length === 0) {
+        return false
+      }
+
+      // Verificar que los exámenes sumen 100%
+      const examSum = exams.reduce((sum, e) => {
+        const value = Number.parseInt(e.value?.replace("%", "") || 0)
+        return sum + value
+      }, 0)
+      if (examSum !== 100) {
+        return false
+      }
+
+      // Verificar que tenga materiales de apoyo
+      const materials = (theme.activities || []).filter((a) => a.type === "Material")
+      if (materials.length === 0) {
+        return false
+      }
+    }
+
+    return true
+  }
+
   return (
-    <div className="space-y-4 mt-4">
+    <div className="space-y-3">
       {levels.map((level) => (
         <div key={level.id} className="border rounded-md">
           <div
@@ -155,7 +215,14 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
             onClick={() => toggleLevelExpand(level.id)}
           >
             <h3 className="block text-sm font-medium text-gray-700">{getLevelDisplayName(level)}</h3>
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  isLevelCompleted(level) ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}
+              >
+                {isLevelCompleted(level) ? "Completado" : "Sin completar"}
+              </span>
               <Tooltip text="Eliminar" position="top">
                 <button
                   className="p-1 hover:bg-gray-100 rounded-full"

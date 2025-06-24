@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Eye, Trash } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Check, CircleAlert, Eye, Trash } from "lucide-react"
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi"
 import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
@@ -28,6 +28,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const [showSupportMaterialModal, setShowSupportMaterialModal] = useState(false)
   const [showMaterialDetailModal, setShowMaterialDetailModal] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
+  const [validationError, setValidationError] = useState("")
 
   // Estados para mensajes de éxito
   const [showSuccessModal, setShowSuccessModal] = useState(false)
@@ -130,15 +131,30 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const materialOptions = getAvailableOptions("Material")
 
   const addNewActivity = () => {
+    // Limpiar errores previos
+    setValidationError("")
+
+    // Validación para total que supere 100%
+    if (localActiveTab !== "Material" && wouldExceed100) {
+      setValidationError(`El valor ingresado haría que el total sea ${totalValue}%, superando el límite de 100%`)
+      return
+    }
+
     // Validación para valor vacío o cero
-    if (
-      localActiveTab !== "Material" &&
-      (!activityValue || activityValue.trim() === "" || Number(activityValue) <= 0)
-    ) {
-      setSuccessMessage(
-        "Debe ingresar un valor mayor a 0 para " + (localActiveTab === "Exámenes" ? "el examen" : "la actividad"),
-      )
-      setShowSuccessModal(true)
+    if (localActiveTab !== "Material" && (!activityValue || activityValue.trim() === "")) {
+      setValidationError("Este campo es requerido")
+      return
+    }
+
+    // Validación para valores mayores a 100
+    if (localActiveTab !== "Material" && Number(activityValue) > 100) {
+      setValidationError("El valor no puede ser mayor a 100%")
+      return
+    }
+
+    // Validación para valores menores o iguales a 0
+    if (localActiveTab !== "Material" && Number(activityValue) <= 0) {
+      setValidationError("El valor debe ser mayor a 0")
       return
     }
 
@@ -217,17 +233,45 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
 
   const calculateTotalValue = () => {
     const filteredActivities = getFilteredActivities()
-    if (filteredActivities.length === 0 || localActiveTab === "Material") return 0
+    if (localActiveTab === "Material") return 0
 
-    return filteredActivities.reduce((total, activity) => {
+    const currentTotal = filteredActivities.reduce((total, activity) => {
       const valueStr = activity.value.replace("%", "")
       const value = Number.parseInt(valueStr)
       return isNaN(value) ? total : total + value
     }, 0)
+
+    // Agregar el valor que se está escribiendo
+    const inputValue = Number(activityValue) || 0
+    return currentTotal + inputValue
   }
 
-  const totalValue = calculateTotalValue()
+  const checkThemeExceeds100 = () => {
+    // Verificar actividades
+    const activities = (currentTheme?.activities || []).filter((a) => a.type === "Actividades")
+    const actSum = activities.reduce((sum, a) => {
+      const value = Number.parseInt(a.value?.replace("%", "") || 0)
+      return sum + value
+    }, 0)
+
+    // Verificar exámenes
+    const exams = (currentTheme?.activities || []).filter((a) => a.type === "Exámenes")
+    const examSum = exams.reduce((sum, e) => {
+      const value = Number.parseInt(e.value?.replace("%", "") || 0)
+      return sum + value
+    }, 0)
+
+    return actSum > 100 || examSum > 100
+  }
+
+  const themeExceeds100 = checkThemeExceeds100()
+
+  const totalValue = useMemo(() => {
+    return calculateTotalValue()
+  }, [levels, levelId, themeId, localActiveTab, activityValue])
+
   const isValueValid = localActiveTab === "Material" || totalValue === 100
+  const wouldExceed100 = localActiveTab !== "Material" && totalValue > 100
 
   const filteredData = getFilteredActivities()
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -317,46 +361,61 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   // Obtener opciones disponibles para mostrar advertencias
   const availableOptions = getOptionsForActiveTab()
 
+  const handleValueChange = (e) => {
+    const value = e.target.value
+    setActivityValue(value)
+
+    // Validar en tiempo real
+    if (value && Number(value) > 100) {
+      setValidationError("El valor no puede ser mayor a 100%")
+    } else if (value && Number(value) <= 0) {
+      setValidationError("El valor debe ser mayor a 0")
+    } else {
+      setValidationError("")
+    }
+  }
+
   return (
-    <div className="mt-4">
+    <div className="mt-4 p-3">
       <div className="border rounded-md">
         <div className="flex border-b">
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-6 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Actividades")}
           >
             Actividades
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Exámenes")}
           >
             Exámenes
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
-              localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-            }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+              }`}
             onClick={() => setLocalActiveTab("Material")}
           >
             Material de Apoyo
           </button>
         </div>
 
-        <div className="p-4">
+        <div className="p-6">
           <div>
             {localActiveTab !== "Material" && filteredData.length > 0 && (
-              <div className="flex justify-between items-center px-2 py-1 mb-3 bg-gray-50 rounded">
+              <div className="flex justify-between items-center px-2 py-1 mb-3 bg-gray-50 rounded-[10px]">
                 <span className="text-sm font-medium">Valor total:</span>
-                <span className={`text-sm font-medium ${isValueValid ? "text-green-600" : "text-red-600"}`}>
-                  {totalValue}% {isValueValid ? "✓" : `(debe ser 100%)`}
+                <span className={`text-sm font-medium ${totalValue === 100 ? "text-green-600" : "text-red-600"}`}>
+                  <span className="inline-flex items-center gap-1">
+                    {totalValue}%{" "}
+                    {totalValue === 100 ? <Check className="h-5 w-7" /> : <CircleAlert className="h-5 w-7" />}
+                  </span>
                 </span>
               </div>
             )}
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className={localActiveTab === "Material" ? "col-span-3" : "col-span-2"}>
@@ -365,9 +424,8 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                   <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
-                  placeholder={`Seleccionar ${
-                    localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
-                  }`}
+                  placeholder={`Seleccionar ${localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
+                    }`}
                   options={availableOptions}
                   value={selectedActivity}
                   onChange={setSelectedActivity}
@@ -386,26 +444,29 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                   <div className="flex items-center w-full">
                     <input
                       type="number"
-                      min="0"
+                      min="1"
                       max="100"
-                      className="w-full rounded-l-md border border-gray-300 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className={`w-full rounded-l-md border px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${validationError ? "border-red-300" : "border-gray-300"
+                        }`}
                       value={activityValue}
-                      onChange={(e) => setActivityValue(e.target.value)}
+                      onChange={handleValueChange}
                     />
                     <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">%</span>
                   </div>
+                  {validationError && <p className="text-xs text-red-600 mt-1">{validationError}</p>}
                 </div>
               )}
             </div>
 
             <div className="flex space-x-2 mb-4">
               <button
-                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center"
+                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={() =>
                   handleCreateEvaluation(
                     localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad",
                   )
                 }
+                disabled={localActiveTab === "Material" && themeExceeds100}
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -414,9 +475,14 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                 {localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad"}
               </button>
               <button
-                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={addNewActivity}
-                disabled={availableOptions.length === 0}
+                disabled={
+                  availableOptions.length === 0 ||
+                  !selectedActivity ||
+                  (localActiveTab === "Material" && themeExceeds100) ||
+                  (localActiveTab !== "Material" && (wouldExceed100 || !activityValue || Number(activityValue) <= 0))
+                }
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

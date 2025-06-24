@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { format, parseISO } from "date-fns"
@@ -9,6 +11,7 @@ import { useGetPrograms } from "../../../Programs/hooks/useGetPrograms"
 import { usePostCourseProgramming } from "../../hooks/usePostCoursePrograming"
 import { usePutCourseProgramming } from "../../hooks/usePutCoursePrograming"
 import { useGetCourseProgrammingById } from "../../hooks/useGetCourseProgrammingById"
+import { useGetCourseProgrammings } from "../../hooks/useGetCoursePrograming"
 
 
 export default function CourseProgrammingForm() {
@@ -18,7 +21,7 @@ export default function CourseProgrammingForm() {
   const { programs } = useGetPrograms()
   const { postCourseProgramming, loading: postLoading, error: postError } = usePostCourseProgramming()
   const { putCourseProgramming, loading: putLoading, error: putError } = usePutCourseProgramming()
-
+  const { programmings } = useGetCourseProgrammings()
 
   const [selectedProgram, setSelectedProgram] = useState("")
   const [levels, setLevels] = useState([])
@@ -43,15 +46,13 @@ export default function CourseProgrammingForm() {
       setEndDate(programming.endDate ? format(parseISO(programming.endDate), "yyyy-MM-dd") : "")
       setActiveStatus(programming.status)
 
-      const transformedLevels = (programming.levels || []).map(level => ({
+      const transformedLevels = (programming.levels || []).map((level) => ({
         _id: level._id,
         id: level._id,
         name: level.name,
         expanded: false,
-        themes: (level.topics || []).map(topic => {
-          const selectedOption = topic.topicId
-            ? { value: topic.topicId._id, label: topic.topicId.name }
-            : null
+        themes: (level.topics || []).map((topic) => {
+          const selectedOption = topic.topicId ? { value: topic.topicId._id, label: topic.topicId.name } : null
 
           return {
             _id: topic._id,
@@ -61,7 +62,7 @@ export default function CourseProgrammingForm() {
             expanded: false,
             showActivities: false,
             activities: [
-              ...(topic.activities || []).map(act => ({
+              ...(topic.activities || []).map((act) => ({
                 id: act._id,
                 name: act.evaluationId?.nombre || "Actividad",
                 value: `${act.value}%`,
@@ -69,7 +70,7 @@ export default function CourseProgrammingForm() {
                 evaluationData: act.evaluationId ? { ...act, ...act.evaluationId } : act,
                 evaluationId: act.evaluationId?._id || act.evaluationId,
               })),
-              ...(topic.exams || []).map(exam => ({
+              ...(topic.exams || []).map((exam) => ({
                 id: exam._id,
                 name: exam.evaluationId?.nombre || "Examen",
                 value: `${exam.value}%`,
@@ -77,16 +78,16 @@ export default function CourseProgrammingForm() {
                 evaluationData: exam.evaluationId ? { ...exam, ...exam.evaluationId } : exam,
                 evaluationId: exam.evaluationId?._id || exam.evaluationId,
               })),
-              ...(topic.materials || []).map(mat => ({
+              ...(topic.materials || []).map((mat) => ({
                 id: mat._id,
                 name: mat.materialId?.titulo || "Material",
                 value: "N/A",
                 type: "Material",
-                evaluationData: mat.materialId ? { ...mat, ...mat.materialId } : mat
-              }))
-            ]
+                evaluationData: mat.materialId ? { ...mat, ...mat.materialId } : mat,
+              })),
+            ],
           }
-        })
+        }),
       }))
 
       setLevels(transformedLevels)
@@ -99,35 +100,61 @@ export default function CourseProgrammingForm() {
       startDate: new Date(startDate).toISOString(),
       endDate: endDate ? new Date(endDate).toISOString() : null,
       status: activeStatus,
-      levels: levels.map(level => ({
-        name: level.name,
-        topics: level.themes.map(theme => {
-          const activities = theme.activities?.filter(a => a.type === "Actividades") || []
-          const exams = theme.activities?.filter(a => a.type === "Exámenes") || []
-          const materials = theme.activities?.filter(a => a.type === "Material") || []
+      levels: levels.map((level, index) => ({
+        name: level.name && level.name.trim() !== "" ? level.name : `Nivel ${index + 1}`,
+        topics: level.themes.map((theme) => {
+          const activities = theme.activities?.filter((a) => a.type === "Actividades") || []
+          const exams = theme.activities?.filter((a) => a.type === "Exámenes") || []
+          const materials = theme.activities?.filter((a) => a.type === "Material") || []
 
           return {
-            topicId: typeof theme.selectedTheme === 'object' && theme.selectedTheme?.value
-              ? theme.selectedTheme.value
-              : theme.selectedTheme, // esto evita que se mande un objeto entero
+            topicId:
+              typeof theme.selectedTheme === "object" && theme.selectedTheme?.value
+                ? theme.selectedTheme.value
+                : theme.selectedTheme, // esto evita que se mande un objeto entero
             value: theme.progress || 0,
-            activities: activities.map(a => ({
+            activities: activities.map((a) => ({
               evaluationId: a.evaluationData._id,
-              value: parseInt(a.value.replace('%', ''))
+              value: Number.parseInt(a.value.replace("%", "")),
             })),
-            exams: exams.map(e => ({
+            exams: exams.map((e) => ({
               evaluationId: e.evaluationData._id,
-              value: parseInt(e.value.replace('%', ''))
+              value: Number.parseInt(e.value.replace("%", "")),
             })),
-            materials: materials.map(m => ({
-              materialId: m.evaluationData._id
-            }))
+            materials: materials.map((m) => ({
+              materialId: m.evaluationData._id,
+            })),
           }
-        })
-      }))
+        }),
+      })),
     }
   }
 
+  const getAvailableProgramsForSelect = () => {
+    if (!programs || !programmings) return []
+
+    // Obtener IDs de programas que ya tienen programación activa
+    const programsWithActiveProgramming = new Set(
+      programmings
+        .filter((prog) => prog.status === true) // Solo programaciones activas
+        .map((prog) => prog.programId._id || prog.programId),
+    )
+
+    // Filtrar programas disponibles
+    return programs
+      .filter((program) => {
+        // En modo edición, permitir el programa actual aunque tenga programación activa
+        if (isEditMode && programming && program._id === programming.programId._id) {
+          return true
+        }
+        // Para nuevas programaciones, excluir programas con programación activa
+        return !programsWithActiveProgramming.has(program._id)
+      })
+      .map((program) => ({
+        value: program._id,
+        label: program.name,
+      }))
+  }
 
   const validateForm = () => {
     const errors = []
@@ -146,13 +173,6 @@ export default function CourseProgrammingForm() {
       errors.push("Debe añadir al menos tres niveles")
     }
 
-    // Validar que cada uno de los tres primeros niveles tenga nombre
-    levels.slice(0, 3).forEach((level, index) => {
-      if (!level.name || level.name.trim() === "") {
-        errors.push(`El nivel ${index + 1} debe tener un nombre`)
-      }
-    })
-
     // Validar solo el primer nivel
     if (levels.length > 0) {
       const firstLevel = levels[0]
@@ -170,28 +190,34 @@ export default function CourseProgrammingForm() {
 
         // 3. Validar actividades, exámenes y materiales por tema
         firstLevel.themes.forEach((theme, themeIndex) => {
-          const activities = (theme.activities || []).filter(a => a.type === "Actividades")
-          const exams = (theme.activities || []).filter(a => a.type === "Exámenes")
-          const materials = (theme.activities || []).filter(a => a.type === "Material")
+          const activities = (theme.activities || []).filter((a) => a.type === "Actividades")
+          const exams = (theme.activities || []).filter((a) => a.type === "Exámenes")
+          const materials = (theme.activities || []).filter((a) => a.type === "Material")
 
           // Actividades
           if (activities.length === 0) {
             errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos una actividad`)
           } else {
             const actSum = activities.reduce((sum, a) => {
-              const value = parseInt(a.value?.replace('%', '') || 0)
+              const value = Number.parseInt(a.value?.replace("%", "") || 0)
               return sum + value
             }, 0)
             if (actSum !== 100) {
-              errors.push(`Las actividades del tema ${themeIndex + 1} (${firstLevelName}) suman ${actSum}% (deben sumar 100%)`)
+              errors.push(
+                `Las actividades del tema ${themeIndex + 1} (${firstLevelName}) suman ${actSum}% (deben sumar 100%)`,
+              )
             }
 
             activities.forEach((a, i) => {
               if (!a.evaluationId) {
-                errors.push(`La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`)
+                errors.push(
+                  `La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`,
+                )
               }
               if (a.value == null || a.value === "") {
-                errors.push(`La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`)
+                errors.push(
+                  `La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`,
+                )
               }
             })
           }
@@ -201,11 +227,13 @@ export default function CourseProgrammingForm() {
             errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos un examen`)
           } else {
             const examSum = exams.reduce((sum, e) => {
-              const value = parseInt(e.value?.replace('%', '') || 0)
+              const value = Number.parseInt(e.value?.replace("%", "") || 0)
               return sum + value
             }, 0)
             if (examSum !== 100) {
-              errors.push(`Los exámenes del tema ${themeIndex + 1} (${firstLevelName}) suman ${examSum}% (deben sumar 100%)`)
+              errors.push(
+                `Los exámenes del tema ${themeIndex + 1} (${firstLevelName}) suman ${examSum}% (deben sumar 100%)`,
+              )
             }
 
             exams.forEach((e, i) => {
@@ -213,7 +241,9 @@ export default function CourseProgrammingForm() {
                 errors.push(`El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`)
               }
               if (e.value == null || e.value === "") {
-                errors.push(`El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`)
+                errors.push(
+                  `El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`,
+                )
               }
             })
           }
@@ -228,8 +258,6 @@ export default function CourseProgrammingForm() {
 
     return errors
   }
-
-
 
   const handleSaveProgramming = async () => {
     const errors = validateForm()
@@ -247,7 +275,7 @@ export default function CourseProgrammingForm() {
         result = await putCourseProgramming(id, programmingData)
         setSuccessMessage("Programación actualizada exitosamente")
       } else {
-        console.log("🟢 Payload enviado al backend:", JSON.stringify(programmingData, null, 2));
+        console.log("🟢 Payload enviado al backend:", JSON.stringify(programmingData, null, 2))
         result = await postCourseProgramming(programmingData)
         setSuccessMessage("Programación creada exitosamente")
       }
@@ -267,7 +295,7 @@ export default function CourseProgrammingForm() {
       id: `level-${Date.now()}`,
       name: "",
       expanded: true,
-      themes: []
+      themes: [],
     }
     setLevels([...levels, newLevel])
   }
@@ -290,10 +318,10 @@ export default function CourseProgrammingForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
+    <div className="max-w-10xl mx-auto p-7 bg-white rounded-lg shadow">
       <header className="mb-6">
         <h1 className="text-xl font-bold text-[#1f384c] mb-4">
-          {isEditMode ? "EDITAR PROGRAMACIÓN" : "AÑADIR PROGRAMACIÓN"}
+          {isEditMode ? "EDITAR PROGRAMACIÓN" : "Añadir Programción"}
         </h1>
       </header>
 
@@ -304,13 +332,15 @@ export default function CourseProgrammingForm() {
           </label>
           <CustomSelect
             placeholder="Selecciona un Programa"
-            options={programs.map(program => ({
-              value: program._id,
-              label: program.name
-            }))}
+            options={getAvailableProgramsForSelect()}
             value={selectedProgram}
             onChange={setSelectedProgram}
           />
+          {getAvailableProgramsForSelect().length === 0 && !isEditMode && (
+            <p className="text-xs text-amber-600 mt-1">
+              ⚠️ Todos los programas disponibles ya tienen una programación activa
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -356,14 +386,9 @@ export default function CourseProgrammingForm() {
           <div className="text-sm text-gray-500">{levels.length} de 3 niveles mínimos requeridos</div>
         </div>
 
-        <LevelsList
-          levels={levels}
-          setLevels={setLevels}
-          activeTabs={activeTabs}
-          setActiveTabs={setActiveTabs}
-        />
+        <LevelsList levels={levels} setLevels={setLevels} activeTabs={activeTabs} setActiveTabs={setActiveTabs} />
 
-        <div className="bg-white py-4 border-t mt-8 flex justify-between">
+        <div className="bg-white py-4 mt-8 flex justify-between">
           <button
             onClick={handleCancel}
             className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
@@ -376,16 +401,27 @@ export default function CourseProgrammingForm() {
             className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
             disabled={postLoading || putLoading}
           >
-            {(postLoading || putLoading) ? (
+            {postLoading || putLoading ? (
               <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 {isEditMode ? "Guardando..." : "Creando..."}
               </span>
+            ) : isEditMode ? (
+              "Guardar Cambios"
             ) : (
-              isEditMode ? "Guardar Cambios" : "Añadir Programación"
+              "Añadir Programación"
             )}
           </button>
         </div>

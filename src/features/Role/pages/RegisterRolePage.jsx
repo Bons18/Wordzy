@@ -71,7 +71,7 @@ const RegistrarRolPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="max-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-1">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#1f384c]">Roles</h1>

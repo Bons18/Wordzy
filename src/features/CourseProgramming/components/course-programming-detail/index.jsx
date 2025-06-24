@@ -41,10 +41,6 @@ export default function CourseProgrammingDetail() {
     navigate("/login")
   }
 
-  const handleBackClick = () => {
-    navigate("/programacion/programacionCursos")
-  }
-
   const handleShowEvaluationDetail = (evaluation) => {
     setSelectedDetail(evaluation)
     setShowDetailModal(true)
@@ -144,15 +140,6 @@ export default function CourseProgrammingDetail() {
 
       <div className="container mx-auto px-6">
         <ProgrammingDetails programming={adaptedProgramming} />
-
-        <div className="max-w-3xl mx-auto mt-6 flex justify-center">
-          <button
-            onClick={handleBackClick}
-            className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
-          >
-            Volver
-          </button>
-        </div>
 
         <ConfirmationModal
           isOpen={showLogoutConfirm}

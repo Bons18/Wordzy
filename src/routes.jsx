@@ -25,6 +25,7 @@ import ProgressView from "./features/ScheduledCourses/pages/ProgressView"
 import CourseProgrammingPage from "./features/CourseProgramming/pages/course-programming-page"
 import CourseProgramming from "./features/CourseProgramming/components/course-programming"
 import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
+import LevelAssignmentPage from "./features/LevelAssignment/pages/LevelAssignmentPage"
 
 
 // Definición de rutas
@@ -87,6 +88,10 @@ const routes = [
     path: "/programacion/programacionCursos/detalle/:id",
     element: <CourseProgrammingDetail />,
   },
+  {
+    path: "/programacion/asignacionNiveles",
+    element: <LevelAssignmentPage />
+  }, 
   {
     path: "/programacion/escala",
     element: <Scale />,
