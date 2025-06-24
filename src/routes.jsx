@@ -1,3 +1,5 @@
+import { Navigate } from "react-router-dom"
+import ProtectedRoute from "./shared/components/ProtectedRoute"
 import Apprentices from "./features/Apprentices/pages/Apprentices"
 import Files from "./features/File/pages/Files"
 import InstructorsPage from "./features/Instructors/pages/InstructorsPage"
@@ -11,11 +13,11 @@ import StudentDetails from "./features/Feedback/pages/StudentDetails"
 import ScheduledCoursesPage from "./features/ScheduledCourses/pages/ScheduledCoursesPage"
 import Scale from "./features/Scale/pages/Scale"
 import Badges from "./features/Badges/pages/Badges"
-import Badges2 from "./features/Badges/pages/Badges2";
-import Badges3 from "./features/Badges/pages/Badges3";
+import Badges2 from "./features/Badges/pages/Badges2"
+import Badges3 from "./features/Badges/pages/Badges3"
 import Ranking from "./features/Ranking/pages/Ranking"
 import Dashboard from "./features/Dashboard/pages/Dashboard"
-import LoginPage from "./features/Auth/pages/LoginPage"
+import LoginPage from "./features/auth/pages/LoginPage"
 import FilePage from "./features/ScheduledCourses/pages/FilePage"
 import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
 import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
@@ -26,12 +28,11 @@ import CourseProgrammingPage from "./features/CourseProgramming/pages/course-pro
 import CourseProgramming from "./features/CourseProgramming/components/course-programming"
 import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
 
-
 // Definición de rutas
 const routes = [
   {
     path: "/",
-    element: <LoginPage />,
+    element: <Navigate to="/login" replace />,
   },
   {
     path: "/login",
@@ -39,117 +40,224 @@ const routes = [
   },
   {
     path: "/dashboard",
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute requiredRoute="/dashboard">
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
   // Formación
   {
     path: "/formacion/programas",
-    element: <Programs />,
+    element: (
+      <ProtectedRoute requiredRoute="/formacion/programas">
+        <Programs />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/formacion/fichas",
-    element: <Files />,
+    element: (
+      <ProtectedRoute requiredRoute="/formacion/fichas">
+        <Files />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/formacion/instructores",
-    element: <InstructorsPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/formacion/instructores">
+        <InstructorsPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/formacion/aprendices",
-    element: <Apprentices/>,
+    element: (
+      <ProtectedRoute requiredRoute="/formacion/aprendices">
+        <Apprentices />
+      </ProtectedRoute>
+    ),
   },
   // Programación
   {
     path: "/programacion/temas",
-    element: <TopicsPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/temas">
+        <TopicsPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/materiales",
-    element: <SupportMaterials />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/materiales">
+        <SupportMaterials />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/evaluaciones",
-    element: <Evaluations />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/evaluaciones">
+        <Evaluations />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/programacionCursos",
-    element: <CourseProgrammingPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/programacionCursos">
+        <CourseProgrammingPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/programacionCursos/registrarProgramacion",
-    element: <CourseProgramming />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/programacionCursos">
+        <CourseProgramming />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/programacionCursos/editar/:id",
-    element: <CourseProgramming />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/programacionCursos">
+        <CourseProgramming />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/programacionCursos/detalle/:id",
-    element: <CourseProgrammingDetail />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/programacionCursos">
+        <CourseProgrammingDetail />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/escala",
-    element: <Scale />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/escala">
+        <Scale />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/insigneas",
-    element: <Badges />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/insigneas">
+        <Badges />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/insigneas2",
-    element: <Badges2 />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/insigneas2">
+        <Badges2 />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/programacion/insigneas3",
-    element: <Badges3 />,
+    element: (
+      <ProtectedRoute requiredRoute="/programacion/insigneas3">
+        <Badges3 />
+      </ProtectedRoute>
+    ),
   },
   // Progreso
   {
     path: "/progreso/cursosProgramados",
-    element: <ScheduledCoursesPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
+        <ScheduledCoursesPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/cursosProgramados/fichas",
-    element: <FilePage />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
+        <FilePage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/cursosProgramados/fichas/aprendices",
-    element: <TraineesPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
+        <TraineesPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/cursosProgramados/fichas/aprendices/progreso/:nombre",
-    element: <ProgressView />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
+        <ProgressView />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/ranking",
-    element: <Ranking />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/ranking">
+        <Ranking />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/retroalimentacion",
-    element: <Feedback />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/retroalimentacion">
+        <Feedback />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/retroalimentacion/:id",
-    element: <FeedbackDetails />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/retroalimentacion">
+        <FeedbackDetails />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/progreso/retroalimentacion/detallesaprendiz",
-    element: <StudentDetails />,
+    element: (
+      <ProtectedRoute requiredRoute="/progreso/retroalimentacion">
+        <StudentDetails />
+      </ProtectedRoute>
+    ),
   },
   // Configuración
   {
     path: "/configuracion/roles",
-    element: <RolesPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/configuracion/roles">
+        <RolesPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/configuracion/roles/registrarRol",
-    element: <RegistrarRolPage />,
+    element: (
+      <ProtectedRoute requiredRoute="/configuracion/roles">
+        <RegistrarRolPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/configuracion/roles/editar/:id",
-    element: <EditarRolPage />,
-  }
+    element: (
+      <ProtectedRoute requiredRoute="/configuracion/roles">
+        <EditarRolPage />
+      </ProtectedRoute>
+    ),
+  },
 ]
 
 export default routes
-

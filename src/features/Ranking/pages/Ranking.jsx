@@ -1,58 +1,42 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import {
-  ChevronDown,
-  Globe,
-  FileText,
-  Calendar,
-  Search,
-  X,
-  SlidersHorizontal,
-  Filter,
-} from "lucide-react";
-import { useAuth } from "../../auth/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { useState, useRef, useEffect } from "react"
+import { ChevronDown, Globe, FileText, Calendar, Filter } from "lucide-react"
+import { useAuth } from "../../auth/hooks/useAuth"
+import { useNavigate } from "react-router-dom"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import { useGetRankingMetrics } from "../hooks/useGetRankingMetrics"
+import { useGetStudentsByCourse } from "../hooks/useGetStudentsByCourse"
+import { useGetStudentsByProgram } from "../hooks/useGetStudentsByProgram"
+import { generateRealRanking } from "../services/rankingService"
+import FilterDropdown from "../components/FilterDropdown"
+import RankingCard from "../components/RankingCard"
 
 const Ranking = () => {
   // Estado para el año y mes seleccionados
-  const [selectedYear, setSelectedYear] = useState(2024);
-  const [selectedMonth, setSelectedMonth] = useState("Mayo");
-  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-  const dropdownRef = useRef(null);
-  const monthDropdownRef = useRef(null);
-  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
-  const yearDropdownRef = useRef(null);
-
-  // Estado para la pestaña activa
-  const [activeTab, setActiveTab] = useState("aprendices");
+  const [selectedYear, setSelectedYear] = useState(2024)
+  const [selectedMonth, setSelectedMonth] = useState("Mayo")
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const dropdownRef = useRef(null)
+  const monthDropdownRef = useRef(null)
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false)
+  const yearDropdownRef = useRef(null)
 
   // Estados para los filtros
-  const [selectedFicha, setSelectedFicha] = useState("");
-  const [selectedPrograma, setSelectedPrograma] = useState("");
-  const [showFichaDropdown, setShowFichaDropdown] = useState(false);
-  const [showProgramaDropdown, setShowProgramaDropdown] = useState(false);
+  const [selectedFicha, setSelectedFicha] = useState("")
+  const [selectedPrograma, setSelectedPrograma] = useState("")
 
-  // Estado para almacenar las métricas
-  const [metrics, setMetrics] = useState({
-    aprendices: 0,
-    fichas: 0,
-    programas: 0,
-  });
+  // Hook para obtener datos generales de la API
+  const { metrics, courses, students, programs, loading, error, refetch } = useGetRankingMetrics()
 
-  // Lista de fichas disponibles (simuladas)
-  const fichas = ["2889927-801", "2889927-802", "2889927-803", "2889927-804"];
+  // Hooks para obtener estudiantes específicos por ficha y programa
+  const { students: studentsByCourse, loading: loadingStudentsByCourse } = useGetStudentsByCourse(selectedFicha)
 
-  // Lista de programas disponibles
-  const programas = [
-    "Análisis y desarrollo de software",
-    "Técnico en programación",
-  ];
+  const { students: studentsByProgram, loading: loadingStudentsByProgram } = useGetStudentsByProgram(selectedPrograma)
 
   // Lista de meses
   const months = [
@@ -68,984 +52,133 @@ const Ranking = () => {
     "Octubre",
     "Noviembre",
     "Diciembre",
-  ];
-
-  // Mapeo de nombres de meses a números
-  const monthToNumber = {
-    Enero: 1,
-    Febrero: 2,
-    Marzo: 3,
-    Abril: 4,
-    Mayo: 5,
-    Junio: 6,
-    Julio: 7,
-    Agosto: 8,
-    Septiembre: 9,
-    Octubre: 10,
-    Noviembre: 11,
-    Diciembre: 12,
-  };
+  ]
 
   // Add click outside handler for user dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+        setIsDropdownOpen(false)
       }
-      if (
-        monthDropdownRef.current &&
-        !monthDropdownRef.current.contains(event.target)
-      ) {
-        setIsMonthDropdownOpen(false);
+      if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target)) {
+        setIsMonthDropdownOpen(false)
       }
-      if (
-        yearDropdownRef.current &&
-        !yearDropdownRef.current.contains(event.target)
-      ) {
-        setIsYearDropdownOpen(false);
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target)) {
+        setIsYearDropdownOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false);
-    setShowLogoutConfirm(true);
-  };
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  // Base de datos completa con información de año y mes
-  const fullRankingData = {
-    // Datos para 2023
-    2023: {
-      // Enero 2023
-      1: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 567,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 524,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 501,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 410,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 408,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 590,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 485,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 442,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 420,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 380,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 724,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 645,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 580,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 580,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 530,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 1500,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-      // Mayo 2023
-      5: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 667,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 624,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 551,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 510,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 458,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 690,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 585,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 542,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 520,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 480,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 824,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 745,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 680,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 680,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 630,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 1700,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-    },
-    // Datos para 2024
-    2024: {
-      // Enero 2024
-      1: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 767,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 624,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 551,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 510,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 458,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 790,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 585,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 542,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 520,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 480,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 924,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 745,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 680,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 680,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 630,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 1800,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-      // Mayo 2024
-      5: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 967,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 724,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 601,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 510,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 508,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 890,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 685,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 542,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 520,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 480,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 1024,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 845,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 780,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 780,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 830,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 2000,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-    },
-    // Datos para 2025
-    2025: {
-      // Enero 2025
-      1: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 1067,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 824,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 701,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 610,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 608,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 990,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 785,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 642,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 620,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 580,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 1124,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 945,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 880,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 880,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 930,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 2200,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-      // Mayo 2025 (datos futuros proyectados)
-      5: {
-        aprendices: [
-          {
-            top: 1,
-            nombre: "Rafael Pereira",
-            puntos: 1267,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Brayan Restrepo",
-            puntos: 924,
-            ficha: "2889927-803",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Zurangely Portillo",
-            puntos: 801,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Dickson Mosquera",
-            puntos: 710,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Diego Alejandro",
-            puntos: 708,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        ficha: [
-          {
-            top: 1,
-            nombre: "Laura S.",
-            puntos: 1090,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Carlos M.",
-            puntos: 885,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 3,
-            nombre: "Miguel A.",
-            puntos: 742,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "Ana Gómez",
-            puntos: 720,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 5,
-            nombre: "Pedro Ruiz",
-            puntos: 680,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-        ],
-        programa: [
-          {
-            top: 1,
-            nombre: "Carolina M.",
-            puntos: 1324,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 2,
-            nombre: "Alejandro G.",
-            puntos: 1045,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 3,
-            nombre: "Santiago R.",
-            puntos: 980,
-            ficha: "2889927-801",
-            programa: "Análisis y desarrollo de software",
-          },
-          {
-            top: 4,
-            nombre: "María López",
-            puntos: 980,
-            ficha: "2889927-802",
-            programa: "Técnico en programación",
-          },
-          {
-            top: 5,
-            nombre: "Beatriz H.",
-            puntos: 1030,
-            ficha: "2889927-804",
-            programa: "Técnico en programación",
-          },
-        ],
-        metrics: {
-          aprendices: 2500,
-          fichas: 4,
-          programas: 2,
-        },
-      },
-    },
-  };
-
-  // Obtener los datos actuales según el año y mes seleccionados
-  const getCurrentData = () => {
-    const monthNumber = monthToNumber[selectedMonth];
-
-    // Verificar si existen datos para el año y mes seleccionados
-    if (
-      fullRankingData[selectedYear] &&
-      fullRankingData[selectedYear][monthNumber]
-    ) {
-      return fullRankingData[selectedYear][monthNumber];
-    }
-
-    // Si no hay datos para el mes específico, buscar el mes más cercano disponible
-    if (fullRankingData[selectedYear]) {
-      const availableMonths = Object.keys(fullRankingData[selectedYear]).map(
-        Number
-      );
-      if (availableMonths.length > 0) {
-        // Encontrar el mes más cercano
-        const closestMonth = availableMonths.reduce((prev, curr) =>
-          Math.abs(curr - monthNumber) < Math.abs(prev - monthNumber)
-            ? curr
-            : prev
-        );
-        return fullRankingData[selectedYear][closestMonth];
-      }
-    }
-
-    // Si no hay datos para el año, usar los datos de 2024/Mayo como fallback
-    return fullRankingData[2024][5];
-  };
-
-  // Actualizar los datos cuando cambia el año o mes
-  useEffect(() => {
-    const currentData = getCurrentData();
-    setMetrics(currentData.metrics);
-  }, [selectedYear, selectedMonth]);
-
-  // Función para filtrar los datos según los filtros seleccionados
-  const getFilteredData = (category) => {
-    const currentData = getCurrentData();
-    let filteredData = [...currentData[category]];
-
-    // Aplicar filtro según la categoría
-    if (category === "ficha" && selectedFicha) {
-      filteredData = filteredData.filter(
-        (item) => item.ficha === selectedFicha
-      );
-    } else if (category === "programa" && selectedPrograma) {
-      filteredData = filteredData.filter(
-        (item) => item.programa === selectedPrograma
-      );
-      // Ordenar por puntos de mayor a menor cuando se filtra por programa
-      filteredData.sort((a, b) => b.puntos - a.puntos);
-    }
-
-    return filteredData;
-  };
+    logout()
+    navigate("/login")
+  }
 
   // Función para seleccionar un año
   const handleYearSelect = (year) => {
-    setSelectedYear(year);
-    setIsYearDropdownOpen(false);
-  };
+    setSelectedYear(year)
+    setIsYearDropdownOpen(false)
+  }
 
   // Función para seleccionar un mes
   const handleMonthSelect = (month) => {
-    setSelectedMonth(month);
-    setIsMonthDropdownOpen(false);
-  };
+    setSelectedMonth(month)
+    setIsMonthDropdownOpen(false)
+  }
 
   // Función para alternar el menú desplegable de meses
   const toggleMonthDropdown = () => {
-    setIsMonthDropdownOpen(!isMonthDropdownOpen);
-  };
+    setIsMonthDropdownOpen(!isMonthDropdownOpen)
+  }
 
   // Función para alternar el menú desplegable de años
   const toggleYearDropdown = () => {
-    setIsYearDropdownOpen(!isYearDropdownOpen);
-  };
+    setIsYearDropdownOpen(!isYearDropdownOpen)
+  }
 
-  // Limpiar los filtros
-  const clearFilters = () => {
-    setSelectedFicha("");
-    setSelectedPrograma("");
-  };
+  // Preparar datos para los dropdowns
+  const fichasOptions = courses.map((course) => ({
+    id: course.code,
+    name: `Ficha ${course.code}`,
+    ...course,
+  }))
 
-  // Renderizar el filtro contextual según la categoría
-  const renderContextualFilter = (category) => {
-    if (category === "ficha") {
-      return (
-        <div className="relative">
-          <button
-            type="button"
-            className="flex items-center gap-1 px-2 py-1 bg-white border rounded-md shadow-sm text-xs hover:bg-gray-50"
-            onClick={() => setShowFichaDropdown(!showFichaDropdown)}
-          >
-            <SlidersHorizontal className="w-3 h-3 text-gray-500" />
-            {selectedFicha ? (
-              <span className="font-medium text-[#1f384c]">
-                {selectedFicha}
-              </span>
-            ) : (
-              <span className="text-gray-500">Seleccionar ficha</span>
-            )}
-            <ChevronDown className="w-3 h-3 text-gray-400" />
-          </button>
+  const programasOptions = programs.map((program) => ({
+    id: program.name,
+    name: program.name,
+    code: program.code,
+    ...program,
+  }))
 
-          {showFichaDropdown && (
-            <div className="absolute right-0 z-10 mt-1 w-36 bg-white shadow-lg max-h-40 rounded-md py-1 text-xs overflow-auto">
-              {fichas.map((ficha) => (
-                <div
-                  key={ficha}
-                  className={`cursor-pointer select-none relative py-1.5 px-3 hover:bg-gray-100 ${
-                    selectedFicha === ficha
-                      ? "bg-blue-50 text-[#1f384c] font-medium"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedFicha(ficha);
-                    setShowFichaDropdown(false);
-                  }}
-                >
-                  {ficha}
-                </div>
-              ))}
-              {selectedFicha && (
-                <div
-                  className="cursor-pointer select-none relative py-1.5 px-3 text-red-600 hover:bg-red-50 border-t"
-                  onClick={() => {
-                    setSelectedFicha("");
-                    setShowFichaDropdown(false);
-                  }}
-                >
-                  <X className="w-3 h-3 inline mr-1" />
-                  Limpiar filtro
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    } else if (category === "programa") {
-      return (
-        <div className="relative">
-          <button
-            type="button"
-            className="flex items-center gap-1 px-2 py-1 bg-white border rounded-md shadow-sm text-xs hover:bg-gray-50"
-            onClick={() => setShowProgramaDropdown(!showProgramaDropdown)}
-          >
-            <SlidersHorizontal className="w-3 h-3 text-gray-500" />
-            {selectedPrograma ? (
-              <span className="font-medium text-[#1f384c] truncate max-w-[100px]">
-                {selectedPrograma}
-              </span>
-            ) : (
-              <span className="text-gray-500">Seleccionar programa</span>
-            )}
-            <ChevronDown className="w-3 h-3 text-gray-400" />
-          </button>
+  // Generar datos de ranking basados en datos reales de la API
+  const generateRankingData = (type, filterValue = null) => {
+    console.log(`🎯 generateRankingData called with type: ${type}, filterValue: ${filterValue}`)
+    console.log(`📊 Available students:`, students?.length || 0)
 
-          {showProgramaDropdown && (
-            <div className="absolute right-0 z-10 mt-1 w-56 bg-white shadow-lg max-h-40 rounded-md py-1 text-xs overflow-auto">
-              {programas.map((programa) => (
-                <div
-                  key={programa}
-                  className={`cursor-pointer select-none relative py-1.5 px-3 hover:bg-gray-100 ${
-                    selectedPrograma === programa
-                      ? "bg-blue-50 text-[#1f384c] font-medium"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedPrograma(programa);
-                    setShowProgramaDropdown(false);
-                  }}
-                >
-                  {programa}
-                </div>
-              ))}
-              {selectedPrograma && (
-                <div
-                  className="cursor-pointer select-none relative py-1.5 px-3 text-red-600 hover:bg-red-50 border-t"
-                  onClick={() => {
-                    setSelectedPrograma("");
-                    setShowProgramaDropdown(false);
-                  }}
-                >
-                  <X className="w-3 h-3 inline mr-1" />
-                  Limpiar filtro
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      );
+    const studentsToUse = students
+
+    let result = []
+
+    switch (type) {
+      case "aprendices":
+        // Usar todos los estudiantes para el ranking general
+        result = generateRealRanking(studentsToUse, "general").slice(0, 15)
+        break
+
+      case "ficha":
+        if (filterValue && studentsByCourse.length > 0) {
+          // Usar estudiantes específicos de la ficha seleccionada
+          result = generateRealRanking(studentsByCourse, "ficha", filterValue)
+        } else {
+          // Datos generales limitados
+          result = generateRealRanking(studentsToUse, "general").slice(0, 10)
+        }
+        break
+
+      case "programa":
+        if (filterValue && studentsByProgram.length > 0) {
+          // Usar estudiantes específicos del programa seleccionado
+          result = generateRealRanking(studentsByProgram, "programa", filterValue)
+        } else {
+          // Datos generales limitados
+          result = generateRealRanking(studentsToUse, "general").slice(0, 10)
+        }
+        break
+
+      default:
+        result = generateRealRanking(studentsToUse, "general").slice(0, 10)
     }
 
-    return null;
-  };
+    console.log(`🎯 generateRankingData result for ${type}:`, result)
+    console.log(
+      `🏆 Points in result:`,
+      result.map((r) => `${r.nombre}: ${r.puntos}`),
+    )
+
+    return result
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-2">Error al cargar los datos</div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button onClick={refetch} className="px-4 py-2 bg-[#1f384c] text-white rounded hover:bg-[#2a4a5c]">
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -1059,11 +192,7 @@ const Ranking = () => {
               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               <span>Administrador</span>
-              <ChevronDown
-                className={`w-5 h-5 transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
+              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isDropdownOpen && (
@@ -1088,9 +217,7 @@ const Ranking = () => {
             <div className="bg-gray-50 p-2 rounded-full mr-3">
               <Calendar className="h-5 w-5 text-[#1f384c]" />
             </div>
-            <span className="text-sm font-medium text-[#1f384c] mr-3">
-              Filtros:
-            </span>
+            <span className="text-sm font-medium text-[#1f384c] mr-3">Filtros:</span>
           </div>
 
           <div className="flex items-center">
@@ -1180,12 +307,8 @@ const Ranking = () => {
                 <Globe className="h-6 w-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">
-                  Top Ranking de Aprendices
-                </p>
-                <h2 className="text-3xl font-bold text-blue-500">
-                  {metrics.aprendices}
-                </h2>
+                <p className="text-sm font-medium text-[#1f384c]">Top Ranking de Aprendices</p>
+                <h2 className="text-3xl font-bold text-blue-500">{loading ? "..." : metrics.aprendices}</h2>
               </div>
             </div>
           </div>
@@ -1197,12 +320,8 @@ const Ranking = () => {
                 <FileText className="h-6 w-6 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">
-                  Total de Fichas
-                </p>
-                <h2 className="text-3xl font-bold text-purple-500">
-                  {metrics.fichas}
-                </h2>
+                <p className="text-sm font-medium text-[#1f384c]">Total de Fichas</p>
+                <h2 className="text-3xl font-bold text-purple-500">{loading ? "..." : metrics.fichas}</h2>
               </div>
             </div>
           </div>
@@ -1214,104 +333,84 @@ const Ranking = () => {
                 <Calendar className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[#1f384c]">
-                  Total de Programas
-                </p>
-                <h2 className="text-3xl font-bold text-green-500">
-                  {metrics.programas}
-                </h2>
+                <p className="text-sm font-medium text-[#1f384c]">Total de Programas</p>
+                <h2 className="text-3xl font-bold text-green-500">{loading ? "..." : metrics.programas}</h2>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Información de filtros activos */}
+        {(selectedFicha || selectedPrograma) && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-2 text-sm text-blue-800">
+              <Filter className="w-4 h-4" />
+              <span className="font-medium">Filtros activos:</span>
+              {selectedFicha && (
+                <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                  Ficha: {selectedFicha} ({studentsByCourse.length} estudiantes)
+                </span>
+              )}
+              {selectedPrograma && (
+                <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+                  Programa: {selectedPrograma} ({studentsByProgram.length} estudiantes)
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Sección de tablas */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3">
-            {[
-              {
-                title: "Top Ranking de Aprendices",
-                category: "aprendices",
-                color: "blue",
-                icon: <Globe className="h-4 w-4" />,
-              },
-              {
-                title: "Total de Fichas",
-                category: "ficha",
-                color: "purple",
-                icon: <FileText className="h-4 w-4" />,
-              },
-              {
-                title: "Total de Programas",
-                category: "programa",
-                color: "green",
-                icon: <Calendar className="h-4 w-4" />,
-              },
-            ].map((section) => (
-              <div
-                key={section.title}
-                className={`bg-white rounded-lg border-t-4 border-t-${section.color}-500 p-3 transition-all duration-300 hover:shadow-md`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`bg-${section.color}-50 p-1 rounded-full text-${section.color}-500 transition-transform duration-200 hover:scale-110`}
-                    >
-                      {section.icon}
-                    </div>
-                    <h2 className="text-sm font-bold text-[#1f384c]">
-                      {section.title}
-                    </h2>
-                  </div>
-                  {/* Filtro contextual */}
-                  {renderContextualFilter(section.category)}
-                </div>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 pb-1 border-b border-[#d6dade]">
-                    <div className="text-xs font-medium text-[#1f384c]">
-                      Top
-                    </div>
-                    <div className="text-xs font-medium text-[#1f384c]">
-                      Nombre
-                    </div>
-                    <div className="text-xs font-medium text-[#1f384c] text-right">
-                      Puntos
-                    </div>
-                  </div>
-                  {getFilteredData(section.category).length > 0 ? (
-                    getFilteredData(section.category)
-                      .slice(0, 5)
-                      .map((item) => (
-                        <div
-                          key={item.top}
-                          className="grid grid-cols-3 py-1 transition-colors duration-200 hover:bg-gray-50 rounded"
-                        >
-                          <div
-                            className={`text-${section.color}-500 text-xs font-bold`}
-                          >
-                            {item.top}
-                          </div>
-                          <div className="text-[#1f384c] text-xs font-medium truncate">
-                            {item.nombre}
-                          </div>
-                          <div
-                            className={`text-${section.color}-500 text-xs font-bold text-right`}
-                          >
-                            {item.puntos}
-                          </div>
-                        </div>
-                      ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <Search className="w-5 h-5 text-gray-300 mx-auto mb-1" />
-                      <p className="text-gray-500 text-xs">
-                        No se encontraron resultados
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+            {/* Top Ranking de Aprendices */}
+            <RankingCard
+              title="Top Ranking de Aprendices"
+              icon={<Globe className="h-4 w-4" />}
+              color="blue"
+              data={generateRankingData("aprendices")}
+              loading={loading}
+            />
+
+            {/* Total de Fichas */}
+            <RankingCard
+              title="Total de Fichas"
+              icon={<FileText className="h-4 w-4" />}
+              color="purple"
+              data={generateRankingData("ficha", selectedFicha)}
+              loading={loading || loadingStudentsByCourse}
+              filterComponent={
+                <FilterDropdown
+                  options={fichasOptions}
+                  selectedValue={selectedFicha}
+                  onSelect={setSelectedFicha}
+                  placeholder="Seleccionar ficha"
+                  displayKey="name"
+                  valueKey="id"
+                  loading={loading}
+                />
+              }
+            />
+
+            {/* Total de Programas */}
+            <RankingCard
+              title="Total de Programas"
+              icon={<Calendar className="h-4 w-4" />}
+              color="green"
+              data={generateRankingData("programa", selectedPrograma)}
+              loading={loading || loadingStudentsByProgram}
+              filterComponent={
+                <FilterDropdown
+                  options={programasOptions}
+                  selectedValue={selectedPrograma}
+                  onSelect={setSelectedPrograma}
+                  placeholder="Seleccionar programa"
+                  displayKey="name"
+                  valueKey="id"
+                  loading={loading}
+                />
+              }
+            />
           </div>
         </div>
       </div>
@@ -1327,7 +426,7 @@ const Ranking = () => {
         confirmColor="bg-[#f44144] hover:bg-red-600"
       />
     </div>
-  );
-};
+  )
+}
 
-export default Ranking;
+export default Ranking

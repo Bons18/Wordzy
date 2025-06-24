@@ -1,45 +1,197 @@
-// Simulación de un servicio de autenticación
-// En un entorno real, esto haría llamadas a una API
+// Servicio de autenticación actualizado para usar la API local
+const API_BASE_URL = "http://localhost:3000/api/user"
+
+// Función para determinar el rol basado en el documento
+const determineUserRole = (document) => {
+  // Usuarios de prueba específicos
+  const roleMapping = {
+    32143550: "administrador",
+    1000660906: "instructor",
+    28488747: "aprendiz",
+  }
+
+  return roleMapping[document] || "aprendiz" // Por defecto aprendiz
+}
+
+// Función para buscar estudiante por documento en la API local
+const findStudentByDocument = async (documentType, document) => {
+  try {
+    const response = await fetch(API_BASE_URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error("Error al consultar la API de estudiantes")
+    }
+
+    const students = await response.json()
+
+    // Convertir el documento a string para asegurar comparación correcta
+    const documentStr = document.toString()
+
+    // Buscar si existe el documento independientemente del tipo
+    const studentWithDocument = students.find((s) => s.documento.toString() === documentStr)
+
+    if (studentWithDocument) {
+      // Si existe el documento pero con diferente tipo
+      if (studentWithDocument.tipoDocumento !== documentType) {
+        throw new Error(
+          `El documento ${document} está registrado como ${studentWithDocument.tipoDocumento}, no como ${documentType}`,
+        )
+      }
+
+      // Si coinciden tanto el documento como el tipo
+      return studentWithDocument
+    }
+
+    // Si no existe el documento en absoluto
+    return null
+  } catch (error) {
+    console.error("Error buscando estudiante:", error)
+    throw error
+  }
+}
 
 export const loginUser = async (credentials) => {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   // Basic validation
-  if (!credentials.email || !credentials.password) {
+  if (!credentials.documentType || !credentials.document || !credentials.password) {
     throw new Error("Todos los campos son requeridos")
   }
 
-  // Email validation (updated to allow soy.sena.edu.co domain)
-  const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(credentials.email)) {
-    throw new Error("Formato de email inválido")
+  // Validar que el documento solo contenga números
+  if (!/^\d+$/.test(credentials.document)) {
+    throw new Error("El documento debe contener solo números")
   }
 
-  // Check for specific admin credentials
-  if (
-    credentials.email === "admin@gmail.com" &&
-    credentials.password === "admin"
-  ) {
-    return {
-      id: "1",
-      name: "Admin",
-      email: credentials.email,
-      role: "admin"
+  // Validar que la contraseña coincida con el documento
+  if (credentials.password !== credentials.document) {
+    throw new Error("La contraseña debe ser igual al número de documento")
+  }
+
+  // Determinar el rol del usuario
+  const userRole = determineUserRole(credentials.document)
+
+  try {
+    // Para usuarios de prueba que no están en la API, crear datos mock
+    if (["32143550", "1000660906"].includes(credentials.document)) {
+      const mockUsers = {
+        32143550: {
+          _id: "admin_001",
+          nombre: "Juan Carlos",
+          apellido: "Administrador",
+          documento: "32143550",
+          tipoDocumento: "CC",
+          correo: "admin@wordzy.com",
+          telefono: "3001234567",
+          estado: "Activo",
+          ficha: ["2024001"],
+          nivel: "Avanzado",
+          programa: "Administración del Sistema",
+          progresoActual: 100,
+          progresoNiveles: { basico: 100, intermedio: 100, avanzado: 100 },
+          puntos: 1000,
+          tipoUsuario: "administrador",
+          contraseña: "32143550",
+        },
+        1000660906: {
+          _id: "instructor_001",
+          nombre: "María Elena",
+          apellido: "Instructor",
+          documento: "1000660906",
+          tipoDocumento: "CC",
+          correo: "instructor@wordzy.com",
+          telefono: "3007654321",
+          estado: "Activo",
+          ficha: ["2024002"],
+          nivel: "Avanzado",
+          programa: "Enseñanza de Inglés",
+          progresoActual: 95,
+          progresoNiveles: { basico: 100, intermedio: 100, avanzado: 95 },
+          puntos: 800,
+          tipoUsuario: "instructor",
+          contraseña: "1000660906",
+        },
+      }
+
+      const mockUser = mockUsers[credentials.document]
+      if (mockUser) {
+        // Verificar que el tipo de documento coincida también para usuarios mock
+        if (mockUser.tipoDocumento !== credentials.documentType) {
+          throw new Error(
+            `El documento ${credentials.document} está registrado como ${mockUser.tipoDocumento}, no como ${credentials.documentType}`,
+          )
+        }
+
+        if (mockUser.contraseña === credentials.document) {
+          return {
+            id: mockUser._id,
+            name: `${mockUser.nombre} ${mockUser.apellido}`,
+            document: mockUser.documento,
+            documentType: mockUser.tipoDocumento,
+            email: mockUser.correo,
+            phone: mockUser.telefono,
+            state: mockUser.estado,
+            courseNumber: mockUser.ficha[0],
+            level: mockUser.nivel,
+            program: mockUser.programa,
+            currentProgress: mockUser.progresoActual,
+            levelProgress: mockUser.progresoNiveles,
+            points: mockUser.puntos,
+            role: userRole,
+            userType: mockUser.tipoUsuario,
+          }
+        }
+      }
     }
-  }
 
-  // Allow login with soy.sena.edu.co domain
-  if (credentials.email.endsWith("@soy.sena.edu.co") && credentials.password.length >= 4) {
-    return {
-      id: "2",
-      name: "Usuario SENA",
-      email: credentials.email,
-      role: "student"
+    // Buscar el estudiante en la API local
+    const student = await findStudentByDocument(credentials.documentType, credentials.document)
+
+    if (!student) {
+      throw new Error("Número de documento no encontrado en el sistema")
     }
-  }
 
-  throw new Error("Correo o contraseña invalidos")
+    // Verificar que el estudiante esté en formación (solo para aprendices)
+    if (userRole === "aprendiz" && student.estado !== "En formación") {
+      throw new Error(`No puede acceder. Estado actual: ${student.estado}`)
+    }
+
+    // Verificar que la contraseña coincida (debe ser igual al documento)
+    if (student.contraseña !== credentials.document) {
+      throw new Error("Contraseña incorrecta")
+    }
+
+    // Login exitoso - mapear los campos de la nueva API
+    return {
+      id: student._id,
+      name: `${student.nombre} ${student.apellido}`,
+      document: student.documento,
+      documentType: student.tipoDocumento,
+      email: student.correo,
+      phone: student.telefono,
+      state: student.estado,
+      courseNumber: student.ficha[0],
+      level: student.nivel,
+      program: student.programa,
+      currentProgress: student.progresoActual,
+      levelProgress: student.progresoNiveles,
+      points: student.puntos,
+      role: userRole,
+      userType: student.tipoUsuario || userRole,
+    }
+  } catch (error) {
+    // Si es un error de red o API, mostrar mensaje genérico
+    if (error.message.includes("API") || error.message.includes("fetch")) {
+      throw new Error("Error de conexión. Intente nuevamente")
+    }
+    throw error
+  }
 }
 
 export const registerUser = async (userData) => {
@@ -58,4 +210,3 @@ export const registerUser = async (userData) => {
     email: userData.email,
   }
 }
-

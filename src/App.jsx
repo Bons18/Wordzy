@@ -1,3 +1,5 @@
+"use client"
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Navbar from "./shared/components/Navbar"
 import routes from "./routes"
@@ -11,7 +13,7 @@ function App() {
     <Router>
       <div className="flex h-screen overflow-hidden">
         {isAuthenticated && <Navbar />}
-        <div className={`flex-1 overflow-auto ${!isAuthenticated ? 'w-full' : ''}`}>
+        <div className={`flex-1 overflow-auto ${!isAuthenticated ? "w-full" : ""}`}>
           <div className="container mx-auto p-4">
             <Routes>
               {routes.map((route, index) => (
@@ -42,4 +44,3 @@ function App() {
 }
 
 export default App
-
