@@ -1,4252 +1,47 @@
-// // // // // // "use client"
-
-// // // // // // import { useState, useEffect, useRef } from "react"
-// // // // // // import { ChevronDown } from "lucide-react"
-// // // // // // import { useNavigate } from "react-router-dom"
-// // // // // // import GenericTable from "../../../shared/components/Table"
-// // // // // // import { useAuth } from "../../auth/hooks/useAuth"
-// // // // // // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // // // // // // Datos de ejemplo
-// // // // // // const escalasData = [
-// // // // // //   {
-// // // // // //     id: 1,
-// // // // // //     fechaInicial: "20-10-2023",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 1,
-// // // // // //     rangoFinal: 69,
-// // // // // //     valoracion: "No aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración para calificaciones insuficientes. Los estudiantes que obtengan una calificación en este rango deberán realizar actividades de refuerzo.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 2,
-// // // // // //     fechaInicial: "20-10-2020",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 90,
-// // // // // //     valoracion: "Aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración para calificaciones satisfactorias. Los estudiantes que obtengan una calificación en este rango han demostrado un dominio adecuado de los contenidos.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 3,
-// // // // // //     fechaInicial: "20-10-2024",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 80,
-// // // // // //     valoracion: "No aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración especial para evaluaciones de nivel avanzado. A pesar de estar en un rango normalmente aprobatorio, en este contexto se requiere un desempeño superior.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 4,
-// // // // // //     fechaInicial: "20-10-2021",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 75,
-// // // // // //     valoracion: "Aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración para calificaciones mínimas aprobatorias. Los estudiantes en este rango han cumplido con los requisitos básicos del curso.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 5,
-// // // // // //     fechaInicial: "20-10-2022",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 100,
-// // // // // //     valoracion: "No aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración especial para evaluaciones de certificación internacional. Requiere revisión adicional independientemente del puntaje obtenido.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 6,
-// // // // // //     fechaInicial: "20-03-2023",
-// // // // // //     fechaFinal: "20-0-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 85,
-// // // // // //     valoracion: "No aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración para evaluaciones de nivel experto. Se requiere un desempeño excepcional para aprobar este tipo de evaluaciones.",
-// // // // // //   },
-// // // // // //   {
-// // // // // //     id: 7,
-// // // // // //     fechaInicial: "20-02-2022",
-// // // // // //     fechaFinal: "20-10-2026",
-// // // // // //     rangoInicial: 70,
-// // // // // //     rangoFinal: 95,
-// // // // // //     valoracion: "Aprueba",
-// // // // // //     descripcion:
-// // // // // //       "Rango de valoración para calificaciones en cursos de nivelación. Los estudiantes en este rango han demostrado un progreso significativo.",
-// // // // // //   },
-// // // // // // ]
-
-// // // // // // const columns = [
-// // // // // //   { key: "fechaInicial", label: "Fecha Inicial" },
-// // // // // //   { key: "fechaFinal", label: "Fecha Final" },
-// // // // // //   { key: "rangoInicial", label: "Rango Inicial", render: (item) => `${item.rangoInicial}%` },
-// // // // // //   { key: "rangoFinal", label: "Rango Final", render: (item) => `${item.rangoFinal}%` },
-// // // // // //   {
-// // // // // //     key: "valoracion",
-// // // // // //     label: "Valoración",
-// // // // // //     render: (item) => (
-// // // // // //       <span
-// // // // // //         className={`px-2 py-1 rounded-full text-xs font-medium ${
-// // // // // //           item.valoracion === "Aprueba" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-// // // // // //         }`}
-// // // // // //       >
-// // // // // //         {item.valoracion}
-// // // // // //       </span>
-// // // // // //     ),
-// // // // // //   },
-// // // // // // ]
-
-// // // // // // const Scale = () => {
-// // // // // //   const [selectedEscala, setSelectedEscala] = useState(null)
-// // // // // //   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-// // // // // //   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-// // // // // //   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-// // // // // //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// // // // // //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-// // // // // //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// // // // // //   const [itemToDelete, setItemToDelete] = useState(null)
-// // // // // //   const [successMessage, setSuccessMessage] = useState("")
-// // // // // //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// // // // // //   const [scales, setScales] = useState([...escalasData])
-// // // // // //   const { logout } = useAuth()
-// // // // // //   const navigate = useNavigate()
-// // // // // //   const dropdownRef = useRef(null)
-
-// // // // // //   // Formulario para crear/editar
-// // // // // //   const [formData, setFormData] = useState({
-// // // // // //     fechaInicial: "",
-// // // // // //     fechaFinal: "",
-// // // // // //     rangoInicial: "",
-// // // // // //     rangoFinal: "",
-// // // // // //     valoracion: "Aprueba",
-// // // // // //     descripcion: "",
-// // // // // //   })
-
-// // // // // //   useEffect(() => {
-// // // // // //     const handleClickOutside = (event) => {
-// // // // // //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// // // // // //         setIsDropdownOpen(false)
-// // // // // //       }
-// // // // // //     }
-
-// // // // // //     document.addEventListener("mousedown", handleClickOutside)
-// // // // // //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// // // // // //   }, [])
-
-// // // // // //   const handleLogoutClick = () => {
-// // // // // //     setIsDropdownOpen(false)
-// // // // // //     setShowLogoutConfirm(true)
-// // // // // //   }
-
-// // // // // //   const handleLogout = () => {
-// // // // // //     logout()
-// // // // // //     navigate("/login")
-// // // // // //   }
-
-// // // // // //   const handleShowEscala = (escala) => {
-// // // // // //     setSelectedEscala(escala)
-// // // // // //     setIsDetailModalOpen(true)
-// // // // // //   }
-
-// // // // // //   const handleCloseDetailModal = () => {
-// // // // // //     setIsDetailModalOpen(false)
-// // // // // //   }
-
-// // // // // //   const handleAddScale = () => {
-// // // // // //     setFormData({
-// // // // // //       fechaInicial: "",
-// // // // // //       fechaFinal: "",
-// // // // // //       rangoInicial: "",
-// // // // // //       rangoFinal: "",
-// // // // // //       valoracion: "Aprueba",
-// // // // // //       descripcion: "",
-// // // // // //     })
-// // // // // //     setIsCreateModalOpen(true)
-// // // // // //   }
-
-// // // // // //   const handleEditScale = (scale) => {
-// // // // // //     setSelectedEscala(scale)
-// // // // // //     setFormData({
-// // // // // //       fechaInicial: scale.fechaInicial,
-// // // // // //       fechaFinal: scale.fechaFinal,
-// // // // // //       rangoInicial: scale.rangoInicial,
-// // // // // //       rangoFinal: scale.rangoFinal,
-// // // // // //       valoracion: scale.valoracion,
-// // // // // //       descripcion: scale.descripcion,
-// // // // // //     })
-// // // // // //     setIsEditModalOpen(true)
-// // // // // //   }
-
-// // // // // //   const handleDeleteScale = (id) => {
-// // // // // //     setItemToDelete(id)
-// // // // // //     setShowDeleteConfirm(true)
-// // // // // //   }
-
-// // // // // //   const confirmDeleteScale = () => {
-// // // // // //     try {
-// // // // // //       // Eliminar de la lista local
-// // // // // //       const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-// // // // // //       setScales(updatedScales)
-
-// // // // // //       // Mostrar mensaje de éxito
-// // // // // //       setSuccessMessage("Escala eliminada exitosamente")
-// // // // // //       setShowSuccessModal(true)
-// // // // // //     } catch (error) {
-// // // // // //       console.error("Error al eliminar la escala:", error)
-// // // // // //       setSuccessMessage("Ocurrió un error al eliminar la escala")
-// // // // // //       setShowSuccessModal(true)
-// // // // // //     } finally {
-// // // // // //       setShowDeleteConfirm(false)
-// // // // // //       setItemToDelete(null)
-// // // // // //     }
-// // // // // //   }
-
-// // // // // //   const handleInputChange = (e) => {
-// // // // // //     const { name, value } = e.target
-// // // // // //     setFormData({
-// // // // // //       ...formData,
-// // // // // //       [name]: name === "rangoInicial" || name === "rangoFinal" ? Number.parseInt(value) || "" : value,
-// // // // // //     })
-// // // // // //   }
-
-// // // // // //   const handleToggleValoracion = () => {
-// // // // // //     setFormData({
-// // // // // //       ...formData,
-// // // // // //       valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-// // // // // //     })
-// // // // // //   }
-
-// // // // // //   const handleCreateSubmit = (e) => {
-// // // // // //     e.preventDefault()
-// // // // // //     const newScale = {
-// // // // // //       id: Math.max(...scales.map((s) => s.id)) + 1,
-// // // // // //       ...formData,
-// // // // // //     }
-// // // // // //     setScales([...scales, newScale])
-// // // // // //     setIsCreateModalOpen(false)
-// // // // // //     setSuccessMessage("Escala creada exitosamente")
-// // // // // //     setShowSuccessModal(true)
-// // // // // //   }
-
-// // // // // //   const handleEditSubmit = (e) => {
-// // // // // //     e.preventDefault()
-// // // // // //     const updatedScales = scales.map((scale) => (scale.id === selectedEscala.id ? { ...scale, ...formData } : scale))
-// // // // // //     setScales(updatedScales)
-// // // // // //     setIsEditModalOpen(false)
-// // // // // //     setSuccessMessage("Escala actualizada exitosamente")
-// // // // // //     setShowSuccessModal(true)
-// // // // // //   }
-
-// // // // // //   return (
-// // // // // //     <div className="min-h-screen">
-// // // // // //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// // // // // //         <div className="container mx-auto flex justify-between items-center">
-// // // // // //           <h1 className="text-2xl font-bold text-[#1f384c]">ESCALA DE VALORACIÓN</h1>
-// // // // // //           <div className="relative" ref={dropdownRef}>
-// // // // // //             <button
-// // // // // //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// // // // // //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// // // // // //             >
-// // // // // //               <span>Administrador</span>
-// // // // // //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// // // // // //             </button>
-
-// // // // // //             {isDropdownOpen && (
-// // // // // //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// // // // // //                 <button
-// // // // // //                   onClick={handleLogoutClick}
-// // // // // //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// // // // // //                 >
-// // // // // //                   Cerrar Sesión
-// // // // // //                 </button>
-// // // // // //               </div>
-// // // // // //             )}
-// // // // // //           </div>
-// // // // // //         </div>
-// // // // // //       </header>
-
-// // // // // //       <div className="container mx-auto px-6">
-// // // // // //         <GenericTable
-// // // // // //           data={scales}
-// // // // // //           columns={columns}
-// // // // // //           onShow={handleShowEscala}
-// // // // // //           onAdd={handleAddScale}
-// // // // // //           onEdit={handleEditScale}
-// // // // // //           onDelete={handleDeleteScale}
-// // // // // //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// // // // // //         />
-
-// // // // // //         {selectedEscala && (
-// // // // // //           <ScaleDetailModal escala={selectedEscala} isOpen={isDetailModalOpen} onClose={handleCloseDetailModal} />
-// // // // // //         )}
-
-// // // // // //         {/* Create Scale Modal */}
-// // // // // //         {isCreateModalOpen && (
-// // // // // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // // // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-// // // // // //               <div className="p-4">
-// // // // // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">CREAR ESCALA DE VALORACIÓN</h2>
-
-// // // // // //                 <form onSubmit={handleCreateSubmit}>
-// // // // // //                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // // // // //                       <input
-// // // // // //                         type="Date"
-// // // // // //                         name="fechaInicial"
-// // // // // //                         value={formData.fechaInicial}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         placeholder="DD/MM/YYYY"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // // // // //                       <input
-// // // // // //                         type="Date"
-// // // // // //                         name="fechaFinal"
-// // // // // //                         value={formData.fechaFinal}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         placeholder="DD/MM/YYYY"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // // // // //                       <input
-// // // // // //                         type="number"
-// // // // // //                         name="rangoInicial"
-// // // // // //                         value={formData.rangoInicial}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         min="0"
-// // // // // //                         max="100"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // // // // //                       <input
-// // // // // //                         type="number"
-// // // // // //                         name="rangoFinal"
-// // // // // //                         value={formData.rangoFinal}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         min="0"
-// // // // // //                         max="100"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // // // // //                       <div className="flex items-center">
-// // // // // //                         <label className="relative inline-flex items-center cursor-pointer">
-// // // // // //                           <input
-// // // // // //                             type="checkbox"
-// // // // // //                             checked={formData.valoracion === "Aprueba"}
-// // // // // //                             onChange={handleToggleValoracion}
-// // // // // //                             className="sr-only peer"
-// // // // // //                           />
-// // // // // //                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // // // // //                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // // // // //                         </label>
-// // // // // //                       </div>
-// // // // // //                     </div>
-// // // // // //                   </div>
-
-// // // // // //                   <div className="mb-4">
-// // // // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-// // // // // //                     <textarea
-// // // // // //                       name="descripcion"
-// // // // // //                       value={formData.descripcion}
-// // // // // //                       onChange={handleInputChange}
-// // // // // //                       rows="3"
-// // // // // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                       placeholder="Descripción de la escala de valoración..."
-// // // // // //                     ></textarea>
-// // // // // //                   </div>
-
-// // // // // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // // // // //                     <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// // // // // //                     <div className="mb-2 text-sm text-center">
-// // // // // //                       {formData.valoracion === "Aprueba"
-// // // // // //                         ? `Aprueba a partir = ${formData.rangoInicial || 0}%`
-// // // // // //                         : `Aprueba a partir = ${(formData.rangoFinal || 0) + 1}%`}
-// // // // // //                     </div>
-
-// // // // // //                     {formData.valoracion === "No aprueba" ? (
-// // // // // //                       <>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>0%</span>
-// // // // // //                           <span>{formData.rangoFinal || 0}% Deficiente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#dc3545] h-5 rounded"
-// // // // // //                             style={{ width: `${formData.rangoFinal || 0}%` }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>{(formData.rangoFinal || 0) + 1}%</span>
-// // // // // //                           <span>100% Excelente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#46ae69] h-5 rounded"
-// // // // // //                             style={{
-// // // // // //                               width: `${100 - ((formData.rangoFinal || 0) + 1)}%`,
-// // // // // //                               marginLeft: `${(formData.rangoFinal || 0) + 1}%`,
-// // // // // //                             }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                       </>
-// // // // // //                     ) : (
-// // // // // //                       <>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>0%</span>
-// // // // // //                           <span>{(formData.rangoInicial || 0) - 1}% Deficiente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#dc3545] h-5 rounded"
-// // // // // //                             style={{ width: `${(formData.rangoInicial || 0) - 1}%` }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>{formData.rangoInicial || 0}%</span>
-// // // // // //                           <span>100% Excelente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#46ae69] h-5 rounded"
-// // // // // //                             style={{
-// // // // // //                               width: `${100 - (formData.rangoInicial || 0)}%`,
-// // // // // //                               marginLeft: `${formData.rangoInicial || 0}%`,
-// // // // // //                             }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                       </>
-// // // // // //                     )}
-// // // // // //                   </div>
-
-// // // // // //                   <div className="flex justify-between px-4">
-// // // // // //                     <button
-// // // // // //                       type="button"
-// // // // // //                       onClick={() => setIsCreateModalOpen(false)}
-// // // // // //                       className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-// // // // // //                     >
-// // // // // //                       Cancelar
-// // // // // //                     </button>
-// // // // // //                     <button
-// // // // // //                       type="submit"
-// // // // // //                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-// // // // // //                     >
-// // // // // //                       Crear
-// // // // // //                     </button>
-// // // // // //                   </div>
-// // // // // //                 </form>
-// // // // // //               </div>
-// // // // // //             </div>
-// // // // // //           </div>
-// // // // // //         )}
-
-// // // // // //         {/* Edit Scale Modal */}
-// // // // // //         {isEditModalOpen && selectedEscala && (
-// // // // // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // // // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-// // // // // //               <div className="p-4">
-// // // // // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">EDITAR ESCALA DE VALORACIÓN</h2>
-
-// // // // // //                 <form onSubmit={handleEditSubmit}>
-// // // // // //                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // // // // //                       <input
-// // // // // //                         type="Date"
-// // // // // //                         name="fechaInicial"
-// // // // // //                         value={formData.fechaInicial}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         placeholder="DD/MM/YYYY"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // // // // //                       <input
-// // // // // //                         type="Date"
-// // // // // //                         name="fechaFinal"
-// // // // // //                         value={formData.fechaFinal}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         placeholder="DD/MM/YYYY"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // // // // //                       <input
-// // // // // //                         type="number"
-// // // // // //                         name="rangoInicial"
-// // // // // //                         value={formData.rangoInicial}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         min="0"
-// // // // // //                         max="100"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // // // // //                       <input
-// // // // // //                         type="number"
-// // // // // //                         name="rangoFinal"
-// // // // // //                         value={formData.rangoFinal}
-// // // // // //                         onChange={handleInputChange}
-// // // // // //                         min="0"
-// // // // // //                         max="100"
-// // // // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                         required
-// // // // // //                       />
-// // // // // //                     </div>
-// // // // // //                     <div>
-// // // // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // // // // //                       <div className="flex items-center">
-// // // // // //                         <label className="relative inline-flex items-center cursor-pointer">
-// // // // // //                           <input
-// // // // // //                             type="checkbox"
-// // // // // //                             checked={formData.valoracion === "Aprueba"}
-// // // // // //                             onChange={handleToggleValoracion}
-// // // // // //                             className="sr-only peer"
-// // // // // //                           />
-// // // // // //                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // // // // //                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // // // // //                         </label>
-// // // // // //                       </div>
-// // // // // //                     </div>
-// // // // // //                   </div>
-
-// // // // // //                   <div className="mb-4">
-// // // // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-// // // // // //                     <textarea
-// // // // // //                       name="descripcion"
-// // // // // //                       value={formData.descripcion}
-// // // // // //                       onChange={handleInputChange}
-// // // // // //                       rows="3"
-// // // // // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // // // //                       placeholder="Descripción de la escala de valoración..."
-// // // // // //                     ></textarea>
-// // // // // //                   </div>
-
-// // // // // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // // // // //                     <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// // // // // //                     <div className="mb-2 text-sm text-center">
-// // // // // //                       {formData.valoracion === "Aprueba"
-// // // // // //                         ? `Aprueba a partir = ${formData.rangoInicial || 0}%`
-// // // // // //                         : `Aprueba a partir = ${(formData.rangoFinal || 0) + 1}%`}
-// // // // // //                     </div>
-
-// // // // // //                     {formData.valoracion === "No aprueba" ? (
-// // // // // //                       <>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>0%</span>
-// // // // // //                           <span>{formData.rangoFinal || 0}% Deficiente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#dc3545] h-5 rounded"
-// // // // // //                             style={{ width: `${formData.rangoFinal || 0}%` }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>{(formData.rangoFinal || 0) + 1}%</span>
-// // // // // //                           <span>100% Excelente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#46ae69] h-5 rounded"
-// // // // // //                             style={{
-// // // // // //                               width: `${100 - ((formData.rangoFinal || 0) + 1)}%`,
-// // // // // //                               marginLeft: `${(formData.rangoFinal || 0) + 1}%`,
-// // // // // //                             }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                       </>
-// // // // // //                     ) : (
-// // // // // //                       <>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>0%</span>
-// // // // // //                           <span>{(formData.rangoInicial || 0) - 1}% Deficiente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#dc3545] h-5 rounded"
-// // // // // //                             style={{ width: `${(formData.rangoInicial || 0) - 1}%` }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                         <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                           <span>{formData.rangoInicial || 0}%</span>
-// // // // // //                           <span>100% Excelente</span>
-// // // // // //                         </div>
-// // // // // //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                           <div
-// // // // // //                             className="bg-[#46ae69] h-5 rounded"
-// // // // // //                             style={{
-// // // // // //                               width: `${100 - (formData.rangoInicial || 0)}%`,
-// // // // // //                               marginLeft: `${formData.rangoInicial || 0}%`,
-// // // // // //                             }}
-// // // // // //                           ></div>
-// // // // // //                         </div>
-// // // // // //                       </>
-// // // // // //                     )}
-// // // // // //                   </div>
-
-// // // // // //                   <div className="flex justify-between px-4">
-// // // // // //                     <button
-// // // // // //                       type="button"
-// // // // // //                       onClick={() => setIsEditModalOpen(false)}
-// // // // // //                       className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-// // // // // //                     >
-// // // // // //                       Cancelar
-// // // // // //                     </button>
-// // // // // //                     <button
-// // // // // //                       type="submit"
-// // // // // //                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-// // // // // //                     >
-// // // // // //                       Guardar Cambios
-// // // // // //                     </button>
-// // // // // //                   </div>
-// // // // // //                 </form>
-// // // // // //               </div>
-// // // // // //             </div>
-// // // // // //           </div>
-// // // // // //         )}
-
-// // // // // //         {/* Modal de confirmación para eliminar escala */}
-// // // // // //         <ConfirmationModal
-// // // // // //           isOpen={showDeleteConfirm}
-// // // // // //           onClose={() => setShowDeleteConfirm(false)}
-// // // // // //           onConfirm={confirmDeleteScale}
-// // // // // //           title="Eliminar Escala"
-// // // // // //           message="¿Está seguro que desea eliminar esta escala de valoración? Esta acción no se puede deshacer."
-// // // // // //           confirmText="Eliminar"
-// // // // // //           confirmColor="bg-[#f44144] hover:bg-red-600"
-// // // // // //         />
-
-// // // // // //         {/* Modal de éxito */}
-// // // // // //         <ConfirmationModal
-// // // // // //           isOpen={showSuccessModal}
-// // // // // //           onConfirm={() => setShowSuccessModal(false)}
-// // // // // //           title="Operación Exitosa"
-// // // // // //           message={successMessage}
-// // // // // //           confirmText="Aceptar"
-// // // // // //           confirmColor="bg-green-500 hover:bg-green-600"
-// // // // // //           showButtonCancel={false}
-// // // // // //         />
-// // // // // //       </div>
-
-// // // // // //       {/* Modal de confirmación para cerrar sesión */}
-// // // // // //       <ConfirmationModal
-// // // // // //         isOpen={showLogoutConfirm}
-// // // // // //         onClose={() => setShowLogoutConfirm(false)}
-// // // // // //         onConfirm={handleLogout}
-// // // // // //         title="Cerrar Sesión"
-// // // // // //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// // // // // //         confirmText="Cerrar Sesión"
-// // // // // //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// // // // // //       />
-// // // // // //     </div>
-// // // // // //   )
-// // // // // // }
-
-// // // // // // // Componente para el modal de detalle de escala
-// // // // // // const ScaleDetailModal = ({ escala, isOpen, onClose }) => {
-// // // // // //   const modalRef = useRef(null)
-
-// // // // // //   useEffect(() => {
-// // // // // //     const handleClickOutside = (event) => {
-// // // // // //       if (modalRef.current && !modalRef.current.contains(event.target)) {
-// // // // // //         onClose()
-// // // // // //       }
-// // // // // //     }
-
-// // // // // //     if (isOpen) {
-// // // // // //       document.addEventListener("mousedown", handleClickOutside)
-// // // // // //     }
-
-// // // // // //     return () => {
-// // // // // //       document.removeEventListener("mousedown", handleClickOutside)
-// // // // // //     }
-// // // // // //   }, [isOpen, onClose])
-
-// // // // // //   if (!isOpen || !escala) return null
-
-// // // // // //   return (
-// // // // // //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // // // //       <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
-// // // // // //         <div className="p-4">
-// // // // // //           <h2 className="text-xl font-bold text-center text-[#1f384c] mb-4">DETALLE ESCALA DE VALORACIÓN</h2>
-
-// // // // // //           <div className="grid grid-cols-2 gap-4 mb-6">
-// // // // // //             <div className="flex">
-// // // // // //               <div className="w-1/3 font-medium text-base">Fecha Inicial:</div>
-// // // // // //               <div className="w-2/3 text-base text-gray-500">{escala.fechaInicial}</div>
-// // // // // //             </div>
-
-// // // // // //             <div className="flex">
-// // // // // //               <div className="w-1/2 font-medium text-base">Fecha Final:</div>
-// // // // // //               <div className="w-1/2 text-base text-gray-500">{escala.fechaFinal}</div>
-// // // // // //             </div>
-
-// // // // // //             <div className="flex">
-// // // // // //               <div className="w-1/3 font-medium text-base">Rango Inicial:</div>
-// // // // // //               <div className="w-2/3 text-base text-gray-500">{escala.rangoInicial}%</div>
-// // // // // //             </div>
-
-// // // // // //             <div className="flex">
-// // // // // //               <div className="w-1/2 font-medium text-base">Rango Final:</div>
-// // // // // //               <div className="w-1/2 text-base text-gray-500">{escala.rangoFinal}%</div>
-// // // // // //             </div>
-
-// // // // // //             <div className="flex">
-// // // // // //               <div className="w-1/3 font-medium text-base">Valoración:</div>
-// // // // // //               <div className="w-2/3 text-base text-gray-500">
-// // // // // //                 <span
-// // // // // //                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-// // // // // //                     escala.valoracion === "Aprueba" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-// // // // // //                   }`}
-// // // // // //                 >
-// // // // // //                   {escala.valoracion}
-// // // // // //                 </span>
-// // // // // //               </div>
-// // // // // //             </div>
-// // // // // //           </div>
-
-// // // // // //           <h3 className="text-lg font-medium mb-3">Descripción</h3>
-
-// // // // // //           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-// // // // // //             <p className="text-gray-700 text-sm">{escala.descripcion}</p>
-// // // // // //           </div>
-
-// // // // // //           <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-6">
-// // // // // //             <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// // // // // //             <div className="mb-2 text-sm text-center">
-// // // // // //               {escala.valoracion === "Aprueba"
-// // // // // //                 ? `Aprueba a partir = ${escala.rangoInicial}%`
-// // // // // //                 : `Aprueba a partir = ${escala.rangoFinal + 1}%`}
-// // // // // //             </div>
-
-// // // // // //             {escala.valoracion === "No aprueba" ? (
-// // // // // //               <>
-// // // // // //                 <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                   <span>0%</span>
-// // // // // //                   <span>{escala.rangoFinal}% Deficiente</span>
-// // // // // //                 </div>
-// // // // // //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                   <div className="bg-[#dc3545] h-5 rounded" style={{ width: `${escala.rangoFinal}%` }}></div>
-// // // // // //                 </div>
-// // // // // //                 <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                   <span>{escala.rangoFinal + 1}%</span>
-// // // // // //                   <span>100% Excelente</span>
-// // // // // //                 </div>
-// // // // // //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                   <div
-// // // // // //                     className="bg-[#46ae69] h-5 rounded"
-// // // // // //                     style={{ width: `${100 - (escala.rangoFinal + 1)}%`, marginLeft: `${escala.rangoFinal + 1}%` }}
-// // // // // //                   ></div>
-// // // // // //                 </div>
-// // // // // //               </>
-// // // // // //             ) : (
-// // // // // //               <>
-// // // // // //                 <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                   <span>0%</span>
-// // // // // //                   <span>{escala.rangoInicial - 1}% Deficiente</span>
-// // // // // //                 </div>
-// // // // // //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                   <div className="bg-[#dc3545] h-5 rounded" style={{ width: `${escala.rangoInicial - 1}%` }}></div>
-// // // // // //                 </div>
-// // // // // //                 <div className="flex items-center justify-between mb-1 text-sm">
-// // // // // //                   <span>{escala.rangoInicial}%</span>
-// // // // // //                   <span>100% Excelente</span>
-// // // // // //                 </div>
-// // // // // //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // // // //                   <div
-// // // // // //                     className="bg-[#46ae69] h-5 rounded"
-// // // // // //                     style={{ width: `${100 - escala.rangoInicial}%`, marginLeft: `${escala.rangoInicial}%` }}
-// // // // // //                   ></div>
-// // // // // //                 </div>
-// // // // // //               </>
-// // // // // //             )}
-// // // // // //           </div>
-
-// // // // // //           <div className="flex justify-center">
-// // // // // //             <button
-// // // // // //               onClick={onClose}
-// // // // // //               className="bg-[#f44144] text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
-// // // // // //             >
-// // // // // //               Cerrar
-// // // // // //             </button>
-// // // // // //           </div>
-// // // // // //         </div>
-// // // // // //       </div>
-// // // // // //     </div>
-// // // // // //   )
-// // // // // // }
-
-// // // // // // export default Scale
-
-// // // // "use client"
-
-// // // // import { useState, useEffect, useRef } from "react"
-// // // // import { ChevronDown } from "lucide-react"
-// // // // import { useNavigate } from "react-router-dom"
-// // // // import GenericTable from "../../../shared/components/Table"
-// // // // import { useAuth } from "../../auth/hooks/useAuth"
-// // // // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // // // // Datos de ejemplo
-// // // // const escalasData = [
-// // // //   {
-// // // //     id: 1,
-// // // //     fechaInicial: "20/10/2023",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 1,
-// // // //     rangoFinal: 69,
-// // // //     valoracion: "No aprueba",
-// // // //     concepto: "Deficiente",
-// // // //   },
-// // // //   {
-// // // //     id: 2,
-// // // //     fechaInicial: "20/10/2020",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 90,
-// // // //     valoracion: "Aprueba",
-// // // //     concepto: "Aceptable",
-// // // //   },
-// // // //   {
-// // // //     id: 3,
-// // // //     fechaInicial: "20/10/2024",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 80,
-// // // //     valoracion: "No aprueba",
-// // // //     concepto: "Bueno",
-// // // //   },
-// // // //   {
-// // // //     id: 4,
-// // // //     fechaInicial: "20/10/2021",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 75,
-// // // //     valoracion: "Aprueba",
-// // // //     concepto: "Medio",
-// // // //   },
-// // // //   {
-// // // //     id: 5,
-// // // //     fechaInicial: "20/10/2022",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 100,
-// // // //     valoracion: "No aprueba",
-// // // //     concepto: "Excelente",
-// // // //   },
-// // // //   {
-// // // //     id: 6,
-// // // //     fechaInicial: "20/03/2023",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 85,
-// // // //     valoracion: "No aprueba",
-// // // //     concepto: "Bueno",
-// // // //   },
-// // // //   {
-// // // //     id: 7,
-// // // //     fechaInicial: "20/02/2022",
-// // // //     fechaFinal: "20/10/2026",
-// // // //     rangoInicial: 70,
-// // // //     rangoFinal: 95,
-// // // //     valoracion: "Aprueba",
-// // // //     concepto: "Excelente",
-// // // //   },
-// // // // ]
-
-// // // // const columns = [
-// // // //   { key: "fechaInicial", label: "Fecha Inicial" },
-// // // //   { key: "fechaFinal", label: "Fecha Final" },
-// // // //   {
-// // // //     key: "rangoAprobatorio",
-// // // //     label: "Rango Aprobatorio",
-// // // //     render: (item) => `${item.rangoInicial}%`,
-// // // //   },
-// // // // ]
-
-// // // // const Scale = () => {
-// // // //   const [selectedEscala, setSelectedEscala] = useState(null)
-// // // //   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-// // // //   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-// // // //   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-// // // //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// // // //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-// // // //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// // // //   const [itemToDelete, setItemToDelete] = useState(null)
-// // // //   const [successMessage, setSuccessMessage] = useState("")
-// // // //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// // // //   const [scales, setScales] = useState([...escalasData])
-// // // //   const { logout } = useAuth()
-// // // //   const navigate = useNavigate()
-// // // //   const dropdownRef = useRef(null)
-
-// // // //   // Formulario para crear/editar
-// // // //   const [formData, setFormData] = useState({
-// // // //     fechaInicial: "",
-// // // //     fechaFinal: "",
-// // // //     rangoInicial: "75",
-// // // //     rangoFinal: "100",
-// // // //     valoracion: "Aprueba",
-// // // //     concepto: "Deficiente",
-// // // //   })
-
-// // // //   useEffect(() => {
-// // // //     const handleClickOutside = (event) => {
-// // // //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// // // //         setIsDropdownOpen(false)
-// // // //       }
-// // // //     }
-
-// // // //     document.addEventListener("mousedown", handleClickOutside)
-// // // //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// // // //   }, [])
-
-// // // //   const handleLogoutClick = () => {
-// // // //     setIsDropdownOpen(false)
-// // // //     setShowLogoutConfirm(true)
-// // // //   }
-
-// // // //   const handleLogout = () => {
-// // // //     logout()
-// // // //     navigate("/login")
-// // // //   }
-
-// // // //   const handleShowEscala = (escala) => {
-// // // //     setSelectedEscala(escala)
-// // // //     setIsDetailModalOpen(true)
-// // // //   }
-
-// // // //   const handleCloseDetailModal = () => {
-// // // //     setIsDetailModalOpen(false)
-// // // //   }
-
-// // // //   const handleAddScale = () => {
-// // // //     setFormData({
-// // // //       fechaInicial: "",
-// // // //       fechaFinal: "",
-// // // //       rangoInicial: "75",
-// // // //       rangoFinal: "100",
-// // // //       valoracion: "Aprueba",
-// // // //       concepto: "Deficiente",
-// // // //     })
-// // // //     setIsCreateModalOpen(true)
-// // // //   }
-
-// // // //   const handleEditScale = (scale) => {
-// // // //     setSelectedEscala(scale)
-// // // //     setFormData({
-// // // //       fechaInicial: scale.fechaInicial,
-// // // //       fechaFinal: scale.fechaFinal,
-// // // //       rangoInicial: scale.rangoInicial.toString(),
-// // // //       rangoFinal: scale.rangoFinal.toString(),
-// // // //       valoracion: scale.valoracion,
-// // // //       concepto: scale.concepto,
-// // // //     })
-// // // //     setIsEditModalOpen(true)
-// // // //   }
-
-// // // //   const handleDeleteScale = (id) => {
-// // // //     setItemToDelete(id)
-// // // //     setShowDeleteConfirm(true)
-// // // //   }
-
-// // // //   const confirmDeleteScale = () => {
-// // // //     try {
-// // // //       // Eliminar de la lista local
-// // // //       const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-// // // //       setScales(updatedScales)
-
-// // // //       // Mostrar mensaje de éxito
-// // // //       setSuccessMessage("Escala eliminada exitosamente")
-// // // //       setShowSuccessModal(true)
-// // // //     } catch (error) {
-// // // //       console.error("Error al eliminar la escala:", error)
-// // // //       setSuccessMessage("Ocurrió un error al eliminar la escala")
-// // // //       setShowSuccessModal(true)
-// // // //     } finally {
-// // // //       setShowDeleteConfirm(false)
-// // // //       setItemToDelete(null)
-// // // //     }
-// // // //   }
-
-// // // //   const handleInputChange = (e) => {
-// // // //     const { name, value } = e.target
-// // // //     setFormData({
-// // // //       ...formData,
-// // // //       [name]: value,
-// // // //     })
-// // // //   }
-
-// // // //   const handleToggleValoracion = () => {
-// // // //     setFormData({
-// // // //       ...formData,
-// // // //       valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-// // // //     })
-// // // //   }
-
-// // // //   const handleCreateSubmit = (e) => {
-// // // //     e.preventDefault()
-// // // //     const newScale = {
-// // // //       id: Math.max(...scales.map((s) => s.id)) + 1,
-// // // //       ...formData,
-// // // //       rangoInicial: Number.parseInt(formData.rangoInicial),
-// // // //       rangoFinal: Number.parseInt(formData.rangoFinal),
-// // // //     }
-// // // //     setScales([...scales, newScale])
-// // // //     setIsCreateModalOpen(false)
-// // // //     setSuccessMessage("Escala creada exitosamente")
-// // // //     setShowSuccessModal(true)
-// // // //   }
-
-// // // //   const handleEditSubmit = (e) => {
-// // // //     e.preventDefault()
-// // // //     const updatedScales = scales.map((scale) =>
-// // // //       scale.id === selectedEscala.id
-// // // //         ? {
-// // // //             ...scale,
-// // // //             ...formData,
-// // // //             rangoInicial: Number.parseInt(formData.rangoInicial),
-// // // //             rangoFinal: Number.parseInt(formData.rangoFinal),
-// // // //           }
-// // // //         : scale,
-// // // //     )
-// // // //     setScales(updatedScales)
-// // // //     setIsEditModalOpen(false)
-// // // //     setSuccessMessage("Escala actualizada exitosamente")
-// // // //     setShowSuccessModal(true)
-// // // //   }
-
-// // // //   return (
-// // // //     <div className="min-h-screen">
-// // // //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// // // //         <div className="container mx-auto flex justify-between items-center">
-// // // //           <h1 className="text-2xl font-bold text-[#1f384c]">ESCALA DE VALORACIÓN</h1>
-// // // //           <div className="relative" ref={dropdownRef}>
-// // // //             <button
-// // // //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// // // //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// // // //             >
-// // // //               <span>Administrador</span>
-// // // //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// // // //             </button>
-
-// // // //             {isDropdownOpen && (
-// // // //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// // // //                 <button
-// // // //                   onClick={handleLogoutClick}
-// // // //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// // // //                 >
-// // // //                   Cerrar Sesión
-// // // //                 </button>
-// // // //               </div>
-// // // //             )}
-// // // //           </div>
-// // // //         </div>
-// // // //       </header>
-
-// // // //       <div className="container mx-auto px-6">
-// // // //         <GenericTable
-// // // //           data={scales}
-// // // //           columns={columns}
-// // // //           onShow={handleShowEscala}
-// // // //           onAdd={handleAddScale}
-// // // //           onEdit={handleEditScale}
-// // // //           onDelete={handleDeleteScale}
-// // // //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// // // //         />
-
-// // // //         {/* Modal para añadir escala */}
-// // // //         {isCreateModalOpen && (
-// // // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-// // // //               <div className="p-6">
-// // // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir Métrica de Valoración:</h2>
-
-// // // //                 <form onSubmit={handleCreateSubmit}>
-// // // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // // //                       <input
-// // // //                         type="text"
-// // // //                         name="fechaInicial"
-// // // //                         value={formData.fechaInicial}
-// // // //                         onChange={handleInputChange}
-// // // //                         placeholder="DD/MM/YYYY"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // // //                       <input
-// // // //                         type="text"
-// // // //                         name="fechaFinal"
-// // // //                         value={formData.fechaFinal}
-// // // //                         onChange={handleInputChange}
-// // // //                         placeholder="DD/MM/YYYY"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="mb-4">
-// // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // // //                     <div className="flex items-center">
-// // // //                       <label className="relative inline-flex items-center cursor-pointer">
-// // // //                         <input
-// // // //                           type="checkbox"
-// // // //                           checked={formData.valoracion === "Aprueba"}
-// // // //                           onChange={handleToggleValoracion}
-// // // //                           className="sr-only peer"
-// // // //                         />
-// // // //                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // // //                         <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // // //                       </label>
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // // //                       <input
-// // // //                         type="number"
-// // // //                         name="rangoInicial"
-// // // //                         value={formData.rangoInicial}
-// // // //                         onChange={handleInputChange}
-// // // //                         min="0"
-// // // //                         max="100"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // // //                       <input
-// // // //                         type="number"
-// // // //                         name="rangoFinal"
-// // // //                         value={formData.rangoFinal}
-// // // //                         onChange={handleInputChange}
-// // // //                         min="0"
-// // // //                         max="100"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="mb-4">
-// // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
-// // // //                     <input
-// // // //                       type="text"
-// // // //                       name="concepto"
-// // // //                       value={formData.concepto}
-// // // //                       onChange={handleInputChange}
-// // // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                       required
-// // // //                     />
-// // // //                   </div>
-
-// // // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // // //                     <div className="text-center font-medium mb-2 text-sm">
-// // // //                       Aprueba a partir ={" "}
-// // // //                       {formData.valoracion === "Aprueba"
-// // // //                         ? formData.rangoInicial
-// // // //                         : Number.parseInt(formData.rangoFinal) + 1}
-// // // //                       %
-// // // //                     </div>
-
-// // // //                     <div className="space-y-2">
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">0</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[40%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           40% No cumple <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">40%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[60%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           60% Deficiente <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">60%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[75%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           75% Medio: Bueno <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">75%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[80%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           80% Bueno <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">80%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[100%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           100% Excelente <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="flex justify-between">
-// // // //                     <button
-// // // //                       type="button"
-// // // //                       onClick={() => setIsCreateModalOpen(false)}
-// // // //                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-// // // //                     >
-// // // //                       Cancelar
-// // // //                     </button>
-// // // //                     <button
-// // // //                       type="submit"
-// // // //                       className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-// // // //                     >
-// // // //                       Añadir
-// // // //                     </button>
-// // // //                   </div>
-// // // //                 </form>
-// // // //               </div>
-// // // //             </div>
-// // // //           </div>
-// // // //         )}
-
-// // // //         {/* Modal para editar escala */}
-// // // //         {isEditModalOpen && selectedEscala && (
-// // // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-// // // //               <div className="p-6">
-// // // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar Métrica de Valoración:</h2>
-
-// // // //                 <form onSubmit={handleEditSubmit}>
-// // // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // // //                       <input
-// // // //                         type="text"
-// // // //                         name="fechaInicial"
-// // // //                         value={formData.fechaInicial}
-// // // //                         onChange={handleInputChange}
-// // // //                         placeholder="DD/MM/YYYY"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // // //                       <input
-// // // //                         type="text"
-// // // //                         name="fechaFinal"
-// // // //                         value={formData.fechaFinal}
-// // // //                         onChange={handleInputChange}
-// // // //                         placeholder="DD/MM/YYYY"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="mb-4">
-// // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // // //                     <div className="flex items-center">
-// // // //                       <label className="relative inline-flex items-center cursor-pointer">
-// // // //                         <input
-// // // //                           type="checkbox"
-// // // //                           checked={formData.valoracion === "Aprueba"}
-// // // //                           onChange={handleToggleValoracion}
-// // // //                           className="sr-only peer"
-// // // //                         />
-// // // //                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // // //                         <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // // //                       </label>
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // // //                       <input
-// // // //                         type="number"
-// // // //                         name="rangoInicial"
-// // // //                         value={formData.rangoInicial}
-// // // //                         onChange={handleInputChange}
-// // // //                         min="0"
-// // // //                         max="100"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                     <div>
-// // // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // // //                       <input
-// // // //                         type="number"
-// // // //                         name="rangoFinal"
-// // // //                         value={formData.rangoFinal}
-// // // //                         onChange={handleInputChange}
-// // // //                         min="0"
-// // // //                         max="100"
-// // // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                         required
-// // // //                       />
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="mb-4">
-// // // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
-// // // //                     <input
-// // // //                       type="text"
-// // // //                       name="concepto"
-// // // //                       value={formData.concepto}
-// // // //                       onChange={handleInputChange}
-// // // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // // //                       required
-// // // //                     />
-// // // //                   </div>
-
-// // // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // // //                     <div className="text-center font-medium mb-2 text-sm">
-// // // //                       Aprueba a partir ={" "}
-// // // //                       {formData.valoracion === "Aprueba"
-// // // //                         ? formData.rangoInicial
-// // // //                         : Number.parseInt(formData.rangoFinal) + 1}
-// // // //                       %
-// // // //                     </div>
-
-// // // //                     <div className="space-y-2">
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">0</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[40%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           40% No cumple <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">40%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[60%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           60% Deficiente <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">60%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[75%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           75% Medio: Bueno <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">75%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[80%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           80% Bueno <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-
-// // // //                       <div className="flex items-center">
-// // // //                         <span className="w-8 text-xs text-right pr-2">80%</span>
-// // // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // // //                           <div className="absolute -top-1.5 left-[100%] h-4 w-0.5 bg-gray-400"></div>
-// // // //                         </div>
-// // // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // // //                           100% Excelente <span className="ml-1 text-red-500">🗑</span>
-// // // //                         </span>
-// // // //                       </div>
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div className="flex justify-between">
-// // // //                     <button
-// // // //                       type="button"
-// // // //                       onClick={() => setIsEditModalOpen(false)}
-// // // //                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-// // // //                     >
-// // // //                       Cancelar
-// // // //                     </button>
-// // // //                     <button
-// // // //                       type="submit"
-// // // //                       className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-// // // //                     >
-// // // //                       Guardar
-// // // //                     </button>
-// // // //                   </div>
-// // // //                 </form>
-// // // //               </div>
-// // // //             </div>
-// // // //           </div>
-// // // //         )}
-
-// // // //         {/* Modal de detalle */}
-// // // //         {isDetailModalOpen && selectedEscala && (
-// // // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4">
-// // // //               <div className="p-6">
-// // // //                 <h2 className="text-xl font-bold text-center text-[#1f384c] mb-6">DETALLE ESCALA DE VALORACIÓN</h2>
-
-// // // //                 <div className="grid grid-cols-2 gap-6 mb-6">
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Fecha Inicial:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.fechaInicial}</div>
-// // // //                   </div>
-
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Fecha Final:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.fechaFinal}</div>
-// // // //                   </div>
-
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Rango Inicial:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.rangoInicial}%</div>
-// // // //                   </div>
-
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Rango Final:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.rangoFinal}%</div>
-// // // //                   </div>
-
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Valoración:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">
-// // // //                       <span
-// // // //                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-// // // //                           selectedEscala.valoracion === "Aprueba"
-// // // //                             ? "bg-green-100 text-green-800"
-// // // //                             : "bg-red-100 text-red-800"
-// // // //                         }`}
-// // // //                       >
-// // // //                         {selectedEscala.valoracion}
-// // // //                       </span>
-// // // //                     </div>
-// // // //                   </div>
-
-// // // //                   <div>
-// // // //                     <div className="font-medium text-base mb-1">Concepto:</div>
-// // // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.concepto}</div>
-// // // //                   </div>
-// // // //                 </div>
-
-// // // //                 <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-6">
-// // // //                   <div className="text-center font-medium mb-4 text-sm">
-// // // //                     Aprueba a partir ={" "}
-// // // //                     {selectedEscala.valoracion === "Aprueba"
-// // // //                       ? selectedEscala.rangoInicial
-// // // //                       : selectedEscala.rangoFinal + 1}
-// // // //                     %
-// // // //                   </div>
-
-// // // //                   {selectedEscala.valoracion === "No aprueba" ? (
-// // // //                     <>
-// // // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // // //                         <span>0%</span>
-// // // //                         <span>{selectedEscala.rangoFinal}% Deficiente</span>
-// // // //                       </div>
-// // // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // //                         <div
-// // // //                           className="bg-[#dc3545] h-5 rounded"
-// // // //                           style={{ width: `${selectedEscala.rangoFinal}%` }}
-// // // //                         ></div>
-// // // //                       </div>
-// // // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // // //                         <span>{selectedEscala.rangoFinal + 1}%</span>
-// // // //                         <span>100% Excelente</span>
-// // // //                       </div>
-// // // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // //                         <div
-// // // //                           className="bg-[#46ae69] h-5 rounded"
-// // // //                           style={{
-// // // //                             width: `${100 - (selectedEscala.rangoFinal + 1)}%`,
-// // // //                             marginLeft: `${selectedEscala.rangoFinal + 1}%`,
-// // // //                           }}
-// // // //                         ></div>
-// // // //                       </div>
-// // // //                     </>
-// // // //                   ) : (
-// // // //                     <>
-// // // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // // //                         <span>0%</span>
-// // // //                         <span>{selectedEscala.rangoInicial - 1}% Deficiente</span>
-// // // //                       </div>
-// // // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // //                         <div
-// // // //                           className="bg-[#dc3545] h-5 rounded"
-// // // //                           style={{ width: `${selectedEscala.rangoInicial - 1}%` }}
-// // // //                         ></div>
-// // // //                       </div>
-// // // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // // //                         <span>{selectedEscala.rangoInicial}%</span>
-// // // //                         <span>100% Excelente</span>
-// // // //                       </div>
-// // // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // // //                         <div
-// // // //                           className="bg-[#46ae69] h-5 rounded"
-// // // //                           style={{
-// // // //                             width: `${100 - selectedEscala.rangoInicial}%`,
-// // // //                             marginLeft: `${selectedEscala.rangoInicial}%`,
-// // // //                           }}
-// // // //                         ></div>
-// // // //                       </div>
-// // // //                     </>
-// // // //                   )}
-// // // //                 </div>
-
-// // // //                 <div className="flex justify-center">
-// // // //                   <button
-// // // //                     onClick={handleCloseDetailModal}
-// // // //                     className="bg-[#f44144] text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
-// // // //                   >
-// // // //                     Cerrar
-// // // //                   </button>
-// // // //                 </div>
-// // // //               </div>
-// // // //             </div>
-// // // //           </div>
-// // // //         )}
-
-// // // //         {/* Modal de confirmación para eliminar escala */}
-// // // //         <ConfirmationModal
-// // // //           isOpen={showDeleteConfirm}
-// // // //           onClose={() => setShowDeleteConfirm(false)}
-// // // //           onConfirm={confirmDeleteScale}
-// // // //           title="Eliminar Escala"
-// // // //           message="¿Está seguro que desea eliminar esta escala de valoración? Esta acción no se puede deshacer."
-// // // //           confirmText="Eliminar"
-// // // //           confirmColor="bg-[#f44144] hover:bg-red-600"
-// // // //         />
-
-// // // //         {/* Modal de éxito */}
-// // // //         <ConfirmationModal
-// // // //           isOpen={showSuccessModal}
-// // // //           onConfirm={() => setShowSuccessModal(false)}
-// // // //           title="Operación Exitosa"
-// // // //           message={successMessage}
-// // // //           confirmText="Aceptar"
-// // // //           confirmColor="bg-green-500 hover:bg-green-600"
-// // // //           showButtonCancel={false}
-// // // //         />
-// // // //       </div>
-
-// // // //       {/* Modal de confirmación para cerrar sesión */}
-// // // //       <ConfirmationModal
-// // // //         isOpen={showLogoutConfirm}
-// // // //         onClose={() => setShowLogoutConfirm(false)}
-// // // //         onConfirm={handleLogout}
-// // // //         title="Cerrar Sesión"
-// // // //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// // // //         confirmText="Cerrar Sesión"
-// // // //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// // // //       />
-// // // //     </div>
-// // // //   )
-// // // // }
-
-// // // // export default Scale
-// // // "use client"
-
-// // // import { useState, useEffect, useRef } from "react"
-// // // import { ChevronDown } from "lucide-react"
-// // // import { useNavigate } from "react-router-dom"
-// // // import { useAuth } from "../../auth/hooks/useAuth"
-// // // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-// // // import GenericTable from "../../../shared/components/Table"
-
-// // // // Datos de ejemplo
-// // // const escalasData = [
-// // //   {
-// // //     id: 1,
-// // //     fechaInicial: "20/10/2023",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 1,
-// // //     rangoFinal: 69,
-// // //     valoracion: "No aprueba",
-// // //     concepto: "Deficiente",
-// // //   },
-// // //   {
-// // //     id: 2,
-// // //     fechaInicial: "20/10/2020",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 90,
-// // //     valoracion: "Aprueba",
-// // //     concepto: "Aceptable",
-// // //   },
-// // //   {
-// // //     id: 3,
-// // //     fechaInicial: "20/10/2024",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 80,
-// // //     valoracion: "No aprueba",
-// // //     concepto: "Bueno",
-// // //   },
-// // //   {
-// // //     id: 4,
-// // //     fechaInicial: "20/10/2021",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 75,
-// // //     valoracion: "Aprueba",
-// // //     concepto: "Medio",
-// // //   },
-// // //   {
-// // //     id: 5,
-// // //     fechaInicial: "20/10/2022",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 100,
-// // //     valoracion: "No aprueba",
-// // //     concepto: "Excelente",
-// // //   },
-// // //   {
-// // //     id: 6,
-// // //     fechaInicial: "20/03/2023",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 85,
-// // //     valoracion: "No aprueba",
-// // //     concepto: "Bueno",
-// // //   },
-// // //   {
-// // //     id: 7,
-// // //     fechaInicial: "20/02/2022",
-// // //     fechaFinal: "20/10/2026",
-// // //     rangoInicial: 70,
-// // //     rangoFinal: 95,
-// // //     valoracion: "Aprueba",
-// // //     concepto: "Excelente",
-// // //   },
-// // // ]
-
-// // // const columns = [
-// // //   { key: "fechaInicial", label: "Fecha Inicial" },
-// // //   { key: "fechaFinal", label: "Fecha Final" },
-// // //   {
-// // //     key: "rangoAprobatorio",
-// // //     label: "Rango Aprobatorio",
-// // //     render: (item) => `${item.rangoInicial}% - ${item.rangoFinal}%`,
-// // //   },
-// // // ]
-
-// // // const Scale = () => {
-// // //   const [selectedEscala, setSelectedEscala] = useState(null)
-// // //   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-// // //   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-// // //   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-// // //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// // //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-// // //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// // //   const [itemToDelete, setItemToDelete] = useState(null)
-// // //   const [successMessage, setSuccessMessage] = useState("")
-// // //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// // //   const [scales, setScales] = useState([...escalasData])
-// // //   const { logout } = useAuth()
-// // //   const navigate = useNavigate()
-// // //   const dropdownRef = useRef(null)
-
-// // //   // Formulario para crear/editar
-// // //   const [formData, setFormData] = useState({
-// // //     fechaInicial: "",
-// // //     fechaFinal: "",
-// // //     rangoInicial: "75",
-// // //     rangoFinal: "100",
-// // //     valoracion: "Aprueba",
-// // //     concepto: "Deficiente",
-// // //   })
-
-// // //   useEffect(() => {
-// // //     const handleClickOutside = (event) => {
-// // //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// // //         setIsDropdownOpen(false)
-// // //       }
-// // //     }
-
-// // //     document.addEventListener("mousedown", handleClickOutside)
-// // //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// // //   }, [])
-
-// // //   const handleLogoutClick = () => {
-// // //     setIsDropdownOpen(false)
-// // //     setShowLogoutConfirm(true)
-// // //   }
-
-// // //   const handleLogout = () => {
-// // //     logout()
-// // //     navigate("/login")
-// // //   }
-
-// // //   const handleShowEscala = (escala) => {
-// // //     setSelectedEscala(escala)
-// // //     setIsDetailModalOpen(true)
-// // //   }
-
-// // //   const handleCloseDetailModal = () => {
-// // //     setIsDetailModalOpen(false)
-// // //   }
-
-// // //   const handleAddScale = () => {
-// // //     setFormData({
-// // //       fechaInicial: "",
-// // //       fechaFinal: "",
-// // //       rangoInicial: "75",
-// // //       rangoFinal: "100",
-// // //       valoracion: "Aprueba",
-// // //       concepto: "Deficiente",
-// // //     })
-// // //     setIsCreateModalOpen(true)
-// // //   }
-
-// // //   const handleEditScale = (scale) => {
-// // //     setSelectedEscala(scale)
-// // //     setFormData({
-// // //       fechaInicial: scale.fechaInicial,
-// // //       fechaFinal: scale.fechaFinal,
-// // //       rangoInicial: scale.rangoInicial.toString(),
-// // //       rangoFinal: scale.rangoFinal.toString(),
-// // //       valoracion: scale.valoracion,
-// // //       concepto: scale.concepto,
-// // //     })
-// // //     setIsEditModalOpen(true)
-// // //   }
-
-// // //   const handleDeleteScale = (id) => {
-// // //     setItemToDelete(id)
-// // //     setShowDeleteConfirm(true)
-// // //   }
-
-// // //   const confirmDeleteScale = () => {
-// // //     try {
-// // //       // Eliminar de la lista local
-// // //       const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-// // //       setScales(updatedScales)
-
-// // //       // Mostrar mensaje de éxito
-// // //       setSuccessMessage("Escala eliminada exitosamente")
-// // //       setShowSuccessModal(true)
-// // //     } catch (error) {
-// // //       console.error("Error al eliminar la escala:", error)
-// // //       setSuccessMessage("Ocurrió un error al eliminar la escala")
-// // //       setShowSuccessModal(true)
-// // //     } finally {
-// // //       setShowDeleteConfirm(false)
-// // //       setItemToDelete(null)
-// // //     }
-// // //   }
-
-// // //   const handleInputChange = (e) => {
-// // //     const { name, value } = e.target
-// // //     setFormData({
-// // //       ...formData,
-// // //       [name]: value,
-// // //     })
-// // //   }
-
-// // //   const handleToggleValoracion = () => {
-// // //     setFormData({
-// // //       ...formData,
-// // //       valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-// // //     })
-// // //   }
-
-// // //   const handleCreateSubmit = (e) => {
-// // //     e.preventDefault()
-// // //     const newScale = {
-// // //       id: Math.max(...scales.map((s) => s.id)) + 1,
-// // //       ...formData,
-// // //       rangoInicial: Number.parseInt(formData.rangoInicial),
-// // //       rangoFinal: Number.parseInt(formData.rangoFinal),
-// // //     }
-// // //     setScales([...scales, newScale])
-// // //     setIsCreateModalOpen(false)
-// // //     setSuccessMessage("Escala creada exitosamente")
-// // //     setShowSuccessModal(true)
-// // //   }
-
-// // //   const handleEditSubmit = (e) => {
-// // //     e.preventDefault()
-// // //     const updatedScales = scales.map((scale) =>
-// // //       scale.id === selectedEscala.id
-// // //         ? {
-// // //             ...scale,
-// // //             ...formData,
-// // //             rangoInicial: Number.parseInt(formData.rangoInicial),
-// // //             rangoFinal: Number.parseInt(formData.rangoFinal),
-// // //           }
-// // //         : scale,
-// // //     )
-// // //     setScales(updatedScales)
-// // //     setIsEditModalOpen(false)
-// // //     setSuccessMessage("Escala actualizada exitosamente")
-// // //     setShowSuccessModal(true)
-// // //   }
-
-// // //   return (
-// // //     <div className="min-h-screen">
-// // //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// // //         <div className="container mx-auto flex justify-between items-center">
-// // //           <h1 className="text-2xl font-bold text-[#1f384c]">ESCALA DE VALORACIÓN</h1>
-// // //           <div className="relative" ref={dropdownRef}>
-// // //             <button
-// // //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// // //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// // //             >
-// // //               <span>Administrador</span>
-// // //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// // //             </button>
-
-// // //             {isDropdownOpen && (
-// // //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// // //                 <button
-// // //                   onClick={handleLogoutClick}
-// // //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// // //                 >
-// // //                   Cerrar Sesión
-// // //                 </button>
-// // //               </div>
-// // //             )}
-// // //           </div>
-// // //         </div>
-// // //       </header>
-
-// // //       <div className="container mx-auto px-6">
-// // //         <GenericTable
-// // //           data={scales}
-// // //           columns={columns}
-// // //           onShow={handleShowEscala}
-// // //           onAdd={handleAddScale}
-// // //           onEdit={handleEditScale}
-// // //           onDelete={handleDeleteScale}
-// // //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// // //         />
-
-// // //         {/* Modal para añadir escala */}
-// // //         {isCreateModalOpen && (
-// // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-// // //               <div className="p-6">
-// // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-6">Añadir Métrica de Valoración:</h2>
-
-// // //                 <form onSubmit={handleCreateSubmit}>
-// // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // //                       <input
-// // //                         type="text"
-// // //                         name="fechaInicial"
-// // //                         value={formData.fechaInicial}
-// // //                         onChange={handleInputChange}
-// // //                         placeholder="DD/MM/YYYY"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // //                       <input
-// // //                         type="text"
-// // //                         name="fechaFinal"
-// // //                         value={formData.fechaFinal}
-// // //                         onChange={handleInputChange}
-// // //                         placeholder="DD/MM/YYYY"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="mb-4">
-// // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // //                     <div className="flex items-center">
-// // //                       <label className="relative inline-flex items-center cursor-pointer">
-// // //                         <input
-// // //                           type="checkbox"
-// // //                           checked={formData.valoracion === "Aprueba"}
-// // //                           onChange={handleToggleValoracion}
-// // //                           className="sr-only peer"
-// // //                         />
-// // //                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // //                         <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // //                       </label>
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // //                       <input
-// // //                         type="number"
-// // //                         name="rangoInicial"
-// // //                         value={formData.rangoInicial}
-// // //                         onChange={handleInputChange}
-// // //                         min="0"
-// // //                         max="100"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // //                       <input
-// // //                         type="number"
-// // //                         name="rangoFinal"
-// // //                         value={formData.rangoFinal}
-// // //                         onChange={handleInputChange}
-// // //                         min="0"
-// // //                         max="100"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="mb-4">
-// // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
-// // //                     <input
-// // //                       type="text"
-// // //                       name="concepto"
-// // //                       value={formData.concepto}
-// // //                       onChange={handleInputChange}
-// // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                       required
-// // //                     />
-// // //                   </div>
-
-// // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // //                     <div className="text-center font-medium mb-2 text-sm">
-// // //                       Aprueba a partir ={" "}
-// // //                       {formData.valoracion === "Aprueba"
-// // //                         ? formData.rangoInicial
-// // //                         : Number.parseInt(formData.rangoFinal) + 1}
-// // //                       %
-// // //                     </div>
-
-// // //                     <div className="space-y-2">
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">0</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[40%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           40% No cumple <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">40%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[60%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           60% Deficiente <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">60%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[75%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           75% Medio: Bueno <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">75%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[80%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           80% Bueno <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">80%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[100%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           100% Excelente <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="flex justify-between">
-// // //                     <button
-// // //                       type="button"
-// // //                       onClick={() => setIsCreateModalOpen(false)}
-// // //                       className="px-6 py-2 bg-[#f44144] text-white rounded-md hover:bg-red-600 text-sm"
-// // //                     >
-// // //                       Cancelar
-// // //                     </button>
-// // //                     <button
-// // //                       type="submit"
-// // //                       className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-// // //                     >
-// // //                       Añadir
-// // //                     </button>
-// // //                   </div>
-// // //                 </form>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         )}
-
-// // //         {/* Modal para editar escala */}
-// // //         {isEditModalOpen && selectedEscala && (
-// // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-// // //               <div className="p-6">
-// // //                 <h2 className="text-xl font-bold text-[#1f384c] mb-6">Editar Métrica de Valoración:</h2>
-
-// // //                 <form onSubmit={handleEditSubmit}>
-// // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// // //                       <input
-// // //                         type="text"
-// // //                         name="fechaInicial"
-// // //                         value={formData.fechaInicial}
-// // //                         onChange={handleInputChange}
-// // //                         placeholder="DD/MM/YYYY"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// // //                       <input
-// // //                         type="text"
-// // //                         name="fechaFinal"
-// // //                         value={formData.fechaFinal}
-// // //                         onChange={handleInputChange}
-// // //                         placeholder="DD/MM/YYYY"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="mb-4">
-// // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// // //                     <div className="flex items-center">
-// // //                       <label className="relative inline-flex items-center cursor-pointer">
-// // //                         <input
-// // //                           type="checkbox"
-// // //                           checked={formData.valoracion === "Aprueba"}
-// // //                           onChange={handleToggleValoracion}
-// // //                           className="sr-only peer"
-// // //                         />
-// // //                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// // //                         <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// // //                       </label>
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="grid grid-cols-2 gap-4 mb-4">
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// // //                       <input
-// // //                         type="number"
-// // //                         name="rangoInicial"
-// // //                         value={formData.rangoInicial}
-// // //                         onChange={handleInputChange}
-// // //                         min="0"
-// // //                         max="100"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                     <div>
-// // //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// // //                       <input
-// // //                         type="number"
-// // //                         name="rangoFinal"
-// // //                         value={formData.rangoFinal}
-// // //                         onChange={handleInputChange}
-// // //                         min="0"
-// // //                         max="100"
-// // //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                         required
-// // //                       />
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="mb-4">
-// // //                     <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
-// // //                     <input
-// // //                       type="text"
-// // //                       name="concepto"
-// // //                       value={formData.concepto}
-// // //                       onChange={handleInputChange}
-// // //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// // //                       required
-// // //                     />
-// // //                   </div>
-
-// // //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// // //                     <div className="text-center font-medium mb-2 text-sm">
-// // //                       Aprueba a partir ={" "}
-// // //                       {formData.valoracion === "Aprueba"
-// // //                         ? formData.rangoInicial
-// // //                         : Number.parseInt(formData.rangoFinal) + 1}
-// // //                       %
-// // //                     </div>
-
-// // //                     <div className="space-y-2">
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">0</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[40%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           40% No cumple <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">40%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[60%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           60% Deficiente <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">60%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[75%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           75% Medio: Bueno <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">75%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[80%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           80% Bueno <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-
-// // //                       <div className="flex items-center">
-// // //                         <span className="w-8 text-xs text-right pr-2">80%</span>
-// // //                         <div className="flex-1 h-1 bg-gray-300 relative">
-// // //                           <div className="absolute -top-1.5 left-[100%] h-4 w-0.5 bg-gray-400"></div>
-// // //                         </div>
-// // //                         <span className="w-24 text-xs pl-2 flex items-center">
-// // //                           100% Excelente <span className="ml-1 text-red-500">🗑</span>
-// // //                         </span>
-// // //                       </div>
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div className="flex justify-between">
-// // //                     <button
-// // //                       type="button"
-// // //                       onClick={() => setIsEditModalOpen(false)}
-// // //                       className="px-6 py-2 bg-[#f44144] text-white rounded-md hover:bg-red-600 text-sm"
-// // //                     >
-// // //                       Cancelar
-// // //                     </button>
-// // //                     <button
-// // //                       type="submit"
-// // //                       className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-// // //                     >
-// // //                       Guardar
-// // //                     </button>
-// // //                   </div>
-// // //                 </form>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         )}
-
-// // //         {/* Modal de detalle */}
-// // //         {isDetailModalOpen && selectedEscala && (
-// // //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// // //             <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4">
-// // //               <div className="p-6">
-// // //                 <h2 className="text-xl font-bold text-center text-[#1f384c] mb-6">DETALLE ESCALA DE VALORACIÓN</h2>
-
-// // //                 <div className="grid grid-cols-2 gap-6 mb-6">
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Fecha Inicial:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.fechaInicial}</div>
-// // //                   </div>
-
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Fecha Final:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.fechaFinal}</div>
-// // //                   </div>
-
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Rango Inicial:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.rangoInicial}%</div>
-// // //                   </div>
-
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Rango Final:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.rangoFinal}%</div>
-// // //                   </div>
-
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Valoración:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">
-// // //                       <span
-// // //                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-// // //                           selectedEscala.valoracion === "Aprueba"
-// // //                             ? "bg-green-100 text-green-800"
-// // //                             : "bg-red-100 text-red-800"
-// // //                         }`}
-// // //                       >
-// // //                         {selectedEscala.valoracion}
-// // //                       </span>
-// // //                     </div>
-// // //                   </div>
-
-// // //                   <div>
-// // //                     <div className="font-medium text-base mb-1">Concepto:</div>
-// // //                     <div className="text-base text-gray-700 bg-gray-50 p-2 rounded">{selectedEscala.concepto}</div>
-// // //                   </div>
-// // //                 </div>
-
-// // //                 <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-6">
-// // //                   <div className="text-center font-medium mb-4 text-sm">
-// // //                     Aprueba a partir ={" "}
-// // //                     {selectedEscala.valoracion === "Aprueba"
-// // //                       ? selectedEscala.rangoInicial
-// // //                       : selectedEscala.rangoFinal + 1}
-// // //                     %
-// // //                   </div>
-
-// // //                   {selectedEscala.valoracion === "No aprueba" ? (
-// // //                     <>
-// // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // //                         <span>0%</span>
-// // //                         <span>{selectedEscala.rangoFinal}% Deficiente</span>
-// // //                       </div>
-// // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // //                         <div
-// // //                           className="bg-[#dc3545] h-5 rounded"
-// // //                           style={{ width: `${selectedEscala.rangoFinal}%` }}
-// // //                         ></div>
-// // //                       </div>
-// // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // //                         <span>{selectedEscala.rangoFinal + 1}%</span>
-// // //                         <span>100% Excelente</span>
-// // //                       </div>
-// // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // //                         <div
-// // //                           className="bg-[#46ae69] h-5 rounded"
-// // //                           style={{
-// // //                             width: `${100 - (selectedEscala.rangoFinal + 1)}%`,
-// // //                             marginLeft: `${selectedEscala.rangoFinal + 1}%`,
-// // //                           }}
-// // //                         ></div>
-// // //                       </div>
-// // //                     </>
-// // //                   ) : (
-// // //                     <>
-// // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // //                         <span>0%</span>
-// // //                         <span>{selectedEscala.rangoInicial - 1}% Deficiente</span>
-// // //                       </div>
-// // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // //                         <div
-// // //                           className="bg-[#dc3545] h-5 rounded"
-// // //                           style={{ width: `${selectedEscala.rangoInicial - 1}%` }}
-// // //                         ></div>
-// // //                       </div>
-// // //                       <div className="flex items-center justify-between mb-1 text-sm">
-// // //                         <span>{selectedEscala.rangoInicial}%</span>
-// // //                         <span>100% Excelente</span>
-// // //                       </div>
-// // //                       <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// // //                         <div
-// // //                           className="bg-[#46ae69] h-5 rounded"
-// // //                           style={{
-// // //                             width: `${100 - selectedEscala.rangoInicial}%`,
-// // //                             marginLeft: `${selectedEscala.rangoInicial}%`,
-// // //                           }}
-// // //                         ></div>
-// // //                       </div>
-// // //                     </>
-// // //                   )}
-// // //                 </div>
-
-// // //                 <div className="flex justify-center">
-// // //                   <button
-// // //                     onClick={handleCloseDetailModal}
-// // //                     className="bg-[#f44144] text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
-// // //                   >
-// // //                     Cerrar
-// // //                   </button>
-// // //                 </div>
-// // //               </div>
-// // //             </div>
-// // //           </div>
-// // //         )}
-
-// // //         {/* Modal de confirmación para eliminar escala */}
-// // //         <ConfirmationModal
-// // //           isOpen={showDeleteConfirm}
-// // //           onClose={() => setShowDeleteConfirm(false)}
-// // //           onConfirm={confirmDeleteScale}
-// // //           title="Eliminar Escala"
-// // //           message="¿Está seguro que desea eliminar esta escala de valoración? Esta acción no se puede deshacer."
-// // //           confirmText="Eliminar"
-// // //           confirmColor="bg-[#f44144] hover:bg-red-600"
-// // //         />
-
-// // //         {/* Modal de éxito */}
-// // //         <ConfirmationModal
-// // //           isOpen={showSuccessModal}
-// // //           onConfirm={() => setShowSuccessModal(false)}
-// // //           title="Operación Exitosa"
-// // //           message={successMessage}
-// // //           confirmText="Aceptar"
-// // //           confirmColor="bg-green-500 hover:bg-green-600"
-// // //           showButtonCancel={false}
-// // //         />
-// // //       </div>
-
-// // //       {/* Modal de confirmación para cerrar sesión */}
-// // //       <ConfirmationModal
-// // //         isOpen={showLogoutConfirm}
-// // //         onClose={() => setShowLogoutConfirm(false)}
-// // //         onConfirm={handleLogout}
-// // //         title="Cerrar Sesión"
-// // //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// // //         confirmText="Cerrar Sesión"
-// // //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// // //       />
-// // //     </div>
-// // //   )
-// // // }
-
-// // // export default Scale
-// // "use client"
-
-// // import { useState, useEffect, useRef } from "react"
-// // import { ChevronDown } from "lucide-react"
-// // import { useNavigate } from "react-router-dom"
-// // import GenericTable from "../../../shared/components/Table"
-// // import { useAuth } from "../../auth/hooks/useAuth"
-// // import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // // Datos de ejemplo
-// // const escalasData = [
-// //   {
-// //     id: 1,
-// //     fechaInicial: "20-10-2023",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 1,
-// //     rangoFinal: 69,
-// //     valoracion: "No aprueba",
-// //     descripcion:
-// //       "Rango de valoración para calificaciones insuficientes. Los estudiantes que obtengan una calificación en este rango deberán realizar actividades de refuerzo.",
-// //   },
-// //   {
-// //     id: 2,
-// //     fechaInicial: "20-10-2020",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 90,
-// //     valoracion: "Aprueba",
-// //     descripcion:
-// //       "Rango de valoración para calificaciones satisfactorias. Los estudiantes que obtengan una calificación en este rango han demostrado un dominio adecuado de los contenidos.",
-// //   },
-// //   {
-// //     id: 3,
-// //     fechaInicial: "20-10-2024",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 80,
-// //     valoracion: "No aprueba",
-// //     descripcion:
-// //       "Rango de valoración especial para evaluaciones de nivel avanzado. A pesar de estar en un rango normalmente aprobatorio, en este contexto se requiere un desempeño superior.",
-// //   },
-// //   {
-// //     id: 4,
-// //     fechaInicial: "20-10-2021",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 75,
-// //     valoracion: "Aprueba",
-// //     descripcion:
-// //       "Rango de valoración para calificaciones mínimas aprobatorias. Los estudiantes en este rango han cumplido con los requisitos básicos del curso.",
-// //   },
-// //   {
-// //     id: 5,
-// //     fechaInicial: "20-10-2022",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 100,
-// //     valoracion: "No aprueba",
-// //     descripcion:
-// //       "Rango de valoración especial para evaluaciones de certificación internacional. Requiere revisión adicional independientemente del puntaje obtenido.",
-// //   },
-// //   {
-// //     id: 6,
-// //     fechaInicial: "20-03-2023",
-// //     fechaFinal: "20-0-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 85,
-// //     valoracion: "No aprueba",
-// //     descripcion:
-// //       "Rango de valoración para evaluaciones de nivel experto. Se requiere un desempeño excepcional para aprobar este tipo de evaluaciones.",
-// //   },
-// //   {
-// //     id: 7,
-// //     fechaInicial: "20-02-2022",
-// //     fechaFinal: "20-10-2026",
-// //     rangoInicial: 70,
-// //     rangoFinal: 95,
-// //     valoracion: "Aprueba",
-// //     descripcion:
-// //       "Rango de valoración para calificaciones en cursos de nivelación. Los estudiantes en este rango han demostrado un progreso significativo.",
-// //   },
-// // ]
-
-// // // Update the columns definition to match the screenshot layout
-// // const columns = [
-// //   { key: "fechaInicial", label: "Fecha Inicial" },
-// //   { key: "fechaFinal", label: "Fecha Final" },
-// //   {
-// //     key: "rangoInicial",
-// //     label: "Rango Aprobatorio",
-// //     render: (item) => `${item.rangoInicial}%`,
-// //   },
-// //   // Remove the "Rango Final" column as it's not shown in the screenshot
-// // ]
-
-// // const Scale = () => {
-// //   const [selectedEscala, setSelectedEscala] = useState(null)
-// //   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-// //   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-// //   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-// //   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-// //   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-// //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-// //   const [itemToDelete, setItemToDelete] = useState(null)
-// //   const [successMessage, setSuccessMessage] = useState("")
-// //   const [showSuccessModal, setShowSuccessModal] = useState(false)
-// //   const [scales, setScales] = useState([...escalasData])
-// //   const { logout } = useAuth()
-// //   const navigate = useNavigate()
-// //   const dropdownRef = useRef(null)
-
-// //   // Formulario para crear/editar
-// //   const [formData, setFormData] = useState({
-// //     fechaInicial: "",
-// //     fechaFinal: "",
-// //     rangoInicial: "",
-// //     rangoFinal: "",
-// //     valoracion: "Aprueba",
-// //     descripcion: "",
-// //   })
-
-// //   useEffect(() => {
-// //     const handleClickOutside = (event) => {
-// //       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-// //         setIsDropdownOpen(false)
-// //       }
-// //     }
-
-// //     document.addEventListener("mousedown", handleClickOutside)
-// //     return () => document.removeEventListener("mousedown", handleClickOutside)
-// //   }, [])
-
-// //   const handleLogoutClick = () => {
-// //     setIsDropdownOpen(false)
-// //     setShowLogoutConfirm(true)
-// //   }
-
-// //   const handleLogout = () => {
-// //     logout()
-// //     navigate("/login")
-// //   }
-
-// //   const handleShowEscala = (escala) => {
-// //     setSelectedEscala(escala)
-// //     setIsDetailModalOpen(true)
-// //   }
-
-// //   const handleCloseDetailModal = () => {
-// //     setIsDetailModalOpen(false)
-// //   }
-
-// //   const handleAddScale = () => {
-// //     setFormData({
-// //       fechaInicial: "",
-// //       fechaFinal: "",
-// //       rangoInicial: "",
-// //       rangoFinal: "",
-// //       valoracion: "Aprueba",
-// //       descripcion: "",
-// //     })
-// //     setIsCreateModalOpen(true)
-// //   }
-
-// //   const handleEditScale = (scale) => {
-// //     setSelectedEscala(scale)
-// //     setFormData({
-// //       fechaInicial: scale.fechaInicial,
-// //       fechaFinal: scale.fechaFinal,
-// //       rangoInicial: scale.rangoInicial,
-// //       rangoFinal: scale.rangoFinal,
-// //       valoracion: scale.valoracion,
-// //       descripcion: scale.descripcion,
-// //     })
-// //     setIsEditModalOpen(true)
-// //   }
-
-// //   const handleDeleteScale = (id) => {
-// //     setItemToDelete(id)
-// //     setShowDeleteConfirm(true)
-// //   }
-
-// //   const confirmDeleteScale = () => {
-// //     try {
-// //       // Eliminar de la lista local
-// //       const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-// //       setScales(updatedScales)
-
-// //       // Mostrar mensaje de éxito
-// //       setSuccessMessage("Escala eliminada exitosamente")
-// //       setShowSuccessModal(true)
-// //     } catch (error) {
-// //       console.error("Error al eliminar la escala:", error)
-// //       setSuccessMessage("Ocurrió un error al eliminar la escala")
-// //       setShowSuccessModal(true)
-// //     } finally {
-// //       setShowDeleteConfirm(false)
-// //       setItemToDelete(null)
-// //     }
-// //   }
-
-// //   const handleInputChange = (e) => {
-// //     const { name, value } = e.target
-// //     setFormData({
-// //       ...formData,
-// //       [name]: name === "rangoInicial" || name === "rangoFinal" ? Number.parseInt(value) || "" : value,
-// //     })
-// //   }
-
-// //   const handleToggleValoracion = () => {
-// //     setFormData({
-// //       ...formData,
-// //       valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-// //     })
-// //   }
-
-// //   const handleCreateSubmit = (e) => {
-// //     e.preventDefault()
-// //     const newScale = {
-// //       id: Math.max(...scales.map((s) => s.id)) + 1,
-// //       ...formData,
-// //     }
-// //     setScales([...scales, newScale])
-// //     setIsCreateModalOpen(false)
-// //     setSuccessMessage("Escala creada exitosamente")
-// //     setShowSuccessModal(true)
-// //   }
-
-// //   const handleEditSubmit = (e) => {
-// //     e.preventDefault()
-// //     const updatedScales = scales.map((scale) => (scale.id === selectedEscala.id ? { ...scale, ...formData } : scale))
-// //     setScales(updatedScales)
-// //     setIsEditModalOpen(false)
-// //     setSuccessMessage("Escala actualizada exitosamente")
-// //     setShowSuccessModal(true)
-// //   }
-
-// //   return (
-// //     <div className="min-h-screen">
-// //       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-// //         <div className="container mx-auto flex justify-between items-center">
-// //           <h1 className="text-2xl font-bold text-[#1f384c]">ESCALA DE VALORACIÓN</h1>
-// //           <div className="relative" ref={dropdownRef}>
-// //             <button
-// //               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-// //               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-// //             >
-// //               <span>Administrador</span>
-// //               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-// //             </button>
-
-// //             {isDropdownOpen && (
-// //               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-// //                 <button
-// //                   onClick={handleLogoutClick}
-// //                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-// //                 >
-// //                   Cerrar Sesión
-// //                 </button>
-// //               </div>
-// //             )}
-// //           </div>
-// //         </div>
-// //       </header>
-
-// //       <div className="container mx-auto px-6">
-// //         <GenericTable
-// //           data={scales}
-// //           columns={columns}
-// //           onShow={handleShowEscala}
-// //           onAdd={handleAddScale}
-// //           onEdit={handleEditScale}
-// //           onDelete={handleDeleteScale}
-// //           showActions={{ show: true, edit: true, delete: true, add: true }}
-// //           addButtonText="Añadir Escala"
-// //         />
-
-// //         {selectedEscala && (
-// //           <ScaleDetailModal escala={selectedEscala} isOpen={isDetailModalOpen} onClose={handleCloseDetailModal} />
-// //         )}
-
-// //         {/* Create Scale Modal */}
-// //         {isCreateModalOpen && (
-// //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-// //               <div className="p-4">
-// //                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">CREAR ESCALA DE VALORACIÓN</h2>
-
-// //                 <form onSubmit={handleCreateSubmit}>
-// //                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// //                       <input
-// //                         type="Date"
-// //                         name="fechaInicial"
-// //                         value={formData.fechaInicial}
-// //                         onChange={handleInputChange}
-// //                         placeholder="DD/MM/YYYY"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// //                       <input
-// //                         type="Date"
-// //                         name="fechaFinal"
-// //                         value={formData.fechaFinal}
-// //                         onChange={handleInputChange}
-// //                         placeholder="DD/MM/YYYY"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// //                       <input
-// //                         type="number"
-// //                         name="rangoInicial"
-// //                         value={formData.rangoInicial}
-// //                         onChange={handleInputChange}
-// //                         min="0"
-// //                         max="100"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// //                       <input
-// //                         type="number"
-// //                         name="rangoFinal"
-// //                         value={formData.rangoFinal}
-// //                         onChange={handleInputChange}
-// //                         min="0"
-// //                         max="100"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// //                       <div className="flex items-center">
-// //                         <label className="relative inline-flex items-center cursor-pointer">
-// //                           <input
-// //                             type="checkbox"
-// //                             checked={formData.valoracion === "Aprueba"}
-// //                             onChange={handleToggleValoracion}
-// //                             className="sr-only peer"
-// //                           />
-// //                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// //                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// //                         </label>
-// //                       </div>
-// //                     </div>
-// //                   </div>
-
-// //                   <div className="mb-4">
-// //                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-// //                     <textarea
-// //                       name="descripcion"
-// //                       value={formData.descripcion}
-// //                       onChange={handleInputChange}
-// //                       rows="3"
-// //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                       placeholder="Descripción de la escala de valoración..."
-// //                     ></textarea>
-// //                   </div>
-
-// //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// //                     <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// //                     <div className="mb-2 text-sm text-center">
-// //                       {formData.valoracion === "Aprueba"
-// //                         ? `Aprueba a partir = ${formData.rangoInicial || 0}%`
-// //                         : `Aprueba a partir = ${(formData.rangoFinal || 0) + 1}%`}
-// //                     </div>
-
-// //                     {formData.valoracion === "No aprueba" ? (
-// //                       <>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>0%</span>
-// //                           <span>{formData.rangoFinal || 0}% Deficiente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#dc3545] h-5 rounded"
-// //                             style={{ width: `${formData.rangoFinal || 0}%` }}
-// //                           ></div>
-// //                         </div>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>{(formData.rangoFinal || 0) + 1}%</span>
-// //                           <span>100% Excelente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#46ae69] h-5 rounded"
-// //                             style={{
-// //                               width: `${100 - ((formData.rangoFinal || 0) + 1)}%`,
-// //                               marginLeft: `${(formData.rangoFinal || 0) + 1}%`,
-// //                             }}
-// //                           ></div>
-// //                         </div>
-// //                       </>
-// //                     ) : (
-// //                       <>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>0%</span>
-// //                           <span>{(formData.rangoInicial || 0) - 1}% Deficiente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#dc3545] h-5 rounded"
-// //                             style={{ width: `${(formData.rangoInicial || 0) - 1}%` }}
-// //                           ></div>
-// //                         </div>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>{formData.rangoInicial || 0}%</span>
-// //                           <span>100% Excelente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#46ae69] h-5 rounded"
-// //                             style={{
-// //                               width: `${100 - (formData.rangoInicial || 0)}%`,
-// //                               marginLeft: `${formData.rangoInicial || 0}%`,
-// //                             }}
-// //                           ></div>
-// //                         </div>
-// //                       </>
-// //                     )}
-// //                   </div>
-
-// //                   <div className="flex justify-between px-4">
-// //                     <button
-// //                       type="button"
-// //                       onClick={() => setIsCreateModalOpen(false)}
-// //                       className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-// //                     >
-// //                       Cancelar
-// //                     </button>
-// //                     <button
-// //                       type="submit"
-// //                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-// //                     >
-// //                       Crear
-// //                     </button>
-// //                   </div>
-// //                 </form>
-// //               </div>
-// //             </div>
-// //           </div>
-// //         )}
-
-// //         {/* Edit Scale Modal */}
-// //         {isEditModalOpen && selectedEscala && (
-// //           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-// //               <div className="p-4">
-// //                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">EDITAR ESCALA DE VALORACIÓN</h2>
-
-// //                 <form onSubmit={handleEditSubmit}>
-// //                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-// //                       <input
-// //                         type="Date"
-// //                         name="fechaInicial"
-// //                         value={formData.fechaInicial}
-// //                         onChange={handleInputChange}
-// //                         placeholder="DD/MM/YYYY"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-// //                       <input
-// //                         type="Date"
-// //                         name="fechaFinal"
-// //                         value={formData.fechaFinal}
-// //                         onChange={handleInputChange}
-// //                         placeholder="DD/MM/YYYY"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial (%)*</label>
-// //                       <input
-// //                         type="number"
-// //                         name="rangoInicial"
-// //                         value={formData.rangoInicial}
-// //                         onChange={handleInputChange}
-// //                         min="0"
-// //                         max="100"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final (%)*</label>
-// //                       <input
-// //                         type="number"
-// //                         name="rangoFinal"
-// //                         value={formData.rangoFinal}
-// //                         onChange={handleInputChange}
-// //                         min="0"
-// //                         max="100"
-// //                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                         required
-// //                       />
-// //                     </div>
-// //                     <div>
-// //                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-// //                       <div className="flex items-center">
-// //                         <label className="relative inline-flex items-center cursor-pointer">
-// //                           <input
-// //                             type="checkbox"
-// //                             checked={formData.valoracion === "Aprueba"}
-// //                             onChange={handleToggleValoracion}
-// //                             className="sr-only peer"
-// //                           />
-// //                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-// //                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-// //                         </label>
-// //                       </div>
-// //                     </div>
-// //                   </div>
-
-// //                   <div className="mb-4">
-// //                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-// //                     <textarea
-// //                       name="descripcion"
-// //                       value={formData.descripcion}
-// //                       onChange={handleInputChange}
-// //                       rows="3"
-// //                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-// //                       placeholder="Descripción de la escala de valoración..."
-// //                     ></textarea>
-// //                   </div>
-
-// //                   <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-4">
-// //                     <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// //                     <div className="mb-2 text-sm text-center">
-// //                       {formData.valoracion === "Aprueba"
-// //                         ? `Aprueba a partir = ${formData.rangoInicial || 0}%`
-// //                         : `Aprueba a partir = ${(formData.rangoFinal || 0) + 1}%`}
-// //                     </div>
-
-// //                     {formData.valoracion === "No aprueba" ? (
-// //                       <>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>0%</span>
-// //                           <span>{formData.rangoFinal || 0}% Deficiente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#dc3545] h-5 rounded"
-// //                             style={{ width: `${formData.rangoFinal || 0}%` }}
-// //                           ></div>
-// //                         </div>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>{(formData.rangoFinal || 0) + 1}%</span>
-// //                           <span>100% Excelente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#46ae69] h-5 rounded"
-// //                             style={{
-// //                               width: `${100 - ((formData.rangoFinal || 0) + 1)}%`,
-// //                               marginLeft: `${(formData.rangoFinal || 0) + 1}%`,
-// //                             }}
-// //                           ></div>
-// //                         </div>
-// //                       </>
-// //                     ) : (
-// //                       <>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>0%</span>
-// //                           <span>{(formData.rangoInicial || 0) - 1}% Deficiente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#dc3545] h-5 rounded"
-// //                             style={{ width: `${(formData.rangoInicial || 0) - 1}%` }}
-// //                           ></div>
-// //                         </div>
-// //                         <div className="flex items-center justify-between mb-1 text-sm">
-// //                           <span>{formData.rangoInicial || 0}%</span>
-// //                           <span>100% Excelente</span>
-// //                         </div>
-// //                         <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                           <div
-// //                             className="bg-[#46ae69] h-5 rounded"
-// //                             style={{
-// //                               width: `${100 - (formData.rangoInicial || 0)}%`,
-// //                               marginLeft: `${formData.rangoInicial || 0}%`,
-// //                             }}
-// //                           ></div>
-// //                         </div>
-// //                       </>
-// //                     )}
-// //                   </div>
-
-// //                   <div className="flex justify-between px-4">
-// //                     <button
-// //                       type="button"
-// //                       onClick={() => setIsEditModalOpen(false)}
-// //                       className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-// //                     >
-// //                       Cancelar
-// //                     </button>
-// //                     <button
-// //                       type="submit"
-// //                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-// //                     >
-// //                       Guardar Cambios
-// //                     </button>
-// //                   </div>
-// //                 </form>
-// //               </div>
-// //             </div>
-// //           </div>
-// //         )}
-
-// //         {/* Modal de confirmación para eliminar escala */}
-// //         <ConfirmationModal
-// //           isOpen={showDeleteConfirm}
-// //           onClose={() => setShowDeleteConfirm(false)}
-// //           onConfirm={confirmDeleteScale}
-// //           title="Eliminar Escala"
-// //           message="¿Está seguro que desea eliminar esta escala de valoración? Esta acción no se puede deshacer."
-// //           confirmText="Eliminar"
-// //           confirmColor="bg-[#f44144] hover:bg-red-600"
-// //         />
-
-// //         {/* Modal de éxito */}
-// //         <ConfirmationModal
-// //           isOpen={showSuccessModal}
-// //           onConfirm={() => setShowSuccessModal(false)}
-// //           title="Operación Exitosa"
-// //           message={successMessage}
-// //           confirmText="Aceptar"
-// //           confirmColor="bg-green-500 hover:bg-green-600"
-// //           showButtonCancel={false}
-// //         />
-// //       </div>
-
-// //       {/* Modal de confirmación para cerrar sesión */}
-// //       <ConfirmationModal
-// //         isOpen={showLogoutConfirm}
-// //         onClose={() => setShowLogoutConfirm(false)}
-// //         onConfirm={handleLogout}
-// //         title="Cerrar Sesión"
-// //         message="¿Está seguro de que desea cerrar la sesión actual?"
-// //         confirmText="Cerrar Sesión"
-// //         confirmColor="bg-[#f44144] hover:bg-red-600"
-// //       />
-// //     </div>
-// //   )
-// // }
-
-// // // Componente para el modal de detalle de escala
-// // const ScaleDetailModal = ({ escala, isOpen, onClose }) => {
-// //   const modalRef = useRef(null)
-
-// //   useEffect(() => {
-// //     const handleClickOutside = (event) => {
-// //       if (modalRef.current && !modalRef.current.contains(event.target)) {
-// //         onClose()
-// //       }
-// //     }
-
-// //     if (isOpen) {
-// //       document.addEventListener("mousedown", handleClickOutside)
-// //     }
-
-// //     return () => {
-// //       document.removeEventListener("mousedown", handleClickOutside)
-// //     }
-// //   }, [isOpen, onClose])
-
-// //   if (!isOpen || !escala) return null
-
-// //   return (
-// //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-// //       <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
-// //         <div className="p-4">
-// //           <h2 className="text-xl font-bold text-center text-[#1f384c] mb-4">DETALLE ESCALA DE VALORACIÓN</h2>
-
-// //           <div className="grid grid-cols-2 gap-4 mb-6">
-// //             <div className="flex">
-// //               <div className="w-1/3 font-medium text-base">Fecha Inicial:</div>
-// //               <div className="w-2/3 text-base text-gray-500">{escala.fechaInicial}</div>
-// //             </div>
-
-// //             <div className="flex">
-// //               <div className="w-1/2 font-medium text-base">Fecha Final:</div>
-// //               <div className="w-1/2 text-base text-gray-500">{escala.fechaFinal}</div>
-// //             </div>
-
-// //             <div className="flex">
-// //               <div className="w-1/3 font-medium text-base">Rango Inicial:</div>
-// //               <div className="w-2/3 text-base text-gray-500">{escala.rangoInicial}%</div>
-// //             </div>
-
-// //             <div className="flex">
-// //               <div className="w-1/2 font-medium text-base">Rango Final:</div>
-// //               <div className="w-1/2 text-base text-gray-500">{escala.rangoFinal}%</div>
-// //             </div>
-
-// //             <div className="flex">
-// //               <div className="w-1/3 font-medium text-base">Valoración:</div>
-// //               <div className="w-2/3 text-base text-gray-500">
-// //                 <span
-// //                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-// //                     escala.valoracion === "Aprueba" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-// //                   }`}
-// //                 >
-// //                   {escala.valoracion}
-// //                 </span>
-// //               </div>
-// //             </div>
-// //           </div>
-
-// //           <h3 className="text-lg font-medium mb-3">Descripción</h3>
-
-// //           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-// //             <p className="text-gray-700 text-sm">{escala.descripcion}</p>
-// //           </div>
-
-// //           <div className="border-t border-dashed border-[#d9d9d9] pt-4 mt-4 mb-6">
-// //             <div className="text-center font-medium mb-2 text-sm">Visualización de la escala</div>
-
-// //             <div className="mb-2 text-sm text-center">
-// //               {escala.valoracion === "Aprueba"
-// //                 ? `Aprueba a partir = ${escala.rangoInicial}%`
-// //                 : `Aprueba a partir = ${escala.rangoFinal + 1}%`}
-// //             </div>
-
-// //             {escala.valoracion === "No aprueba" ? (
-// //               <>
-// //                 <div className="flex items-center justify-between mb-1 text-sm">
-// //                   <span>0%</span>
-// //                   <span>{escala.rangoFinal}% Deficiente</span>
-// //                 </div>
-// //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                   <div className="bg-[#dc3545] h-5 rounded" style={{ width: `${escala.rangoFinal}%` }}></div>
-// //                 </div>
-// //                 <div className="flex items-center justify-between mb-1 text-sm">
-// //                   <span>{escala.rangoFinal + 1}%</span>
-// //                   <span>100% Excelente</span>
-// //                 </div>
-// //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                   <div
-// //                     className="bg-[#46ae69] h-5 rounded"
-// //                     style={{ width: `${100 - (escala.rangoFinal + 1)}%`, marginLeft: `${escala.rangoFinal + 1}%` }}
-// //                   ></div>
-// //                 </div>
-// //               </>
-// //             ) : (
-// //               <>
-// //                 <div className="flex items-center justify-between mb-1 text-sm">
-// //                   <span>0%</span>
-// //                   <span>{escala.rangoInicial - 1}% Deficiente</span>
-// //                 </div>
-// //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                   <div className="bg-[#dc3545] h-5 rounded" style={{ width: `${escala.rangoInicial - 1}%` }}></div>
-// //                 </div>
-// //                 <div className="flex items-center justify-between mb-1 text-sm">
-// //                   <span>{escala.rangoInicial}%</span>
-// //                   <span>100% Excelente</span>
-// //                 </div>
-// //                 <div className="w-full bg-gray-200 h-5 mb-2 rounded">
-// //                   <div
-// //                     className="bg-[#46ae69] h-5 rounded"
-// //                     style={{ width: `${100 - escala.rangoInicial}%`, marginLeft: `${escala.rangoInicial}%` }}
-// //                   ></div>
-// //                 </div>
-// //               </>
-// //             )}
-// //           </div>
-
-// //           <div className="flex justify-center">
-// //             <button
-// //               onClick={onClose}
-// //               className="bg-[#f44144] text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
-// //             >
-// //               Cerrar
-// //             </button>
-// //           </div>
-// //         </div>
-// //       </div>
-// //     </div>
-// //   )
-// // }
-
-// // export default Scale
-// "use client"
-
-// import { useState, useEffect, useRef } from "react"
-// import { ChevronDown, Plus, Trash2 } from "lucide-react"
-// import { useNavigate } from "react-router-dom"
-// import GenericTable from "../../../shared/components/Table"
-// import { useAuth } from "../../auth/hooks/useAuth"
-// import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-
-// // Datos de ejemplo
-// const escalasData = [
-//   {
-//     id: 1,
-//     fechaInicial: "20-10-2023",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 1,
-//     rangoFinal: 69,
-//     valoracion: "No aprueba",
-//     descripcion:
-//       "Rango de valoración para calificaciones insuficientes. Los estudiantes que obtengan una calificación en este rango deberán realizar actividades de refuerzo.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 70,
-//   },
-//   {
-//     id: 2,
-//     fechaInicial: "20-10-2020",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 90,
-//     valoracion: "Aprueba",
-//     descripcion:
-//       "Rango de valoración para calificaciones satisfactorias. Los estudiantes que obtengan una calificación en este rango han demostrado un dominio adecuado de los contenidos.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 70,
-//   },
-//   {
-//     id: 3,
-//     fechaInicial: "20-10-2024",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 80,
-//     valoracion: "No aprueba",
-//     descripcion:
-//       "Rango de valoración especial para evaluaciones de nivel avanzado. A pesar de estar en un rango normalmente aprobatorio, en este contexto se requiere un desempeño superior.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 80,
-//   },
-//   {
-//     id: 4,
-//     fechaInicial: "20-10-2021",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 75,
-//     valoracion: "Aprueba",
-//     descripcion:
-//       "Rango de valoración para calificaciones mínimas aprobatorias. Los estudiantes en este rango han cumplido con los requisitos básicos del curso.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 70,
-//   },
-//   {
-//     id: 5,
-//     fechaInicial: "20-10-2022",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 100,
-//     valoracion: "No aprueba",
-//     descripcion:
-//       "Rango de valoración especial para evaluaciones de certificación internacional. Requiere revisión adicional independientemente del puntaje obtenido.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 80,
-//   },
-//   {
-//     id: 6,
-//     fechaInicial: "20-03-2023",
-//     fechaFinal: "20-0-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 85,
-//     valoracion: "No aprueba",
-//     descripcion:
-//       "Rango de valoración para evaluaciones de nivel experto. Se requiere un desempeño excepcional para aprobar este tipo de evaluaciones.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 80,
-//   },
-//   {
-//     id: 7,
-//     fechaInicial: "20-02-2022",
-//     fechaFinal: "20-10-2026",
-//     rangoInicial: 70,
-//     rangoFinal: 95,
-//     valoracion: "Aprueba",
-//     descripcion:
-//       "Rango de valoración para calificaciones en cursos de nivelación. Los estudiantes en este rango han demostrado un progreso significativo.",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 70,
-//   },
-// ]
-
-// // Update the columns definition to match the screenshot layout
-// const columns = [
-//   { key: "fechaInicial", label: "Fecha Inicial" },
-//   { key: "fechaFinal", label: "Fecha Final" },
-//   {
-//     key: "rangoInicial",
-//     label: "Rango Aprobatorio",
-//     render: (item) => `${item.rangoInicial}%`,
-//   },
-//   // Remove the "Rango Final" column as it's not shown in the screenshot
-// ]
-
-// const Scale = () => {
-//   const [selectedEscala, setSelectedEscala] = useState(null)
-//   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-//   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-//   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-//   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-//   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-//   const [itemToDelete, setItemToDelete] = useState(null)
-//   const [successMessage, setSuccessMessage] = useState("")
-//   const [showSuccessModal, setShowSuccessModal] = useState(false)
-//   const [scales, setScales] = useState([...escalasData])
-//   const { logout } = useAuth()
-//   const navigate = useNavigate()
-//   const dropdownRef = useRef(null)
-
-//   // Formulario para crear/editar
-//   const [formData, setFormData] = useState({
-//     fechaInicial: "",
-//     fechaFinal: "",
-//     rangoInicial: "",
-//     rangoFinal: "",
-//     valoracion: "Aprueba",
-//     descripcion: "",
-//     metricas: [
-//       { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//       { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//       { id: 3, rangoInicial: 80, rangoFinal: 100, concepto: "Excelente" },
-//     ],
-//     apruebaPorcentaje: 80,
-//   })
-
-//   // Nueva métrica temporal
-//   const [newMetrica, setNewMetrica] = useState({
-//     rangoInicial: 75,
-//     rangoFinal: 100,
-//     concepto: "Deficiente",
-//   })
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-//         setIsDropdownOpen(false)
-//       }
-//     }
-
-//     document.addEventListener("mousedown", handleClickOutside)
-//     return () => document.removeEventListener("mousedown", handleClickOutside)
-//   }, [])
-
-//   const handleLogoutClick = () => {
-//     setIsDropdownOpen(false)
-//     setShowLogoutConfirm(true)
-//   }
-
-//   const handleLogout = () => {
-//     logout()
-//     navigate("/login")
-//   }
-
-//   const handleShowEscala = (escala) => {
-//     setSelectedEscala(escala)
-//     setIsDetailModalOpen(true)
-//   }
-
-//   const handleCloseDetailModal = () => {
-//     setIsDetailModalOpen(false)
-//   }
-
-//   const handleAddScale = () => {
-//     setFormData({
-//       fechaInicial: "",
-//       fechaFinal: "",
-//       rangoInicial: "",
-//       rangoFinal: "",
-//       valoracion: "Aprueba",
-//       descripcion: "",
-//       metricas: [
-//         { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-//         { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-//         { id: 3, rangoInicial: 80, rangoFinal: 100, concepto: "Excelente" },
-//       ],
-//       apruebaPorcentaje: 80,
-//     })
-//     setNewMetrica({
-//       rangoInicial: 75,
-//       rangoFinal: 100,
-//       concepto: "Deficiente",
-//     })
-//     setIsCreateModalOpen(true)
-//   }
-
-//   const handleEditScale = (scale) => {
-//     setSelectedEscala(scale)
-//     setFormData({
-//       fechaInicial: scale.fechaInicial,
-//       fechaFinal: scale.fechaFinal,
-//       rangoInicial: scale.rangoInicial,
-//       rangoFinal: scale.rangoFinal,
-//       valoracion: scale.valoracion,
-//       descripcion: scale.descripcion,
-//       metricas: [...scale.metricas],
-//       apruebaPorcentaje: scale.apruebaPorcentaje,
-//     })
-//     setIsEditModalOpen(true)
-//   }
-
-//   const handleDeleteScale = (id) => {
-//     setItemToDelete(id)
-//     setShowDeleteConfirm(true)
-//   }
-
-//   const confirmDeleteScale = () => {
-//     try {
-//       // Eliminar de la lista local
-//       const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-//       setScales(updatedScales)
-
-//       // Mostrar mensaje de éxito
-//       setSuccessMessage("Escala eliminada exitosamente")
-//       setShowSuccessModal(true)
-//     } catch (error) {
-//       console.error("Error al eliminar la escala:", error)
-//       setSuccessMessage("Ocurrió un error al eliminar la escala")
-//       setShowSuccessModal(true)
-//     } finally {
-//       setShowDeleteConfirm(false)
-//       setItemToDelete(null)
-//     }
-//   }
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target
-//     setFormData({
-//       ...formData,
-//       [name]:
-//         name === "rangoInicial" || name === "rangoFinal" || name === "apruebaPorcentaje"
-//           ? Number.parseInt(value) || ""
-//           : value,
-//     })
-//   }
-
-//   const handleNewMetricaChange = (e) => {
-//     const { name, value } = e.target
-//     setNewMetrica({
-//       ...newMetrica,
-//       [name]: name === "rangoInicial" || name === "rangoFinal" ? Number.parseInt(value) || "" : value,
-//     })
-//   }
-
-//   const handleToggleValoracion = () => {
-//     setFormData({
-//       ...formData,
-//       valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-//     })
-//   }
-
-//   const handleAddMetrica = () => {
-//     // Validar que los rangos no se superpongan
-//     const newId = Math.max(...formData.metricas.map((m) => m.id), 0) + 1
-//     const newMetricaWithId = { ...newMetrica, id: newId }
-
-//     setFormData({
-//       ...formData,
-//       metricas: [...formData.metricas, newMetricaWithId],
-//     })
-
-//     // Resetear la nueva métrica
-//     setNewMetrica({
-//       rangoInicial: 0,
-//       rangoFinal: 0,
-//       concepto: "",
-//     })
-//   }
-
-//   const handleDeleteMetrica = (id) => {
-//     const updatedMetricas = formData.metricas.filter((m) => m.id !== id)
-//     setFormData({
-//       ...formData,
-//       metricas: updatedMetricas,
-//     })
-//   }
-
-//   const handleCreateSubmit = (e) => {
-//     e.preventDefault()
-//     const newScale = {
-//       id: Math.max(...scales.map((s) => s.id)) + 1,
-//       ...formData,
-//     }
-//     setScales([...scales, newScale])
-//     setIsCreateModalOpen(false)
-//     setSuccessMessage("Escala creada exitosamente")
-//     setShowSuccessModal(true)
-//   }
-
-//   const handleEditSubmit = (e) => {
-//     e.preventDefault()
-//     const updatedScales = scales.map((scale) => (scale.id === selectedEscala.id ? { ...scale, ...formData } : scale))
-//     setScales(updatedScales)
-//     setIsEditModalOpen(false)
-//     setSuccessMessage("Escala actualizada exitosamente")
-//     setShowSuccessModal(true)
-//   }
-
-//   return (
-//     <div className="min-h-screen">
-//       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
-//         <div className="container mx-auto flex justify-between items-center">
-//           <h1 className="text-2xl font-bold text-[#1f384c]">ESCALA DE VALORACIÓN</h1>
-//           <div className="relative" ref={dropdownRef}>
-//             <button
-//               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-//               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
-//             >
-//               <span>Administrador</span>
-//               <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
-//             </button>
-
-//             {isDropdownOpen && (
-//               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-//                 <button
-//                   onClick={handleLogoutClick}
-//                   className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
-//                 >
-//                   Cerrar Sesión
-//                 </button>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </header>
-
-//       <div className="container mx-auto px-6">
-//         <GenericTable
-//           data={scales}
-//           columns={columns}
-//           onShow={handleShowEscala}
-//           onAdd={handleAddScale}
-//           onEdit={handleEditScale}
-//           onDelete={handleDeleteScale}
-//           showActions={{ show: true, edit: true, delete: true, add: true }}
-//           addButtonText="Añadir Escala"
-//         />
-
-//         {selectedEscala && (
-//           <ScaleDetailModal escala={selectedEscala} isOpen={isDetailModalOpen} onClose={handleCloseDetailModal} />
-//         )}
-
-//         {/* Create Scale Modal */}
-//         {isCreateModalOpen && (
-//           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-//               <div className="p-4">
-//                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">CREAR ESCALA DE VALORACIÓN</h2>
-
-//                 <form onSubmit={handleCreateSubmit}>
-//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-//                       <input
-//                         type="Date"
-//                         name="fechaInicial"
-//                         value={formData.fechaInicial}
-//                         onChange={handleInputChange}
-//                         placeholder="DD/MM/YYYY"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-//                       <input
-//                         type="Date"
-//                         name="fechaFinal"
-//                         value={formData.fechaFinal}
-//                         onChange={handleInputChange}
-//                         placeholder="DD/MM/YYYY"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-//                       <div className="flex items-center">
-//                         <label className="relative inline-flex items-center cursor-pointer">
-//                           <input
-//                             type="checkbox"
-//                             checked={formData.valoracion === "Aprueba"}
-//                             onChange={handleToggleValoracion}
-//                             className="sr-only peer"
-//                           />
-//                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-//                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-//                         </label>
-//                       </div>
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Aprueba a partir de (%)*</label>
-//                       <input
-//                         type="number"
-//                         name="apruebaPorcentaje"
-//                         value={formData.apruebaPorcentaje}
-//                         onChange={handleInputChange}
-//                         min="0"
-//                         max="100"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                   </div>
-
-//                   <div className="mb-4">
-//                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-//                     <textarea
-//                       name="descripcion"
-//                       value={formData.descripcion}
-//                       onChange={handleInputChange}
-//                       rows="3"
-//                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                       placeholder="Descripción de la escala de valoración..."
-//                     ></textarea>
-//                   </div>
-
-//                   {/* Sección para añadir métricas de valoración */}
-//                   <div className="border border-gray-200 rounded-lg p-4 mb-6">
-//                     <h3 className="text-lg font-medium mb-4 text-center">Añadir Métrica de Valoración:</h3>
-
-//                     <div className="grid grid-cols-2 gap-4 mb-4">
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial</label>
-//                         <input
-//                           type="text"
-//                           value={formData.fechaInicial}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final</label>
-//                         <input
-//                           type="text"
-//                           value={formData.fechaFinal}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-//                         <input
-//                           type="text"
-//                           value={formData.valoracion}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                     </div>
-
-//                     <div className="grid grid-cols-3 gap-4 mb-4 items-end">
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial</label>
-//                         <input
-//                           type="number"
-//                           name="rangoInicial"
-//                           value={newMetrica.rangoInicial}
-//                           onChange={handleNewMetricaChange}
-//                           min="0"
-//                           max="100"
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final</label>
-//                         <input
-//                           type="number"
-//                           name="rangoFinal"
-//                           value={newMetrica.rangoFinal}
-//                           onChange={handleNewMetricaChange}
-//                           min="0"
-//                           max="100"
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-//                         <div className="flex items-center">
-//                           <input
-//                             type="text"
-//                             name="concepto"
-//                             value={newMetrica.concepto}
-//                             onChange={handleNewMetricaChange}
-//                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                           />
-//                           <button
-//                             type="button"
-//                             onClick={handleAddMetrica}
-//                             className="ml-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600"
-//                           >
-//                             <Plus className="w-5 h-5" />
-//                           </button>
-//                         </div>
-//                       </div>
-//                     </div>
-
-//                     <div className="border-t border-dashed border-gray-300 my-4"></div>
-
-//                     <div className="text-center mb-2">
-//                       <span className="text-sm font-medium">Aprueba a partir = {formData.apruebaPorcentaje}%</span>
-//                     </div>
-
-//                     {/* Lista de métricas */}
-//                     <div className="space-y-2">
-//                       {formData.metricas.map((metrica) => (
-//                         <div key={metrica.id} className="flex items-center justify-between">
-//                           <span className="text-sm">
-//                             {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-//                           </span>
-//                           <button
-//                             type="button"
-//                             onClick={() => handleDeleteMetrica(metrica.id)}
-//                             className="text-red-500 hover:text-red-700"
-//                           >
-//                             <Trash2 className="w-5 h-5" />
-//                           </button>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-
-//                   <div className="flex justify-between">
-//                     <button
-//                       type="button"
-//                       onClick={() => setIsCreateModalOpen(false)}
-//                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-//                     >
-//                       Cancelar
-//                     </button>
-//                     <button
-//                       type="submit"
-//                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-//                     >
-//                       Añadir
-//                     </button>
-//                   </div>
-//                 </form>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Edit Scale Modal */}
-//         {isEditModalOpen && selectedEscala && (
-//           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//             <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-//               <div className="p-4">
-//                 <h2 className="text-xl font-bold text-[#1f384c] mb-4">EDITAR ESCALA DE VALORACIÓN</h2>
-
-//                 <form onSubmit={handleEditSubmit}>
-//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
-//                       <input
-//                         type="Date"
-//                         name="fechaInicial"
-//                         value={formData.fechaInicial}
-//                         onChange={handleInputChange}
-//                         placeholder="DD/MM/YYYY"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
-//                       <input
-//                         type="Date"
-//                         name="fechaFinal"
-//                         value={formData.fechaFinal}
-//                         onChange={handleInputChange}
-//                         placeholder="DD/MM/YYYY"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-//                       <div className="flex items-center">
-//                         <label className="relative inline-flex items-center cursor-pointer">
-//                           <input
-//                             type="checkbox"
-//                             checked={formData.valoracion === "Aprueba"}
-//                             onChange={handleToggleValoracion}
-//                             className="sr-only peer"
-//                           />
-//                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-//                           <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-//                         </label>
-//                       </div>
-//                     </div>
-//                     <div>
-//                       <label className="block text-sm font-medium text-gray-700 mb-1">Aprueba a partir de (%)*</label>
-//                       <input
-//                         type="number"
-//                         name="apruebaPorcentaje"
-//                         value={formData.apruebaPorcentaje}
-//                         onChange={handleInputChange}
-//                         min="0"
-//                         max="100"
-//                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         required
-//                       />
-//                     </div>
-//                   </div>
-
-//                   <div className="mb-4">
-//                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-//                     <textarea
-//                       name="descripcion"
-//                       value={formData.descripcion}
-//                       onChange={handleInputChange}
-//                       rows="3"
-//                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                       placeholder="Descripción de la escala de valoración..."
-//                     ></textarea>
-//                   </div>
-
-//                   {/* Sección para añadir métricas de valoración */}
-//                   <div className="border border-gray-200 rounded-lg p-4 mb-6">
-//                     <h3 className="text-lg font-medium mb-4 text-center">Añadir Métrica de Valoración:</h3>
-
-//                     <div className="grid grid-cols-2 gap-4 mb-4">
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial</label>
-//                         <input
-//                           type="text"
-//                           value={formData.fechaInicial}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final</label>
-//                         <input
-//                           type="text"
-//                           value={formData.fechaFinal}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-//                         <input
-//                           type="text"
-//                           value={formData.valoracion}
-//                           disabled
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-//                         />
-//                       </div>
-//                     </div>
-
-//                     <div className="grid grid-cols-3 gap-4 mb-4 items-end">
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial</label>
-//                         <input
-//                           type="number"
-//                           name="rangoInicial"
-//                           value={newMetrica.rangoInicial}
-//                           onChange={handleNewMetricaChange}
-//                           min="0"
-//                           max="100"
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final</label>
-//                         <input
-//                           type="number"
-//                           name="rangoFinal"
-//                           value={newMetrica.rangoFinal}
-//                           onChange={handleNewMetricaChange}
-//                           min="0"
-//                           max="100"
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                         />
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-//                         <div className="flex items-center">
-//                           <input
-//                             type="text"
-//                             name="concepto"
-//                             value={newMetrica.concepto}
-//                             onChange={handleNewMetricaChange}
-//                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                           />
-//                           <button
-//                             type="button"
-//                             onClick={handleAddMetrica}
-//                             className="ml-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600"
-//                           >
-//                             <Plus className="w-5 h-5" />
-//                           </button>
-//                         </div>
-//                       </div>
-//                     </div>
-
-//                     <div className="border-t border-dashed border-gray-300 my-4"></div>
-
-//                     <div className="text-center mb-2">
-//                       <span className="text-sm font-medium">Aprueba a partir = {formData.apruebaPorcentaje}%</span>
-//                     </div>
-
-//                     {/* Lista de métricas */}
-//                     <div className="space-y-2">
-//                       {formData.metricas.map((metrica) => (
-//                         <div key={metrica.id} className="flex items-center justify-between">
-//                           <span className="text-sm">
-//                             {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-//                           </span>
-//                           <button
-//                             type="button"
-//                             onClick={() => handleDeleteMetrica(metrica.id)}
-//                             className="text-red-500 hover:text-red-700"
-//                           >
-//                             <Trash2 className="w-5 h-5" />
-//                           </button>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-
-//                   <div className="flex justify-between">
-//                     <button
-//                       type="button"
-//                       onClick={() => setIsEditModalOpen(false)}
-//                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-//                     >
-//                       Cancelar
-//                     </button>
-//                     <button
-//                       type="submit"
-//                       className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-//                     >
-//                       Guardar Cambios
-//                     </button>
-//                   </div>
-//                 </form>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Modal de confirmación para eliminar escala */}
-//         <ConfirmationModal
-//           isOpen={showDeleteConfirm}
-//           onClose={() => setShowDeleteConfirm(false)}
-//           onConfirm={confirmDeleteScale}
-//           title="Eliminar Escala"
-//           message="¿Está seguro que desea eliminar esta escala de valoración? Esta acción no se puede deshacer."
-//           confirmText="Eliminar"
-//           confirmColor="bg-[#f44144] hover:bg-red-600"
-//         />
-
-//         {/* Modal de éxito */}
-//         <ConfirmationModal
-//           isOpen={showSuccessModal}
-//           onConfirm={() => setShowSuccessModal(false)}
-//           title="Operación Exitosa"
-//           message={successMessage}
-//           confirmText="Aceptar"
-//           confirmColor="bg-green-500 hover:bg-green-600"
-//           showButtonCancel={false}
-//         />
-//       </div>
-
-//       {/* Modal de confirmación para cerrar sesión */}
-//       <ConfirmationModal
-//         isOpen={showLogoutConfirm}
-//         onClose={() => setShowLogoutConfirm(false)}
-//         onConfirm={handleLogout}
-//         title="Cerrar Sesión"
-//         message="¿Está seguro de que desea cerrar la sesión actual?"
-//         confirmText="Cerrar Sesión"
-//         confirmColor="bg-[#f44144] hover:bg-red-600"
-//       />
-//     </div>
-//   )
-// }
-
-// // Componente para el modal de detalle de escala
-// const ScaleDetailModal = ({ escala, isOpen, onClose }) => {
-//   const modalRef = useRef(null)
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (modalRef.current && !modalRef.current.contains(event.target)) {
-//         onClose()
-//       }
-//     }
-
-//     if (isOpen) {
-//       document.addEventListener("mousedown", handleClickOutside)
-//     }
-
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside)
-//     }
-//   }, [isOpen, onClose])
-
-//   if (!isOpen || !escala) return null
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//       <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
-//         <div className="p-4">
-//           <h2 className="text-xl font-bold text-center text-[#1f384c] mb-4">DETALLE ESCALA DE VALORACIÓN</h2>
-
-//           <div className="grid grid-cols-2 gap-4 mb-6">
-//             <div className="flex">
-//               <div className="w-1/3 font-medium text-base">Fecha Inicial:</div>
-//               <div className="w-2/3 text-base text-gray-500">{escala.fechaInicial}</div>
-//             </div>
-
-//             <div className="flex">
-//               <div className="w-1/2 font-medium text-base">Fecha Final:</div>
-//               <div className="w-1/2 text-base text-gray-500">{escala.fechaFinal}</div>
-//             </div>
-
-//             <div className="flex">
-//               <div className="w-1/3 font-medium text-base">Rango Inicial:</div>
-//               <div className="w-2/3 text-base text-gray-500">{escala.rangoInicial}%</div>
-//             </div>
-
-//             <div className="flex">
-//               <div className="w-1/2 font-medium text-base">Rango Final:</div>
-//               <div className="w-1/2 text-base text-gray-500">{escala.rangoFinal}%</div>
-//             </div>
-
-//             <div className="flex">
-//               <div className="w-1/3 font-medium text-base">Valoración:</div>
-//               <div className="w-2/3 text-base text-gray-500">
-//                 <span
-//                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                     escala.valoracion === "Aprueba" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-//                   }`}
-//                 >
-//                   {escala.valoracion}
-//                 </span>
-//               </div>
-//             </div>
-
-//             <div className="flex">
-//               <div className="w-1/2 font-medium text-base">Aprueba a partir de:</div>
-//               <div className="w-1/2 text-base text-gray-500">{escala.apruebaPorcentaje || 70}%</div>
-//             </div>
-//           </div>
-
-//           <h3 className="text-lg font-medium mb-3">Descripción</h3>
-
-//           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-//             <p className="text-gray-700 text-sm">{escala.descripcion}</p>
-//           </div>
-
-//           <h3 className="text-lg font-medium mb-3">Métricas de Valoración</h3>
-
-//           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-//             <div className="space-y-2">
-//               {escala.metricas &&
-//                 escala.metricas.map((metrica) => (
-//                   <div key={metrica.id} className="flex items-center justify-between">
-//                     <span className="text-sm">
-//                       {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-//                     </span>
-//                   </div>
-//                 ))}
-//             </div>
-//           </div>
-
-//           <div className="flex justify-center">
-//             <button
-//               onClick={onClose}
-//               className="bg-[#f44144] text-white py-2 px-6 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
-//             >
-//               Cerrar
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
-// export default Scale
+                         
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Plus, Trash2 } from "lucide-react"
+import { ChevronDown, Plus, Trash2, AlertTriangle } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import { useGetScales } from "../hooks/useGetScales"
+import { usePostScale } from "../hooks/usePostScale"
+import { usePutScale } from "../hooks/usePutScale"
+import { useDeleteScale } from "../hooks/useDeleteScale"
+import LoadingSpinner from "../../../shared/components/LoadingSpinner"
 
-// Datos de ejemplo
-const escalasData = [
-  {
-    id: 1,
-    fechaInicial: "20-10-2023",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 1,
-    rangoFinal: 69,
-    valoracion: "No aprueba",
-    descripcion:
-      "Rango de valoración para calificaciones insuficientes. Los estudiantes que obtengan una calificación en este rango deberán realizar actividades de refuerzo.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 70,
-  },
-  {
-    id: 2,
-    fechaInicial: "20-10-2020",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 70,
-    rangoFinal: 90,
-    valoracion: "Aprueba",
-    descripcion:
-      "Rango de valoración para calificaciones satisfactorias. Los estudiantes que obtengan una calificación en este rango han demostrado un dominio adecuado de los contenidos.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 70,
-  },
-  {
-    id: 3,
-    fechaInicial: "20-10-2024",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 70,
-    rangoFinal: 80,
-    valoracion: "No aprueba",
-    descripcion:
-      "Rango de valoración especial para evaluaciones de nivel avanzado. A pesar de estar en un rango normalmente aprobatorio, en este contexto se requiere un desempeño superior.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 80,
-  },
-  {
-    id: 4,
-    fechaInicial: "20-10-2021",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 70,
-    rangoFinal: 75,
-    valoracion: "Aprueba",
-    descripcion:
-      "Rango de valoración para calificaciones mínimas aprobatorias. Los estudiantes en este rango han cumplido con los requisitos básicos del curso.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 70,
-  },
-  {
-    id: 5,
-    fechaInicial: "20-10-2022",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 70,
-    rangoFinal: 100,
-    valoracion: "No aprueba",
-    descripcion:
-      "Rango de valoración especial para evaluaciones de certificación internacional. Requiere revisión adicional independientemente del puntaje obtenido.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 80,
-  },
-  {
-    id: 6,
-    fechaInicial: "20-03-2023",
-    fechaFinal: "20-0-2026",
-    rangoInicial: 70,
-    rangoFinal: 85,
-    valoracion: "No aprueba",
-    descripcion:
-      "Rango de valoración para evaluaciones de nivel experto. Se requiere un desempeño excepcional para aprobar este tipo de evaluaciones.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 80,
-  },
-  {
-    id: 7,
-    fechaInicial: "20-02-2022",
-    fechaFinal: "20-10-2026",
-    rangoInicial: 70,
-    rangoFinal: 95,
-    valoracion: "Aprueba",
-    descripcion:
-      "Rango de valoración para calificaciones en cursos de nivelación. Los estudiantes en este rango han demostrado un progreso significativo.",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 70, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 70,
-  },
-]
-
-// Actualizar la definición de columnas para usar apruebaPorcentaje en lugar de rangoInicial
+// Columnas para la tabla - SIN métricas, solo datos principales
 const columns = [
-  { key: "fechaInicial", label: "Fecha Inicial" },
-  { key: "fechaFinal", label: "Fecha Final" },
+  {
+    key: "fechaInicial",
+    label: "Fecha Inicial",
+    render: (item) => new Date(item.fechaInicial).toLocaleDateString(),
+  },
+  {
+    key: "fechaFinal",
+    label: "Fecha Final",
+    render: (item) => new Date(item.fechaFinal).toLocaleDateString(),
+  },
   {
     key: "apruebaPorcentaje",
-    label: "Rango Aprobatorio",
-    render: (item) => `${item.apruebaPorcentaje || item.rangoInicial}%`,
+    label: "% Aprobación",
+    render: (item) => `${item.apruebaPorcentaje}%`,
+  },
+  {
+    key: "estado",
+    label: "Estado",
+    render: (item) => (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${
+          item.estado === "activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}
+      >
+        {item.estado}
+      </span>
+    ),
   },
 ]
 
@@ -4261,32 +56,33 @@ const Scale = () => {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [scales, setScales] = useState([...escalasData])
+  const [validationErrors, setValidationErrors] = useState([])
+  const [showDateConflictModal, setShowDateConflictModal] = useState(false)
+  const [conflictingScales, setConflictingScales] = useState([])
+
+  const { data: scales, loading, error, refetch } = useGetScales()
+  const { createNewScale, loading: creating } = usePostScale()
+  const { updateExistingScale, loading: updating } = usePutScale()
+  const { deleteExistingScale, loading: deleting } = useDeleteScale()
   const { logout } = useAuth()
   const navigate = useNavigate()
   const dropdownRef = useRef(null)
 
-  // Formulario para crear/editar
+  // Formulario para crear/editar - SIN rangoInicial y rangoFinal para la escala
   const [formData, setFormData] = useState({
     fechaInicial: "",
     fechaFinal: "",
-    rangoInicial: "",
-    rangoFinal: "",
-    valoracion: "Aprueba",
     descripcion: "",
-    metricas: [
-      { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-      { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-      { id: 3, rangoInicial: 80, rangoFinal: 100, concepto: "Excelente" },
-    ],
-    apruebaPorcentaje: 80,
+    metricas: [],
+    apruebaPorcentaje: 70,
   })
 
-  // Nueva métrica temporal
+  // Nueva métrica temporal - CON rangoInicial y rangoFinal
   const [newMetrica, setNewMetrica] = useState({
-    rangoInicial: 75,
-    rangoFinal: 100,
-    concepto: "Deficiente",
+    rangoInicial: "",
+    rangoFinal: "",
+    concepto: "",
+    descripcion: "",
   })
 
   useEffect(() => {
@@ -4299,6 +95,24 @@ const Scale = () => {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Función para encontrar escalas que se solapan con las fechas dadas
+  const findConflictingScales = (fechaInicial, fechaFinal) => {
+    if (!scales || !fechaInicial || !fechaFinal) return []
+
+    const startDate = new Date(fechaInicial)
+    const endDate = new Date(fechaFinal)
+
+    return scales.filter((scale) => {
+      if (scale.estado !== "activo") return false
+
+      const scaleStart = new Date(scale.fechaInicial)
+      const scaleEnd = new Date(scale.fechaFinal)
+
+      // Verificar solapamiento
+      return startDate <= scaleEnd && endDate >= scaleStart
+    })
+  }
 
   const handleLogoutClick = () => {
     setIsDropdownOpen(false)
@@ -4323,37 +137,35 @@ const Scale = () => {
     setFormData({
       fechaInicial: "",
       fechaFinal: "",
-      rangoInicial: "",
-      rangoFinal: "",
-      valoracion: "Aprueba",
       descripcion: "",
-      metricas: [
-        { id: 1, rangoInicial: 0, rangoFinal: 40, concepto: "No cumple" },
-        { id: 2, rangoInicial: 40, rangoFinal: 70, concepto: "Deficiente" },
-        { id: 3, rangoInicial: 80, rangoFinal: 100, concepto: "Excelente" },
-      ],
-      apruebaPorcentaje: 80,
+      metricas: [],
+      apruebaPorcentaje: 70,
     })
     setNewMetrica({
-      rangoInicial: 75,
-      rangoFinal: 100,
-      concepto: "Deficiente",
+      rangoInicial: "",
+      rangoFinal: "",
+      concepto: "",
+      descripcion: "",
     })
+    setValidationErrors([])
     setIsCreateModalOpen(true)
   }
 
   const handleEditScale = (scale) => {
     setSelectedEscala(scale)
+
+    // Formatear fechas para el input date
+    const fechaInicial = scale.fechaInicial ? new Date(scale.fechaInicial).toISOString().split("T")[0] : ""
+    const fechaFinal = scale.fechaFinal ? new Date(scale.fechaFinal).toISOString().split("T")[0] : ""
+
     setFormData({
-      fechaInicial: scale.fechaInicial,
-      fechaFinal: scale.fechaFinal,
-      rangoInicial: scale.rangoInicial,
-      rangoFinal: scale.rangoFinal,
-      valoracion: scale.valoracion,
-      descripcion: scale.descripcion,
-      metricas: [...scale.metricas],
-      apruebaPorcentaje: scale.apruebaPorcentaje,
+      fechaInicial,
+      fechaFinal,
+      descripcion: scale.descripcion || "",
+      metricas: scale.metricas ? [...scale.metricas] : [],
+      apruebaPorcentaje: scale.apruebaPorcentaje || 70,
     })
+    setValidationErrors([])
     setIsEditModalOpen(true)
   }
 
@@ -4362,18 +174,15 @@ const Scale = () => {
     setShowDeleteConfirm(true)
   }
 
-  const confirmDeleteScale = () => {
+  const confirmDeleteScale = async () => {
     try {
-      // Eliminar de la lista local
-      const updatedScales = scales.filter((s) => s.id !== itemToDelete)
-      setScales(updatedScales)
-
-      // Mostrar mensaje de éxito
+      await deleteExistingScale(itemToDelete)
       setSuccessMessage("Escala eliminada exitosamente")
       setShowSuccessModal(true)
+      refetch()
     } catch (error) {
-      console.error("Error al eliminar la escala:", error)
-      setSuccessMessage("Ocurrió un error al eliminar la escala")
+      console.error("Error deleting scale:", error)
+      setSuccessMessage("Error al eliminar la escala")
       setShowSuccessModal(true)
     } finally {
       setShowDeleteConfirm(false)
@@ -4385,32 +194,68 @@ const Scale = () => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]:
-        name === "rangoInicial" || name === "rangoFinal" || name === "apruebaPorcentaje"
-          ? Number.parseInt(value) || ""
-          : value,
+      [name]: name === "apruebaPorcentaje" ? Number.parseInt(value) || "" : value,
     })
+
+    // Verificar conflictos de fechas en tiempo real
+    if (name === "fechaInicial" || name === "fechaFinal") {
+      const newFormData = { ...formData, [name]: value }
+      if (newFormData.fechaInicial && newFormData.fechaFinal) {
+        const conflicts = findConflictingScales(newFormData.fechaInicial, newFormData.fechaFinal)
+        if (conflicts.length > 0) {
+          setConflictingScales(conflicts)
+        } else {
+          setConflictingScales([])
+        }
+      }
+    }
   }
 
   const handleNewMetricaChange = (e) => {
     const { name, value } = e.target
-    setNewMetrica({
-      ...newMetrica,
-      [name]: name === "rangoInicial" || name === "rangoFinal" ? Number.parseInt(value) || "" : value,
-    })
-  }
-
-  const handleToggleValoracion = () => {
-    setFormData({
-      ...formData,
-      valoracion: formData.valoracion === "Aprueba" ? "No aprueba" : "Aprueba",
-    })
+    setNewMetrica((prev) => ({
+      ...prev,
+      [name]: name === "rangoInicial" || name === "rangoFinal" ? (value === "" ? "" : Number(value)) : value,
+    }))
   }
 
   const handleAddMetrica = () => {
-    // Validar que los rangos no se superpongan
-    const newId = Math.max(...formData.metricas.map((m) => m.id), 0) + 1
-    const newMetricaWithId = { ...newMetrica, id: newId }
+    // Validar que todos los campos estén completos
+    if (!newMetrica.concepto || newMetrica.rangoInicial === "" || newMetrica.rangoFinal === "") {
+      setSuccessMessage("Por favor complete todos los campos de la métrica")
+      setShowSuccessModal(true)
+      return
+    }
+
+    // Validar que el rango final sea mayor al inicial
+    if (Number(newMetrica.rangoFinal) <= Number(newMetrica.rangoInicial)) {
+      setSuccessMessage("El rango final debe ser mayor al rango inicial")
+      setShowSuccessModal(true)
+      return
+    }
+
+    // Validar solapamiento con métricas existentes
+    const hasOverlap = formData.metricas.some((metrica) => {
+      const newInicial = Number(newMetrica.rangoInicial)
+      const newFinal = Number(newMetrica.rangoFinal)
+      const existingInicial = Number(metrica.rangoInicial)
+      const existingFinal = Number(metrica.rangoFinal)
+
+      return newInicial < existingFinal && newFinal > existingInicial
+    })
+
+    if (hasOverlap) {
+      setSuccessMessage("Los rangos de las métricas no pueden solaparse")
+      setShowSuccessModal(true)
+      return
+    }
+
+    const newMetricaWithId = {
+      ...newMetrica,
+      id: Date.now(), // ID temporal para el frontend
+      rangoInicial: Number(newMetrica.rangoInicial),
+      rangoFinal: Number(newMetrica.rangoFinal),
+    }
 
     setFormData({
       ...formData,
@@ -4419,9 +264,10 @@ const Scale = () => {
 
     // Resetear la nueva métrica
     setNewMetrica({
-      rangoInicial: 0,
-      rangoFinal: 0,
+      rangoInicial: "",
+      rangoFinal: "",
       concepto: "",
+      descripcion: "",
     })
   }
 
@@ -4433,28 +279,165 @@ const Scale = () => {
     })
   }
 
-  const handleCreateSubmit = (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault()
-    const newScale = {
-      id: Math.max(...scales.map((s) => s.id)) + 1,
-      ...formData,
-      // Asegurarse de que apruebaPorcentaje esté definido
-      apruebaPorcentaje: formData.apruebaPorcentaje || formData.rangoInicial,
+    setValidationErrors([])
+
+    try {
+      // Validar fechas
+      if (new Date(formData.fechaFinal) < new Date(formData.fechaInicial)) {
+        setSuccessMessage("La fecha final debe ser posterior o igual a la fecha inicial")
+        setShowSuccessModal(true)
+        return
+      }
+
+      // Verificar conflictos de fechas antes de enviar
+      const conflicts = findConflictingScales(formData.fechaInicial, formData.fechaFinal)
+      if (conflicts.length > 0) {
+        setConflictingScales(conflicts)
+        setShowDateConflictModal(true)
+        return
+      }
+
+      // Preparar datos para enviar - SIN rangoInicial y rangoFinal de la escala
+      const cleanData = {
+        fechaInicial: formData.fechaInicial,
+        fechaFinal: formData.fechaFinal,
+        descripcion: formData.descripcion,
+        apruebaPorcentaje: Number(formData.apruebaPorcentaje),
+        metricas: formData.metricas.map((metrica) => ({
+          rangoInicial: Number(metrica.rangoInicial),
+          rangoFinal: Number(metrica.rangoFinal),
+          concepto: metrica.concepto,
+          descripcion: metrica.descripcion || "",
+        })),
+      }
+
+      console.log("📤 Enviando datos para crear escala:", cleanData)
+
+      const result = await createNewScale(cleanData)
+
+      if (result.success) {
+        setIsCreateModalOpen(false)
+        setSuccessMessage("Escala creada exitosamente")
+        setShowSuccessModal(true)
+
+        // Refrescar inmediatamente
+        console.log("🔄 Refrescando escalas después de crear...")
+        await refetch()
+
+        // Refrescar nuevamente después de un pequeño delay para asegurar consistencia
+        setTimeout(async () => {
+          console.log("🔄 Segundo refetch para asegurar consistencia...")
+          await refetch()
+        }, 1000)
+      } else {
+        // Mostrar errores específicos
+        if (result.errorType === "DATE_OVERLAP") {
+          setConflictingScales(conflicts)
+          setShowDateConflictModal(true)
+        } else if (result.errors && result.errors.length > 0) {
+          setValidationErrors(result.errors)
+        } else {
+          setSuccessMessage(result.message || "Error al crear la escala")
+          setShowSuccessModal(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error creating scale:", error)
+      setSuccessMessage(error.message || "Error al crear la escala")
+      setShowSuccessModal(true)
     }
-    setScales([...scales, newScale])
-    setIsCreateModalOpen(false)
-    setSuccessMessage("Escala creada exitosamente")
-    setShowSuccessModal(true)
   }
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault()
-    const updatedScales = scales.map((scale) => (scale.id === selectedEscala.id ? { ...scale, ...formData } : scale))
-    setScales(updatedScales)
-    setIsEditModalOpen(false)
-    setSuccessMessage("Escala actualizada exitosamente")
-    setShowSuccessModal(true)
+    setValidationErrors([])
+
+    try {
+      // Validar fechas
+      if (new Date(formData.fechaFinal) < new Date(formData.fechaInicial)) {
+        setSuccessMessage("La fecha final debe ser posterior o igual a la fecha inicial")
+        setShowSuccessModal(true)
+        return
+      }
+
+      // Preparar datos para enviar
+      const cleanData = {
+        fechaInicial: formData.fechaInicial,
+        fechaFinal: formData.fechaFinal,
+        descripcion: formData.descripcion,
+        apruebaPorcentaje: Number(formData.apruebaPorcentaje),
+        metricas: formData.metricas.map((metrica) => ({
+          rangoInicial: Number(metrica.rangoInicial),
+          rangoFinal: Number(metrica.rangoFinal),
+          concepto: metrica.concepto,
+          descripcion: metrica.descripcion || "",
+        })),
+      }
+
+      const result = await updateExistingScale(selectedEscala._id, cleanData)
+
+      if (result.success) {
+        setIsEditModalOpen(false)
+        setSuccessMessage("Escala actualizada exitosamente")
+        setShowSuccessModal(true)
+
+        // Refrescar inmediatamente
+        console.log("🔄 Refrescando escalas después de editar...")
+        await refetch()
+
+        // Refrescar nuevamente después de un pequeño delay
+        setTimeout(async () => {
+          console.log("🔄 Segundo refetch para asegurar consistencia...")
+          await refetch()
+        }, 1000)
+      } else {
+        // Mostrar errores específicos
+        if (result.errors && result.errors.length > 0) {
+          setValidationErrors(result.errors)
+        } else {
+          setSuccessMessage(result.message || "Error al actualizar la escala")
+          setShowSuccessModal(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error updating scale:", error)
+      setSuccessMessage(error.message || "Error al actualizar la escala")
+      setShowSuccessModal(true)
+    }
   }
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner />
+      </div>
+    )
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>
+
+  // Debug: mostrar información de las escalas
+  console.log("🎯 Renderizando Scale component:")
+  console.log("📊 Loading:", loading)
+  console.log("❌ Error:", error)
+  console.log("📋 Scales data:", scales)
+  console.log("📈 Scales length:", scales?.length || 0)
+
+  // Debug adicional: verificar el estado completo
+  console.log("🔍 Estado completo del componente:")
+  console.log("  - Loading:", loading)
+  console.log("  - Error:", error)
+  console.log("  - Scales raw:", scales)
+  console.log("  - Scales type:", typeof scales)
+  console.log("  - Scales isArray:", Array.isArray(scales))
+  console.log("  - Scales stringified:", JSON.stringify(scales, null, 2))
+
+  // Verificar si GenericTable recibe los datos
+  console.log("📋 Datos que se pasan a GenericTable:")
+  console.log("  - data:", scales || [])
+  console.log("  - columns:", columns)
+
+    console.log("🔎 Escalas desde useGetScales:", scales); // <-- Aquí
 
   return (
     <div className="min-h-screen">
@@ -4485,8 +468,35 @@ const Scale = () => {
       </header>
 
       <div className="container mx-auto px-6">
+        {/* Prueba temporal - mostrar datos sin GenericTable */}
+        {/* <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
+          <h3 className="font-bold mb-2">🧪 PRUEBA DE DATOS:</h3>
+          <p>
+            <strong>Loading:</strong> {loading ? "Sí" : "No"}
+          </p>
+          <p>
+            <strong>Error:</strong> {error || "Ninguno"}
+          </p>
+          <p>
+            <strong>Cantidad de escalas:</strong> {scales?.length || 0}
+          </p>
+          {scales && scales.length > 0 && (
+            <div className="mt-2">
+              <strong>Escalas encontradas:</strong>
+              <ul className="list-disc ml-4">
+                {scales.map((scale, index) => (
+                  <li key={index}>
+                    {new Date(scale.fechaInicial).toLocaleDateString()} -
+                    {new Date(scale.fechaFinal).toLocaleDateString()}({scale.apruebaPorcentaje}%)
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div> */}
+
         <GenericTable
-          data={scales}
+          data={scales || []}
           columns={columns}
           onShow={handleShowEscala}
           onAdd={handleAddScale}
@@ -4503,53 +513,79 @@ const Scale = () => {
         {/* Create Scale Modal */}
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-              <div className="p-4">
-                <h2 className="text-xl font-bold text-[#1f384c] mb-4">CREAR ESCALA DE VALORACIÓN</h2>
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-auto">
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-[#1f384c] mb-6">CREAR ESCALA DE VALORACIÓN</h2>
+
+                {/* Mostrar errores de validación */}
+                {validationErrors.length > 0 && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h3 className="text-red-800 font-medium mb-2">Errores de validación:</h3>
+                    <ul className="list-disc list-inside text-red-700 text-sm">
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Mostrar advertencia de conflictos de fechas */}
+                {conflictingScales.length > 0 && (
+                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center mb-2">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600 mr-2" />
+                      <h3 className="text-yellow-800 font-medium">Conflicto de fechas detectado</h3>
+                    </div>
+                    <p className="text-yellow-700 text-sm mb-2">
+                      Las fechas seleccionadas se solapan con las siguientes escalas activas:
+                    </p>
+                    <ul className="list-disc list-inside text-yellow-700 text-sm">
+                      {conflictingScales.map((scale, index) => (
+                        <li key={index}>
+                          {new Date(scale.fechaInicial).toLocaleDateString()} -{" "}
+                          {new Date(scale.fechaFinal).toLocaleDateString()} ({scale.apruebaPorcentaje}% aprobación)
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-yellow-700 text-sm mt-2">
+                      Por favor, selecciona fechas diferentes o elimina/desactiva las escalas existentes.
+                    </p>
+                  </div>
+                )}
 
                 <form onSubmit={handleCreateSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Información básica de la escala */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
                       <input
-                        type="Date"
+                        type="date"
                         name="fechaInicial"
                         value={formData.fechaInicial}
                         onChange={handleInputChange}
-                        placeholder="DD/MM/YYYY"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${
+                          conflictingScales.length > 0 ? "border-yellow-300 bg-yellow-50" : "border-gray-300"
+                        }`}
                         required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
                       <input
-                        type="Date"
+                        type="date"
                         name="fechaFinal"
                         value={formData.fechaFinal}
                         onChange={handleInputChange}
-                        placeholder="DD/MM/YYYY"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${
+                          conflictingScales.length > 0 ? "border-yellow-300 bg-yellow-50" : "border-gray-300"
+                        }`}
                         required
                       />
                     </div>
-                    {/* <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-                      <div className="flex items-center">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.valoracion === "Aprueba"}
-                            onChange={handleToggleValoracion}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-                          <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-                        </label>
-                      </div>
-                    </div> */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Aprueba a partir de (%)*</label>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Porcentaje de Aprobación (%)*
+                      </label>
                       <input
                         type="number"
                         name="apruebaPorcentaje"
@@ -4560,10 +596,11 @@ const Scale = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                         required
                       />
+                      <p className="text-xs text-gray-500 mt-1">Porcentaje mínimo para aprobar</p>
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                     <textarea
                       name="descripcion"
@@ -4577,41 +614,14 @@ const Scale = () => {
 
                   {/* Sección para añadir métricas de valoración */}
                   <div className="border border-gray-200 rounded-lg p-4 mb-6">
-                    <h3 className="text-lg font-medium mb-4 text-center">Añadir Métrica de Valoración:</h3>
+                    <h3 className="text-lg font-medium mb-4 text-center">Métricas de Valoración</h3>
+                    <p className="text-sm text-gray-600 mb-4 text-center">
+                      Las métricas definen los rangos de calificación y sus conceptos asociados
+                    </p>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial</label>
-                        <input
-                          type="text"
-                          value={formData.fechaInicial}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final</label>
-                        <input
-                          type="text"
-                          value={formData.fechaFinal}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div>
-                      {/* <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-                        <input
-                          type="text"
-                          value={formData.valoracion}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div> */}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 mb-4 items-end">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial*</label>
                         <input
                           type="number"
                           name="rangoInicial"
@@ -4620,10 +630,11 @@ const Scale = () => {
                           min="0"
                           max="100"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="0"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final*</label>
                         <input
                           type="number"
                           name="rangoFinal"
@@ -4632,67 +643,86 @@ const Scale = () => {
                           min="0"
                           max="100"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="100"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-                        <div className="flex items-center">
-                          <input
-                            type="text"
-                            name="concepto"
-                            value={newMetrica.concepto}
-                            onChange={handleNewMetricaChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleAddMetrica}
-                            className="ml-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
-                        </div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
+                        <input
+                          type="text"
+                          name="concepto"
+                          value={newMetrica.concepto}
+                          onChange={handleNewMetricaChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Ej: Excelente"
+                        />
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={handleAddMetrica}
+                          className="w-full bg-green-500 text-white p-2 rounded-md hover:bg-green-600 flex items-center justify-center"
+                        >
+                          <Plus className="w-5 h-5 mr-1" />
+                          Agregar
+                        </button>
                       </div>
                     </div>
 
-                    <div className="border-t border-dashed border-gray-300 my-4"></div>
-
-                    <div className="text-center mb-2">
-                      <span className="text-sm font-medium">Aprueba a partir = {formData.apruebaPorcentaje}%</span>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Descripción de la métrica</label>
+                      <input
+                        type="text"
+                        name="descripcion"
+                        value={newMetrica.descripcion}
+                        onChange={handleNewMetricaChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        placeholder="Descripción opcional de la métrica"
+                      />
                     </div>
 
-                    {/* Lista de métricas */}
-                    <div className="space-y-2">
-                      {formData.metricas.map((metrica) => (
-                        <div key={metrica.id} className="flex items-center justify-between">
-                          <span className="text-sm">
-                            {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMetrica(metrica.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                    {formData.metricas.length > 0 && (
+                      <>
+                        <div className="border-t border-dashed border-gray-300 my-4"></div>
+                        <h4 className="text-md font-medium mb-2">Métricas Agregadas:</h4>
+                        <div className="space-y-2">
+                          {formData.metricas.map((metrica) => (
+                            <div key={metrica.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                              <span className="text-sm">
+                                <strong>
+                                  {metrica.rangoInicial}% - {metrica.rangoFinal}%:
+                                </strong>{" "}
+                                {metrica.concepto}
+                                {metrica.descripcion && <span className="text-gray-600"> - {metrica.descripcion}</span>}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMetrica(metrica.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex justify-between">
                     <button
                       type="button"
                       onClick={() => setIsCreateModalOpen(false)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                      className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                      disabled={creating || conflictingScales.length > 0}
+                      className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:opacity-50"
                     >
-                      Añadir
+                      {creating ? "Creando..." : "Crear Escala"}
                     </button>
                   </div>
                 </form>
@@ -4701,23 +731,46 @@ const Scale = () => {
           </div>
         )}
 
-        {/* Edit Scale Modal */}
+        {/* Modal de conflicto de fechas */}
+        <ConfirmationModal
+          isOpen={showDateConflictModal}
+          onClose={() => setShowDateConflictModal(false)}
+          title="Conflicto de Fechas"
+          message={`Las fechas seleccionadas se solapan con ${conflictingScales.length} escala(s) activa(s). Por favor, selecciona fechas diferentes o elimina las escalas existentes.`}
+          confirmText="Entendido"
+          confirmColor="bg-yellow-500 hover:bg-yellow-600"
+          showButtonCancel={false}
+        />
+
+        {/* Edit Scale Modal - Similar structure */}
         {isEditModalOpen && selectedEscala && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-auto">
-              <div className="p-4">
-                <h2 className="text-xl font-bold text-[#1f384c] mb-4">EDITAR ESCALA DE VALORACIÓN</h2>
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-auto">
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-[#1f384c] mb-6">EDITAR ESCALA DE VALORACIÓN</h2>
+
+                {/* Mostrar errores de validación */}
+                {validationErrors.length > 0 && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h3 className="text-red-800 font-medium mb-2">Errores de validación:</h3>
+                    <ul className="list-disc list-inside text-red-700 text-sm">
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <form onSubmit={handleEditSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Same form structure as create modal */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial*</label>
                       <input
-                        type="Date"
+                        type="date"
                         name="fechaInicial"
                         value={formData.fechaInicial}
                         onChange={handleInputChange}
-                        placeholder="DD/MM/YYYY"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                         required
                       />
@@ -4725,32 +778,18 @@ const Scale = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final*</label>
                       <input
-                        type="Date"
+                        type="date"
                         name="fechaFinal"
                         value={formData.fechaFinal}
                         onChange={handleInputChange}
-                        placeholder="DD/MM/YYYY"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                         required
                       />
                     </div>
-                    {/* <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-                      <div className="flex items-center">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.valoracion === "Aprueba"}
-                            onChange={handleToggleValoracion}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#16A34A]"></div>
-                          <span className="ml-3 text-sm font-medium text-gray-700">{formData.valoracion}</span>
-                        </label>
-                      </div>
-                    </div> */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Aprueba a partir de (%)*</label>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Porcentaje de Aprobación (%)*
+                      </label>
                       <input
                         type="number"
                         name="apruebaPorcentaje"
@@ -4764,7 +803,7 @@ const Scale = () => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                     <textarea
                       name="descripcion"
@@ -4776,43 +815,13 @@ const Scale = () => {
                     ></textarea>
                   </div>
 
-                  {/* Sección para añadir métricas de valoración */}
+                  {/* Métricas section - same as create */}
                   <div className="border border-gray-200 rounded-lg p-4 mb-6">
-                    <h3 className="text-lg font-medium mb-4 text-center">Añadir Métrica de Valoración:</h3>
+                    <h3 className="text-lg font-medium mb-4 text-center">Métricas de Valoración</h3>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicial</label>
-                        <input
-                          type="text"
-                          value={formData.fechaInicial}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Final</label>
-                        <input
-                          type="text"
-                          value={formData.fechaFinal}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div>
-                      {/* <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Valoración</label>
-                        <input
-                          type="text"
-                          value={formData.valoracion}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
-                        />
-                      </div> */}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 mb-4 items-end">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Inicial*</label>
                         <input
                           type="number"
                           name="rangoInicial"
@@ -4824,7 +833,7 @@ const Scale = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rango Final*</label>
                         <input
                           type="number"
                           name="rangoFinal"
@@ -4836,64 +845,81 @@ const Scale = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-                        <div className="flex items-center">
-                          <input
-                            type="text"
-                            name="concepto"
-                            value={newMetrica.concepto}
-                            onChange={handleNewMetricaChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleAddMetrica}
-                            className="ml-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
-                        </div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Concepto*</label>
+                        <input
+                          type="text"
+                          name="concepto"
+                          value={newMetrica.concepto}
+                          onChange={handleNewMetricaChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        />
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={handleAddMetrica}
+                          className="w-full bg-green-500 text-white p-2 rounded-md hover:bg-green-600 flex items-center justify-center"
+                        >
+                          <Plus className="w-5 h-5 mr-1" />
+                          Agregar
+                        </button>
                       </div>
                     </div>
 
-                    <div className="border-t border-dashed border-gray-300 my-4"></div>
-
-                    <div className="text-center mb-2">
-                      <span className="text-sm font-medium">Aprueba a partir = {formData.apruebaPorcentaje}%</span>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Descripción de la métrica</label>
+                      <input
+                        type="text"
+                        name="descripcion"
+                        value={newMetrica.descripcion}
+                        onChange={handleNewMetricaChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        placeholder="Descripción opcional de la métrica"
+                      />
                     </div>
 
-                    {/* Lista de métricas */}
-                    <div className="space-y-2">
-                      {formData.metricas.map((metrica) => (
-                        <div key={metrica.id} className="flex items-center justify-between">
-                          <span className="text-sm">
-                            {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMetrica(metrica.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                    {formData.metricas.length > 0 && (
+                      <>
+                        <div className="border-t border-dashed border-gray-300 my-4"></div>
+                        <h4 className="text-md font-medium mb-2">Métricas Agregadas:</h4>
+                        <div className="space-y-2">
+                          {formData.metricas.map((metrica) => (
+                            <div key={metrica.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                              <span className="text-sm">
+                                <strong>
+                                  {metrica.rangoInicial}% - {metrica.rangoFinal}%:
+                                </strong>{" "}
+                                {metrica.concepto}
+                                {metrica.descripcion && <span className="text-gray-600"> - {metrica.descripcion}</span>}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMetrica(metrica.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex justify-between">
                     <button
                       type="button"
                       onClick={() => setIsEditModalOpen(false)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                      className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                      disabled={updating}
+                      className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:opacity-50"
                     >
-                      Guardar Cambios
+                      {updating ? "Actualizando..." : "Guardar Cambios"}
                     </button>
                   </div>
                 </form>
@@ -4902,7 +928,7 @@ const Scale = () => {
           </div>
         )}
 
-        {/* Modal de confirmación para eliminar escala */}
+        {/* Modales de confirmación */}
         <ConfirmationModal
           isOpen={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
@@ -4913,11 +939,10 @@ const Scale = () => {
           confirmColor="bg-[#f44144] hover:bg-red-600"
         />
 
-        {/* Modal de éxito */}
         <ConfirmationModal
           isOpen={showSuccessModal}
           onConfirm={() => setShowSuccessModal(false)}
-          title="Operación Exitosa"
+          title="Información"
           message={successMessage}
           confirmText="Aceptar"
           confirmColor="bg-green-500 hover:bg-green-600"
@@ -4925,7 +950,6 @@ const Scale = () => {
         />
       </div>
 
-      {/* Modal de confirmación para cerrar sesión */}
       <ConfirmationModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
@@ -4939,7 +963,7 @@ const Scale = () => {
   )
 }
 
-// Componente para el modal de detalle de escala
+// Componente para el modal de detalle de escala - AQUÍ SÍ SE MUESTRAN LAS MÉTRICAS
 const ScaleDetailModal = ({ escala, isOpen, onClose }) => {
   const modalRef = useRef(null)
 
@@ -4963,69 +987,96 @@ const ScaleDetailModal = ({ escala, isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-4 max-h-[80vh] overflow-y-auto">
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-center text-[#1f384c] mb-4">DETALLE ESCALA DE VALORACIÓN</h2>
+      <div ref={modalRef} className="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-center text-[#1f384c] mb-6">DETALLE ESCALA DE VALORACIÓN</h2>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="flex">
-              <div className="w-1/3 font-medium text-base">Fecha Inicial:</div>
-              <div className="w-2/3 text-base text-gray-500">{escala.fechaInicial}</div>
-            </div>
-
-            <div className="flex">
-              <div className="w-1/2 font-medium text-base">Fecha Final:</div>
-              <div className="w-1/2 text-base text-gray-500">{escala.fechaFinal}</div>
-            </div>
-
-            <div className="flex">
-              <div className="w-1/3 font-medium text-base">Rango Inicial:</div>
-              <div className="w-2/3 text-base text-gray-500">{escala.rangoInicial}%</div>
-            </div>
-
-            <div className="flex">
-              <div className="w-1/2 font-medium text-base">Rango Final:</div>
-              <div className="w-1/2 text-base text-gray-500">{escala.rangoFinal}%</div>
-            </div>
-
-            {/* <div className="flex">
-              <div className="w-1/3 font-medium text-base">Valoración:</div>
-              <div className="w-2/3 text-base text-gray-500">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    escala.valoracion === "Aprueba" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {escala.valoracion}
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-4">
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Fecha Inicial:</div>
+                <div className="w-1/2 text-base text-gray-500">
+                  {new Date(escala.fechaInicial).toLocaleDateString()}
+                </div>
               </div>
-            </div> */}
 
-            <div className="flex">
-              <div className="w-1/2 font-medium text-base">Aprueba a partir de:</div>
-              <div className="w-1/2 text-base text-gray-500">{escala.apruebaPorcentaje || 70}%</div>
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Fecha Final:</div>
+                <div className="w-1/2 text-base text-gray-500">{new Date(escala.fechaFinal).toLocaleDateString()}</div>
+              </div>
+
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">% Aprobación:</div>
+                <div className="w-1/2 text-base text-gray-500">{escala.apruebaPorcentaje}%</div>
+              </div>
+
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Estado:</div>
+                <div className="w-1/2">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      escala.estado === "activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {escala.estado}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Total Métricas:</div>
+                <div className="w-1/2 text-base text-gray-500">{escala.metricas?.length || 0}</div>
+              </div>
+
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Creada:</div>
+                <div className="w-1/2 text-base text-gray-500">
+                  {escala.createdAt ? new Date(escala.createdAt).toLocaleDateString() : "N/A"}
+                </div>
+              </div>
+
+              <div className="flex">
+                <div className="w-1/2 font-medium text-base">Actualizada:</div>
+                <div className="w-1/2 text-base text-gray-500">
+                  {escala.updatedAt ? new Date(escala.updatedAt).toLocaleDateString() : "N/A"}
+                </div>
+              </div>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-3">Descripción</h3>
-
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-gray-700 text-sm">{escala.descripcion}</p>
-          </div>
+          {escala.descripcion && (
+            <>
+              <h3 className="text-lg font-medium mb-3">Descripción</h3>
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <p className="text-gray-700 text-sm">{escala.descripcion}</p>
+              </div>
+            </>
+          )}
 
           <h3 className="text-lg font-medium mb-3">Métricas de Valoración</h3>
 
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <div className="space-y-2">
-              {escala.metricas &&
-                escala.metricas.map((metrica) => (
-                  <div key={metrica.id} className="flex items-center justify-between">
-                    <span className="text-sm">
-                      {metrica.rangoInicial}% — {metrica.rangoFinal}%: {metrica.concepto}
-                    </span>
-                  </div>
-                ))}
-            </div>
+            {escala.metricas && escala.metricas.length > 0 ? (
+              <div className="space-y-3">
+                {escala.metricas
+                  .sort((a, b) => a.rangoInicial - b.rangoInicial)
+                  .map((metrica, index) => (
+                    <div key={index} className="border-l-4 border-blue-500 pl-4 bg-white p-3 rounded">
+                      <div className="font-medium text-sm mb-1">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold mr-2">
+                          {metrica.rangoInicial}% - {metrica.rangoFinal}%
+                        </span>
+                        {metrica.concepto}
+                      </div>
+                      {metrica.descripcion && <div className="text-xs text-gray-600 mt-1">{metrica.descripcion}</div>}
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm text-center py-4">No hay métricas definidas</p>
+            )}
           </div>
 
           <div className="flex justify-center">
