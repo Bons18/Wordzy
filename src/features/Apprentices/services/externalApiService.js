@@ -4,6 +4,33 @@ const EXTERNAL_API_URL = "https://sara-api-ingdanielbs-projects.vercel.app/api/v
 const API_KEY = "sara_d32775a2ea8a39a3.a14bb968e21a6be6821d19f2764945338ba182b972aff43732b0c7c8314d343a"
 
 /**
+ * Busca el rol de "Aprendiz" en la API
+ */
+const findApprenticeRole = async () => {
+  try {
+    console.log("Buscando rol de Aprendiz...")
+    const response = await fetch("http://localhost:3000/api/role")
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener roles: ${response.status}`)
+    }
+
+    const roles = await response.json()
+    const apprenticeRole = roles.find((role) => role.name === "Aprendiz" && role.status === true)
+
+    if (!apprenticeRole) {
+      throw new Error("No se encontró el rol 'Aprendiz' activo. Asegúrese de que esté creado en el sistema.")
+    }
+
+    console.log(`Rol de Aprendiz encontrado: ${apprenticeRole._id}`)
+    return apprenticeRole._id
+  } catch (error) {
+    console.error("Error al buscar rol de Aprendiz:", error)
+    throw error
+  }
+}
+
+/**
  * Mapea los estados de la API externa a los estados locales
  */
 const mapExternalStateToLocal = (externalState) => {
@@ -21,11 +48,11 @@ const mapExternalStateToLocal = (externalState) => {
 /**
  * Transforma un aprendiz de la API externa al formato local
  */
-const transformExternalApprentice = (externalApprentice) => {
+const transformExternalApprentice = (externalApprentice, roleId) => {
   // Asegurar que course_number sea un número
   const fichaNumber = Number.parseInt(externalApprentice.course_number)
 
-  // Manejar teléfono vacío o inválido - ÚNICA CORRECCIÓN AQUÍ
+  // Manejar teléfono vacío o inválido
   const telefono = externalApprentice.phone?.toString().trim() || "No especificado"
 
   return {
@@ -41,6 +68,9 @@ const transformExternalApprentice = (externalApprentice) => {
     correo: externalApprentice.email?.toLowerCase().trim() || "",
     contraseña: externalApprentice.document?.toString().trim() || "", // Contraseña igual al documento
     estado: mapExternalStateToLocal(externalApprentice.state),
+
+    // NUEVO: Vinculación con rol
+    role: roleId, // ID del rol de Aprendiz
 
     // Campos específicos de aprendices - FORMATO CORRECTO
     ficha: [fichaNumber], // Array con el número de ficha
@@ -100,6 +130,9 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
   try {
     console.log("=== INICIANDO DESCARGA MASIVA DE APRENDICES ===")
 
+    // Primero obtener el ID del rol de Aprendiz
+    const apprenticeRoleId = await findApprenticeRole()
+
     const allApprentices = []
     let totalPages = 1
     let totalItems = 0
@@ -112,7 +145,9 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
     console.log(`Total de páginas: ${totalPages}, Total de elementos: ${totalItems}`)
 
     // Procesar primera página
-    const transformedFirstPage = firstPageData.apprentices.map(transformExternalApprentice)
+    const transformedFirstPage = firstPageData.apprentices.map((apprentice) =>
+      transformExternalApprentice(apprentice, apprenticeRoleId),
+    )
     allApprentices.push(...transformedFirstPage)
 
     if (onProgress) {
@@ -129,7 +164,9 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
     for (let page = 2; page <= totalPages; page++) {
       try {
         const pageData = await fetchApprenticesPage(page)
-        const transformedApprentices = pageData.apprentices.map(transformExternalApprentice)
+        const transformedApprentices = pageData.apprentices.map((apprentice) =>
+          transformExternalApprentice(apprentice, apprenticeRoleId),
+        )
         allApprentices.push(...transformedApprentices)
 
         if (onProgress) {
@@ -191,6 +228,11 @@ export const validateTransformedApprentice = (apprentice) => {
 
   if (!apprentice.estado || !["En formación", "Condicionado", "Retirado", "Graduado"].includes(apprentice.estado)) {
     errors.push("estado debe ser válido para aprendices")
+  }
+
+  // Validación del rol
+  if (!apprentice.role || typeof apprentice.role !== "string") {
+    errors.push("role debe ser un ID válido")
   }
 
   // Validaciones específicas de aprendices

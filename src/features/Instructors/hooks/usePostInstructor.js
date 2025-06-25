@@ -1,46 +1,23 @@
 "use client"
 
 import { useState } from "react"
+import { createInstructor } from "../services/instructorApiService"
 
-const usePostInstructor = () => {
+export function usePostInstructor() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(false)
 
-  const createInstructor = async (instructorData) => {
+  const postInstructor = async (instructorData) => {
+    setLoading(true)
+    setError(null)
+
     try {
-      setLoading(true)
-      setError(null)
-      setSuccess(false)
-
-      console.log("Creando instructor:", instructorData)
-
-      // Asegurar que el tipo de usuario sea instructor
-      const dataToSend = {
-        ...instructorData,
-        tipoUsuario: "instructor",
-        fichas: [], // Inicializar con array vacío
-      }
-
-      const response = await fetch("http://localhost:3000/api/instructor", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSend),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
-      }
-
-      const result = await response.json()
-      console.log("Instructor creado exitosamente:", result)
-      setSuccess(true)
+      console.log("=== HOOK: CREANDO INSTRUCTOR ===")
+      const result = await createInstructor(instructorData)
+      console.log("Instructor creado desde hook:", result)
       return result
     } catch (err) {
-      console.error("Error al crear instructor:", err)
+      console.error("Error en hook postInstructor:", err)
       setError(err.message)
       throw err
     } finally {
@@ -48,19 +25,5 @@ const usePostInstructor = () => {
     }
   }
 
-  const resetState = () => {
-    setError(null)
-    setSuccess(false)
-    setLoading(false)
-  }
-
-  return {
-    createInstructor,
-    loading,
-    error,
-    success,
-    resetState,
-  }
+  return { postInstructor, loading, error }
 }
-
-export default usePostInstructor
