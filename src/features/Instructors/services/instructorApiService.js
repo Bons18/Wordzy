@@ -1,4 +1,74 @@
-// Servicio para operaciones de instructores con integración de roles
+/**
+ * Servicio de API para instructores
+ * Maneja todas las comunicaciones con el backend
+ */
+
+// Configuración de API
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"
+
+/**
+ * Obtiene todos los instructores del servidor
+ * @returns {Promise<Array>} Lista de instructores
+ */
+export const getAllInstructors = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/usuarios?tipoUsuario=instructor`)
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const instructors = await response.json()
+    return instructors
+  } catch (error) {
+    console.error("Error obteniendo instructores:", error)
+    throw error
+  }
+}
+
+/**
+ * Verifica si un documento ya existe en el sistema
+ * @param {string} documento - Documento a verificar
+ * @param {string} excludeId - ID a excluir (para edición)
+ * @returns {Promise<boolean>} true si existe
+ */
+export const checkDocumentExists = async (documento, excludeId = null) => {
+  try {
+    const instructors = await getAllInstructors()
+
+    const exists = instructors.some(
+      (instructor) => instructor.documento === documento.trim() && (excludeId ? instructor._id !== excludeId : true),
+    )
+
+    return exists
+  } catch (error) {
+    console.error("Error verificando documento:", error)
+    return false // En caso de error, permitir continuar
+  }
+}
+
+/**
+ * Verifica si un correo ya existe en el sistema
+ * @param {string} correo - Correo a verificar
+ * @param {string} excludeId - ID a excluir (para edición)
+ * @returns {Promise<boolean>} true si existe
+ */
+export const checkEmailExists = async (correo, excludeId = null) => {
+  try {
+    const instructors = await getAllInstructors()
+
+    const exists = instructors.some(
+      (instructor) =>
+        instructor.correo.toLowerCase() === correo.toLowerCase().trim() &&
+        (excludeId ? instructor._id !== excludeId : true),
+    )
+
+    return exists
+  } catch (error) {
+    console.error("Error verificando correo:", error)
+    return false // En caso de error, permitir continuar
+  }
+}
 
 /**
  * Busca el rol de "Instructor" en la API
@@ -6,7 +76,7 @@
 const findInstructorRole = async () => {
   try {
     console.log("Buscando rol de Instructor...")
-    const response = await fetch("http://localhost:3000/api/role")
+    const response = await fetch(`${API_BASE_URL}/api/role`)
 
     if (!response.ok) {
       throw new Error(`Error al obtener roles: ${response.status}`)
@@ -75,7 +145,7 @@ export const createInstructor = async (formData) => {
     // Preparar datos con rol
     const instructorData = await prepareInstructorDataWithRole(formData)
 
-    const response = await fetch("http://localhost:3000/api/instructor", {
+    const response = await fetch(`${API_BASE_URL}/api/instructor`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -119,7 +189,7 @@ export const updateInstructor = async (id, formData) => {
       ...(formData.contraseña && { contraseña: formData.contraseña.trim() }),
     }
 
-    const response = await fetch(`http://localhost:3000/api/instructor/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/instructor/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -138,38 +208,5 @@ export const updateInstructor = async (id, formData) => {
   } catch (error) {
     console.error("Error al actualizar instructor:", error)
     throw error
-  }
-}
-
-/**
- * Valida los datos del instructor antes del envío
- */
-export const validateInstructorDataWithRole = (formData) => {
-  const errors = {}
-
-  // Validaciones básicas
-  if (!formData.nombre || formData.nombre.trim().length < 2) {
-    errors.nombre = "El nombre debe tener al menos 2 caracteres"
-  }
-
-  if (!formData.apellido || formData.apellido.trim().length < 2) {
-    errors.apellido = "El apellido debe tener al menos 2 caracteres"
-  }
-
-  if (!formData.documento || formData.documento.trim().length < 6) {
-    errors.documento = "El documento debe tener al menos 6 caracteres"
-  }
-
-  if (!formData.correo || !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.correo)) {
-    errors.correo = "El correo debe tener un formato válido"
-  }
-
-  if (!formData.telefono || formData.telefono.trim().length === 0) {
-    errors.telefono = "El teléfono es obligatorio"
-  }
-
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
   }
 }
