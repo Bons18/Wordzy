@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FiUpload, FiChevronDown, FiPlus } from "react-icons/fi"
-import { Trash } from "lucide-react"
+import { Trash, Pencil } from "lucide-react" // Importar Pencil para el botón de editar
 
 const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   // Modificar el estado inicial para incluir un modo de edición de pregunta
@@ -440,48 +440,49 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-4 w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
+    <div className="bg-white rounded-lg p-6 w-full max-w-7xl mx-auto">
       <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-4">
         {evaluation && evaluation.id ? "EDITAR EVALUACIÓN" : "CREAR EVALUACION"}
       </h2>
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-3">
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Nombre de la Evaluacion</label>
-            <input
-              type="text"
-              name="nombre"
-              value={formData.nombre}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-              placeholder="Ingrese el nombre de la evaluacion"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Temática</label>
-            <select
-              name="tematica"
-              value={formData.tematica}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-              required
-            >
-              <option value="" disabled>
-                Seleccione una temática
-              </option>
-              <option value="listening">Listening</option>
-              <option value="vocabulary">Vocabulary</option>
-              <option value="grammar">Grammar</option>
-              <option value="reading">Reading</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
-              <label className="block text-[14px] font-medium mb-1">Tipo evaluación</label>
+              <label className="block text-[14px] font-medium mb-1">Nombre de la Evaluacion</label>
+              <input
+                type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                placeholder="Ingrese el nombre de la evaluacion"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[14px] font-medium mb-1">Temática</label>
+              <select
+                name="tematica"
+                value={formData.tematica}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                required
+              >
+                <option value="" disabled>
+                  Seleccione una temática
+                </option>
+                <option value="listening">Listening</option>
+                <option value="vocabulary">Vocabulary</option>
+                <option value="grammar">Grammar</option>
+                <option value="reading">Reading</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[14px] font-medium mb-1">Tipo</label>{" "}
+              {/* Cambiado de "Tipo evaluación" a "Tipo" */}
               <select
                 name="tipoEvaluacion"
                 value={formData.tipoEvaluacion}
@@ -493,7 +494,11 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                 <option value="Actividad">Actividad</option>
               </select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {" "}
+            {/* Reducido el gap de 6 a 4 */}
             <div>
               <label className="block text-[14px] font-medium mb-1">Estado</label>
               <div className="flex items-center pt-1">
@@ -515,41 +520,37 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                 </span>
               </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Material de referencia</label>
             <div>
-              <label className="block text-[14px] font-medium mb-1">Descripción General</label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md text-[14px] min-h-[80px]"
-                placeholder="Escriba una descripción general sobre esta actividad..."
-              />
+              <label className="block text-[14px] font-medium mb-1">Material</label>
+              <div className="flex items-center">
+                <input type="file" id="material" onChange={handleFileChange} className="hidden" />
+                <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
+                  {formData.material instanceof File
+                    ? formData.material.name
+                    : formData.materialName
+                      ? formData.materialName
+                      : "Seleccionar archivo. Ningún archivo seleccionado"}
+                </div>
+                <label
+                  htmlFor="material"
+                  className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
+                >
+                  <FiUpload className="mr-2" />
+                  Subir
+                </label>
+              </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-[14px] font-medium mb-1">Material</label>
-            <div className="flex items-center">
-              <input type="file" id="material" onChange={handleFileChange} className="hidden" />
-              <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                {formData.material instanceof File
-                  ? formData.material.name
-                  : formData.materialName
-                    ? formData.materialName
-                    : "Seleccionar archivo. Ningún archivo seleccionado"}
-              </div>
-              <label
-                htmlFor="material"
-                className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
-              >
-                <FiUpload className="mr-2" />
-                Subir
-              </label>
-            </div>
+            <label className="block text-[14px] font-medium mb-1">Descripción General</label>
+            <textarea
+              name="descripcion"
+              value={formData.descripcion}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-[14px] min-h-[80px]"
+              placeholder="Escriba una descripción general sobre esta actividad..."
+            />
           </div>
 
           <div className="border-t border-gray-200 pt-4">
@@ -616,8 +617,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   {formData.preguntas.map((pregunta, index) => (
                     <div
                       key={pregunta.id}
-                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleEditQuestion(index)}
+                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50" // Quitado cursor-pointer del div
                     >
                       <div>
                         <p className="text-[14px]">
@@ -636,19 +636,30 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                           Tipo: {pregunta.tipo} | Puntaje: {pregunta.puntaje}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setFormData((prev) => ({
-                            ...prev,
-                            preguntas: prev.preguntas.filter((_, i) => i !== index),
-                          }))
-                        }}
-                        className="text-red-500"
-                      >
-                        <Trash className="h-4 w-6 text-red-500" />
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        {" "}
+                        {/* Contenedor para los botones */}
+                        <button
+                          type="button"
+                          onClick={() => handleEditQuestion(index)} // Botón de editar
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setFormData((prev) => ({
+                              ...prev,
+                              preguntas: prev.preguntas.filter((_, i) => i !== index),
+                            }))
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -710,25 +721,27 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     required
                   />
 
-                  {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="respuestaCorrecta"
-                        checked={questionData.respuestaCorrecta === index}
-                        onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
-                        className="mr-2"
-                      />
-                      <input
-                        type="text"
-                        value={questionData.opciones[index]}
-                        onChange={(e) => handleOptionChange(index, e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-                        placeholder={`Opción ${index + 1}`}
-                        required
-                      />
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[0, 1, 2, 3].map((index) => (
+                      <div key={index} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="respuestaCorrecta"
+                          checked={questionData.respuestaCorrecta === index}
+                          onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
+                          className="mr-2"
+                        />
+                        <input
+                          type="text"
+                          value={questionData.opciones[index]}
+                          onChange={(e) => handleOptionChange(index, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                          placeholder={`Opción ${index + 1}`}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
 
                   <button
                     type="button"
@@ -774,25 +787,27 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     required
                   />
 
-                  {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="respuestaCorrecta"
-                        checked={questionData.respuestaCorrecta === index}
-                        onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
-                        className="mr-2"
-                      />
-                      <input
-                        type="text"
-                        value={questionData.opciones[index]}
-                        onChange={(e) => handleOptionChange(index, e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-                        placeholder={`Opción ${index + 1}`}
-                        required
-                      />
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[0, 1, 2, 3].map((index) => (
+                      <div key={index} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="respuestaCorrecta"
+                          checked={questionData.respuestaCorrecta === index}
+                          onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
+                          className="mr-2"
+                        />
+                        <input
+                          type="text"
+                          value={questionData.opciones[index]}
+                          onChange={(e) => handleOptionChange(index, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                          placeholder={`Opción ${index + 1}`}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
 
                   <button
                     type="button"
@@ -928,25 +943,27 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     required
                   />
 
-                  {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="respuestaCorrecta"
-                        checked={questionData.respuestaCorrecta === index}
-                        onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
-                        className="mr-2"
-                      />
-                      <input
-                        type="text"
-                        value={questionData.opciones[index]}
-                        onChange={(e) => handleOptionChange(index, e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
-                        placeholder={`Opción ${index + 1}`}
-                        required
-                      />
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[0, 1, 2, 3].map((index) => (
+                      <div key={index} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="respuestaCorrecta"
+                          checked={questionData.respuestaCorrecta === index}
+                          onChange={() => setQuestionData((prev) => ({ ...prev, respuestaCorrecta: index }))}
+                          className="mr-2"
+                        />
+                        <input
+                          type="text"
+                          value={questionData.opciones[index]}
+                          onChange={(e) => handleOptionChange(index, e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md text-[14px]"
+                          placeholder={`Opción ${index + 1}`}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
 
                   <button
                     type="button"

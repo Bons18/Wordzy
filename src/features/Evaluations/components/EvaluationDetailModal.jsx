@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { FiDownload, FiPlay, FiPause, FiVolume2, FiVolumeX, FiEye } from "react-icons/fi"
+import { FiDownload, FiPlay, FiPause, FiVolume2, FiVolumeX, FiEye, FiChevronDown, FiChevronUp } from "react-icons/fi"
 
 // URL base de la API (ajusta según tu configuración)
 const API_BASE_URL = "http://localhost:3000"
@@ -14,6 +14,8 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
   const [audioMuted, setAudioMuted] = useState({})
   const [downloadingMaterial, setDownloadingMaterial] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
+  const [expandedQuestions, setExpandedQuestions] = useState(new Set())
+  const [allExpanded, setAllExpanded] = useState(false)
   const audioRefs = useRef({})
   const progressIntervals = useRef({})
 
@@ -59,6 +61,28 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
       setImagePreview(null)
     }
   }, [isOpen])
+
+  // Función para expandir o contraer todas las preguntas
+  const toggleAllQuestions = () => {
+    if (allExpanded) {
+      setExpandedQuestions(new Set())
+    } else {
+      const allIndexes = new Set(evaluation.preguntas?.map((_, index) => index) || [])
+      setExpandedQuestions(allIndexes)
+    }
+    setAllExpanded(!allExpanded)
+  }
+
+  // Función para expandir o contraer una pregunta específica
+  const toggleQuestion = (index) => {
+    const newExpanded = new Set(expandedQuestions)
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index)
+    } else {
+      newExpanded.add(index)
+    }
+    setExpandedQuestions(newExpanded)
+  }
 
   // Función para convertir URLs relativas a absolutas
   const getFullUrl = (url) => {
@@ -322,200 +346,251 @@ const EvaluationDetailModal = ({ evaluation, isOpen, onClose }) => {
 
             {/* Preguntas */}
             <div className="border border-gray-300 rounded-lg p-3">
-              <h3 className="text-[16px] font-bold mb-2">Preguntas</h3>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-[16px] font-bold">Preguntas</h3>
+                <button
+                  onClick={toggleAllQuestions}
+                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  {allExpanded ? (
+                    <>
+                      <FiChevronUp size={16} />
+                      Contraer todas
+                    </>
+                  ) : (
+                    <>
+                      <FiChevronDown size={16} />
+                      Expandir todas
+                    </>
+                  )}
+                </button>
+              </div>
               <p className="text-[14px] text-gray-500 mb-4">Total preguntas: {evaluation.preguntas.length}</p>
 
               <div className="space-y-3">
-                {evaluation.preguntas.map((pregunta, index) => (
-                  <div key={pregunta.id || index} className="border border-gray-300 rounded-lg p-3">
-                    {/* Título de la pregunta según su tipo */}
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-[14px] font-bold">
-                        {pregunta.tipo === "seleccion" && "Selección múltiple"}
-                        {pregunta.tipo === "verdaderoFalso" && "Verdadero o falso"}
-                        {pregunta.tipo === "imagen" && "Pregunta con imagen"}
-                        {pregunta.tipo === "audio" && "Pregunta con audio"}
-                        {pregunta.tipo === "completar" && "Completar espacios"}
-                        {" | pregunta "}
-                        {index + 1}
-                      </h4>
-                      <span className="text-[14px] font-medium">Puntos: {pregunta.puntaje}</span>
-                    </div>
-
-                    {/* Enunciado */}
-                    <div className="mb-2">
-                      <p className="text-[14px] text-gray-500">Enunciado</p>
-                      <p className="text-[14px]">{pregunta.texto || pregunta.completarTexto || "Sin enunciado"}</p>
-                    </div>
-
-                    {/* Imagen (si aplica) */}
-                    {pregunta.tipo === "imagen" && pregunta.imagen && (
-                      <div className="mb-4">
-                        <p className="text-[14px] text-gray-500 mb-1">Imagen</p>
-                        <div className="border border-gray-300 rounded-lg p-2">
-                          <div className="flex justify-center mb-2">
-                            <img
-                              src={getFullUrl(pregunta.imagen) || "/placeholder.svg"}
-                              alt="Imagen de la pregunta"
-                              className="max-h-48 object-contain"
-                              onError={(e) => {
-                                console.error("Error cargando imagen:", e)
-                                e.target.onerror = null
-                                e.target.src = "/placeholder.svg?height=200&width=200"
-                              }}
-                            />
+                {evaluation.preguntas.map((pregunta, index) => {
+                  const isExpanded = expandedQuestions.has(index)
+                  return (
+                    <div key={pregunta.id || index} className="border border-gray-300 rounded-lg overflow-hidden">
+                      {/* Header de la pregunta - clickeable para expandir/contraer */}
+                      <button
+                        onClick={() => toggleQuestion(index)}
+                        className="w-full px-3 py-2 bg-gray-50 hover:bg-gray-100 flex justify-between items-center text-left transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <h4 className="text-[14px] font-bold">
+                              {pregunta.tipo === "seleccion" && "Selección múltiple"}
+                              {pregunta.tipo === "verdaderoFalso" && "Verdadero o falso"}
+                              {pregunta.tipo === "imagen" && "Pregunta con imagen"}
+                              {pregunta.tipo === "audio" && "Pregunta con audio"}
+                              {pregunta.tipo === "completar" && "Completar espacios"}
+                              {" | pregunta "}
+                              {index + 1}
+                            </h4>
+                            <span className="text-[14px] font-medium ml-2">Puntos: {pregunta.puntaje}</span>
                           </div>
-                          <div className="flex justify-center">
-                            <button
-                              onClick={() => handleImagePreview(pregunta.imagen)}
-                              className="flex items-center px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-[12px]"
-                            >
-                              <FiEye className="mr-1" size={14} />
-                              Ver imagen completa
-                            </button>
-                          </div>
+                          {pregunta.texto && (
+                            <p className="text-[12px] text-gray-600 mt-1 truncate">
+                              {pregunta.texto.length > 60 ? `${pregunta.texto.substring(0, 60)}...` : pregunta.texto}
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    )}
+                        {isExpanded ? (
+                          <FiChevronUp className="w-5 h-5 text-gray-500 ml-2" />
+                        ) : (
+                          <FiChevronDown className="w-5 h-5 text-gray-500 ml-2" />
+                        )}
+                      </button>
 
-                    {/* Audio (si aplica) */}
-                    {pregunta.tipo === "audio" && pregunta.audio && (
-                      <div className="mb-4">
-                        <p className="text-[14px] text-gray-500 mb-1">Audio</p>
-                        <div className="border border-gray-300 rounded-lg p-2 flex items-center">
-                          <button
-                            onClick={() => handlePlayAudio(pregunta.id || index)}
-                            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 mr-2 flex-shrink-0"
-                          >
-                            {audioPlaying === (pregunta.id || index) ? <FiPause size={18} /> : <FiPlay size={18} />}
-                          </button>
-
-                          <div
-                            className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
-                            onClick={(e) => handleProgressClick(e, pregunta.id || index)}
-                          >
-                            <div
-                              className={`h-full bg-gray-400 ${audioPlaying === (pregunta.id || index) ? "transition-all duration-100" : ""}`}
-                              style={{ width: `${audioProgress[pregunta.id || index] || 0}%` }}
-                            ></div>
+                      {/* Contenido expandible */}
+                      {isExpanded && (
+                        <div className="p-3 bg-white border-t border-gray-200">
+                          {/* Enunciado */}
+                          <div className="mb-2">
+                            <p className="text-[14px] text-gray-500">Enunciado</p>
+                            <p className="text-[14px]">
+                              {pregunta.texto || pregunta.completarTexto || "Sin enunciado"}
+                            </p>
                           </div>
 
-                          <audio
-                            ref={(el) => {
-                              if (el) audioRefs.current[pregunta.id || index] = el
-                            }}
-                            src={getFullUrl(pregunta.audio)}
-                            onEnded={() => handleAudioEnded(pregunta.id || index)}
-                            className="hidden"
-                          >
-                            Tu navegador no soporta el elemento de audio.
-                          </audio>
-
-                          <button
-                            className="p-2 ml-2 flex-shrink-0 text-gray-600 hover:text-gray-800"
-                            onClick={(e) => toggleMute(e, pregunta.id || index)}
-                          >
-                            {audioMuted[pregunta.id || index] ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Opciones para preguntas de selección múltiple, verdadero/falso, imagen y audio */}
-                    {(pregunta.tipo === "seleccion" || pregunta.tipo === "imagen" || pregunta.tipo === "audio") && (
-                      <div>
-                        <p className="text-[14px] text-gray-500 mb-1">Opciones</p>
-                        <div className="space-y-2">
-                          {pregunta.opciones &&
-                            pregunta.opciones.map((opcion, idx) => (
-                              <div key={idx} className="flex items-center">
-                                <div
-                                  className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${idx === pregunta.respuestaCorrecta ? "bg-black border-black" : "border-gray-400"}`}
-                                >
-                                  {idx === pregunta.respuestaCorrecta && (
-                                    <div className="w-2 h-2 rounded-full bg-white"></div>
-                                  )}
+                          {/* Imagen (si aplica) */}
+                          {pregunta.tipo === "imagen" && pregunta.imagen && (
+                            <div className="mb-4">
+                              <p className="text-[14px] text-gray-500 mb-1">Imagen</p>
+                              <div className="border border-gray-300 rounded-lg p-2">
+                                <div className="flex justify-center mb-2">
+                                  <img
+                                    src={getFullUrl(pregunta.imagen) || "/placeholder.svg"}
+                                    alt="Imagen de la pregunta"
+                                    className="max-h-48 object-contain"
+                                    onError={(e) => {
+                                      console.error("Error cargando imagen:", e)
+                                      e.target.onerror = null
+                                      e.target.src = "/placeholder.svg?height=200&width=200"
+                                    }}
+                                  />
                                 </div>
-                                <span className="text-[14px]">{opcion}</span>
+                                <div className="flex justify-center">
+                                  <button
+                                    onClick={() => handleImagePreview(pregunta.imagen)}
+                                    className="flex items-center px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-[12px]"
+                                  >
+                                    <FiEye className="mr-1" size={14} />
+                                    Ver imagen completa
+                                  </button>
+                                </div>
                               </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Opciones para verdadero/falso */}
-                    {pregunta.tipo === "verdaderoFalso" && (
-                      <div>
-                        <p className="text-[14px] text-gray-500 mb-1">Opciones</p>
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${pregunta.respuestaCorrecta === 0 ? "bg-black border-black" : "border-gray-400"}`}
-                            >
-                              {pregunta.respuestaCorrecta === 0 && (
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
-                              )}
                             </div>
-                            <span className="text-[14px]">Verdadero</span>
-                          </div>
-                          <div className="flex items-center">
-                            <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${pregunta.respuestaCorrecta === 1 ? "bg-black border-black" : "border-gray-400"}`}
-                            >
-                              {pregunta.respuestaCorrecta === 1 && (
-                                <div className="w-2 h-2 rounded-full bg-white"></div>
-                              )}
-                            </div>
-                            <span className="text-[14px]">Falso</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                          )}
 
-                    {/* Completar espacios */}
-                    {pregunta.tipo === "completar" && (
-                      <>
-                        {renderCompletarEspacios(pregunta)}
-
-                        {pregunta.palabrasCompletar && pregunta.palabrasCompletar.length > 0 && (
-                          <div className="mt-3">
-                            <p className="text-[14px] text-gray-500 mb-1">Palabras a completar</p>
-                            <div className="flex flex-wrap gap-2">
-                              {pregunta.palabrasCompletar.map((palabra, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-block px-3 py-1 bg-gray-100 rounded border border-gray-300 text-[14px]"
+                          {/* Audio (si aplica) */}
+                          {pregunta.tipo === "audio" && pregunta.audio && (
+                            <div className="mb-4">
+                              <p className="text-[14px] text-gray-500 mb-1">Audio</p>
+                              <div className="border border-gray-300 rounded-lg p-2 flex items-center">
+                                <button
+                                  onClick={() => handlePlayAudio(pregunta.id || index)}
+                                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 mr-2 flex-shrink-0"
                                 >
-                                  {palabra}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                                  {audioPlaying === (pregunta.id || index) ? (
+                                    <FiPause size={18} />
+                                  ) : (
+                                    <FiPlay size={18} />
+                                  )}
+                                </button>
 
-                        {/* Opciones de relleno */}
-                        {pregunta.opcionesRelleno && pregunta.opcionesRelleno.length > 0 && (
-                          <div className="mt-3">
-                            <p className="text-[14px] text-gray-500 mb-1">Opciones de relleno</p>
-                            <div className="flex flex-wrap gap-2">
-                              {pregunta.opcionesRelleno.map(
-                                (opcion, idx) =>
-                                  opcion && (
-                                    <span
-                                      key={idx}
-                                      className="inline-block px-3 py-1 bg-blue-50 rounded border border-blue-200 text-[14px]"
-                                    >
-                                      {opcion}
-                                    </span>
-                                  ),
-                              )}
+                                <div
+                                  className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
+                                  onClick={(e) => handleProgressClick(e, pregunta.id || index)}
+                                >
+                                  <div
+                                    className={`h-full bg-gray-400 ${audioPlaying === (pregunta.id || index) ? "transition-all duration-100" : ""}`}
+                                    style={{ width: `${audioProgress[pregunta.id || index] || 0}%` }}
+                                  ></div>
+                                </div>
+
+                                <audio
+                                  ref={(el) => {
+                                    if (el) audioRefs.current[pregunta.id || index] = el
+                                  }}
+                                  src={getFullUrl(pregunta.audio)}
+                                  onEnded={() => handleAudioEnded(pregunta.id || index)}
+                                  className="hidden"
+                                >
+                                  Tu navegador no soporta el elemento de audio.
+                                </audio>
+
+                                <button
+                                  className="p-2 ml-2 flex-shrink-0 text-gray-600 hover:text-gray-800"
+                                  onClick={(e) => toggleMute(e, pregunta.id || index)}
+                                >
+                                  {audioMuted[pregunta.id || index] ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ))}
+                          )}
+
+                          {/* Opciones para preguntas de selección múltiple, verdadero/falso, imagen y audio */}
+                          {(pregunta.tipo === "seleccion" ||
+                            pregunta.tipo === "imagen" ||
+                            pregunta.tipo === "audio") && (
+                            <div>
+                              <p className="text-[14px] text-gray-500 mb-1">Opciones</p>
+                              <div className="space-y-2">
+                                {pregunta.opciones &&
+                                  pregunta.opciones.map((opcion, idx) => (
+                                    <div key={idx} className="flex items-center">
+                                      <div
+                                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${idx === pregunta.respuestaCorrecta ? "bg-black border-black" : "border-gray-400"}`}
+                                      >
+                                        {idx === pregunta.respuestaCorrecta && (
+                                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                                        )}
+                                      </div>
+                                      <span className="text-[14px]">{opcion}</span>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Opciones para verdadero/falso */}
+                          {pregunta.tipo === "verdaderoFalso" && (
+                            <div>
+                              <p className="text-[14px] text-gray-500 mb-1">Opciones</p>
+                              <div className="space-y-2">
+                                <div className="flex items-center">
+                                  <div
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${pregunta.respuestaCorrecta === 0 ? "bg-black border-black" : "border-gray-400"}`}
+                                  >
+                                    {pregunta.respuestaCorrecta === 0 && (
+                                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                                    )}
+                                  </div>
+                                  <span className="text-[14px]">Verdadero</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${pregunta.respuestaCorrecta === 1 ? "bg-black border-black" : "border-gray-400"}`}
+                                  >
+                                    {pregunta.respuestaCorrecta === 1 && (
+                                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                                    )}
+                                  </div>
+                                  <span className="text-[14px]">Falso</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Completar espacios */}
+                          {pregunta.tipo === "completar" && (
+                            <>
+                              {renderCompletarEspacios(pregunta)}
+
+                              {pregunta.palabrasCompletar && pregunta.palabrasCompletar.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-[14px] text-gray-500 mb-1">Palabras a completar</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {pregunta.palabrasCompletar.map((palabra, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-block px-3 py-1 bg-gray-100 rounded border border-gray-300 text-[14px]"
+                                      >
+                                        {palabra}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Opciones de relleno */}
+                              {pregunta.opcionesRelleno && pregunta.opcionesRelleno.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-[14px] text-gray-500 mb-1">Opciones de relleno</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {pregunta.opcionesRelleno.map(
+                                      (opcion, idx) =>
+                                        opcion && (
+                                          <span
+                                            key={idx}
+                                            className="inline-block px-3 py-1 bg-blue-50 rounded border border-blue-200 text-[14px]"
+                                          >
+                                            {opcion}
+                                          </span>
+                                        ),
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

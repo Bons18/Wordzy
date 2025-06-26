@@ -13,9 +13,15 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     details: "",
   })
   const [results, setResults] = useState(null)
-  const [showDetails, setShowDetails] = useState(false)
   const [connectivity, setConnectivity] = useState(null)
-  const [connectivityVerified, setConnectivityVerified] = useState(false)
+  const [connectivityLoading, setConnectivityLoading] = useState(false)
+
+  // Verificar conectividad automáticamente al abrir el modal
+  useEffect(() => {
+    if (isOpen && !connectivity && !connectivityLoading) {
+      checkConnectivityAutomatically()
+    }
+  }, [isOpen])
 
   // useEffect para manejar cuando se completa la sincronización
   useEffect(() => {
@@ -39,12 +45,11 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     }
   }, [progress.phase, results, progress.details])
 
-  const checkConnectivity = async () => {
+  const checkConnectivityAutomatically = async () => {
+    setConnectivityLoading(true)
     try {
       const result = await checkApiConnectivity()
       setConnectivity(result)
-      setConnectivityVerified(true)
-      return result
     } catch (error) {
       console.error("Error verificando conectividad:", error)
       setConnectivity({
@@ -52,8 +57,8 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
         local: false,
         errors: [error.message],
       })
-      setConnectivityVerified(false)
-      return null
+    } finally {
+      setConnectivityLoading(false)
     }
   }
 
@@ -62,18 +67,12 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     setResults(null)
     setProgress({
       phase: "starting",
-      message: "Verificando conectividad...",
+      message: "Iniciando sincronización...",
       percentage: 0,
       details: "",
     })
 
     try {
-      // Verificar conectividad primero
-      const connectivityResult = await checkConnectivity()
-      if (!connectivityResult || !connectivityResult.external || !connectivityResult.local) {
-        throw new Error("Error de conectividad con las APIs")
-      }
-
       await processMassiveUpdate((progressData) => {
         setProgress(progressData)
       })
@@ -118,9 +117,8 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
       details: "",
     })
     setResults(null)
-    setShowDetails(false)
     setConnectivity(null)
-    setConnectivityVerified(false)
+    setConnectivityLoading(false)
 
     // Cerrar modal
     console.log("🚪 Cerrando modal...")
@@ -128,7 +126,6 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
   }
 
   const handleBackdropClick = (e) => {
-    // Solo cerrar si se hace clic en el backdrop, no en el contenido del modal
     if (e.target === e.currentTarget && !isProcessing) {
       handleClose()
     }
@@ -136,6 +133,8 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
 
   const getPhaseIcon = () => {
     switch (progress.phase) {
+      case "connectivity":
+        return <Wifi className="w-5 h-5 text-blue-500 animate-pulse" />
       case "download":
         return <Download className="w-5 h-5 text-blue-500 animate-pulse" />
       case "sync":
@@ -151,6 +150,8 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
 
   const getPhaseTitle = () => {
     switch (progress.phase) {
+      case "connectivity":
+        return "Verificando Conectividad"
       case "download":
         return "Descargando desde API Externa"
       case "sync":
@@ -176,7 +177,7 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
     >
       <div
         className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-        onClick={(e) => e.stopPropagation()} // Prevenir cierre al hacer clic en el contenido
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -207,9 +208,14 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
                 </div>
 
                 {/* Información de conectividad */}
-                {connectivity && (
-                  <div className="p-4 bg-gray-50 rounded-md border border-gray-300">
-                    <h4 className="font-medium text-gray-800 mb-3">Estado de Conectividad</h4>
+                <div className="p-4 bg-gray-50 rounded-md border border-gray-300">
+                  <h4 className="font-medium text-gray-800 mb-3">Estado de Conectividad</h4>
+                  {connectivityLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                      <span className="text-gray-600">Verificando conectividad...</span>
+                    </div>
+                  ) : connectivity ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         {connectivity.external ? (
@@ -231,9 +237,21 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
                           API Local: {connectivity.local ? "Conectada" : "Error"}
                         </span>
                       </div>
+                      {connectivity.errors.length > 0 && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                          <strong>Errores:</strong>
+                          <ul className="list-disc list-inside mt-1">
+                            {connectivity.errors.map((error, index) => (
+                              <li key={index}>{error}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-gray-500">Verificando conectividad...</div>
+                  )}
+                </div>
               </div>
 
               {/* Columna derecha - Advertencias y acciones */}
@@ -253,28 +271,23 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
                   </div>
                 </div>
 
-                {/* Botones de acción */}
+                {/* Botón de acción */}
                 <div className="space-y-3">
-                  <button
-                    onClick={checkConnectivity}
-                    type="button"
-                    className="w-full px-4 py-3 text-sm text-white rounded-[10px] focus:outline-none focus:ring-2 bg-blue-500 hover:bg-blue-600 focus:ring-blue-500 transition-colors"
-                  >
-                    Verificar Conectividad
-                  </button>
                   <button
                     onClick={handleStartUpdate}
                     type="button"
-                    disabled={
-                      !connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))
-                    }
+                    disabled={!connectivity || !connectivity.external || !connectivity.local || connectivityLoading}
                     className={`w-full px-4 py-3 text-sm text-white rounded-[10px] focus:outline-none focus:ring-2 transition-colors ${
-                      !connectivityVerified || (connectivity && (!connectivity.external || !connectivity.local))
+                      !connectivity || !connectivity.external || !connectivity.local || connectivityLoading
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-green-500 hover:bg-green-600 focus:ring-green-500"
                     }`}
                   >
-                    {!connectivityVerified ? "Verificar Conectividad Primero" : "Iniciar Sincronización"}
+                    {connectivityLoading
+                      ? "Verificando Conectividad..."
+                      : !connectivity || !connectivity.external || !connectivity.local
+                        ? "Error de Conectividad - No se puede iniciar"
+                        : "Iniciar Sincronización"}
                   </button>
                 </div>
               </div>

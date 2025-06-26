@@ -96,7 +96,7 @@ export const normalizeApprentice = (apprentice) => {
  */
 export const normalizeApprentices = (apprentices) => {
   return apprentices
-    .filter(user => user.tipoUsuario === "aprendiz") // Filtro adicional por seguridad
+    .filter((user) => user.tipoUsuario === "aprendiz") // Filtro adicional por seguridad
     .map(normalizeApprentice)
 }
 
@@ -128,12 +128,12 @@ export const createApprentice = async (apprenticeData) => {
   try {
     const preparedData = prepareApprenticeForSubmit(apprenticeData)
     const validation = validateApprentice(preparedData)
-    
+
     if (!validation.isValid) {
       throw new Error(validation.errors.join(", "))
     }
 
-    const response = await fetch("http://localhost:3000/api/usuarios", {
+    const response = await fetch("http://localhost:3000/api/user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -161,12 +161,12 @@ export const updateApprentice = async (id, apprenticeData) => {
   try {
     const preparedData = prepareApprenticeForSubmit(apprenticeData)
     const validation = validateApprentice(preparedData)
-    
+
     if (!validation.isValid) {
       throw new Error(validation.errors.join(", "))
     }
 
-    const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/user/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -192,7 +192,7 @@ export const updateApprentice = async (id, apprenticeData) => {
  */
 export const deleteApprentice = async (id) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, {
+    const response = await fetch(`http://localhost:3000/api/user/${id}`, {
       method: "DELETE",
     })
 
@@ -213,7 +213,7 @@ export const deleteApprentice = async (id) => {
  */
 export const updateApprenticeProgress = async (id, progresoNiveles) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/usuarios/${id}/progress`, {
+    const response = await fetch(`http://localhost:3000/api/user/${id}/progress`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

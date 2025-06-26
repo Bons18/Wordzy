@@ -5,14 +5,11 @@ import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import { useAuth } from "../../auth/hooks/useAuth"
-import EvaluationForm from "../components/EvaluationForm"
 import EvaluationDetailModal from "../components/EvaluationDetailModal"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
 // Importar los hooks
 import useGetEvaluations from "../hooks/useGetEvaluations"
-import usePostEvaluation from "../hooks/usePostEvaluation"
-import usePutEvaluation from "../hooks/usePutEvaluation"
 import useDeleteEvaluation from "../hooks/useDeleteEvaluation"
 import { normalizeEvaluations } from "../services/evaluationService"
 
@@ -44,17 +41,16 @@ const columns = [
 ]
 
 const Evaluations = () => {
+  const navigate = useNavigate()
+
   // Usar los hooks personalizados
   const { evaluations: rawEvaluations, loading: fetchLoading, error: fetchError, refetch } = useGetEvaluations()
-  const { createEvaluation, loading: createLoading, error: createError } = usePostEvaluation()
-  const { updateEvaluation, loading: updateLoading, error: updateError } = usePutEvaluation()
   const { deleteEvaluation, loading: deleteLoading, error: deleteError } = useDeleteEvaluation()
 
   // Normalizar las evaluaciones para la UI (asegurar que tengan id)
   const evaluationsData = normalizeEvaluations(rawEvaluations)
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
@@ -69,19 +65,18 @@ const Evaluations = () => {
   const [errorMessage, setErrorMessage] = useState("")
 
   const { logout } = useAuth()
-  const navigate = useNavigate()
   const dropdownRef = useRef(null)
 
   // Actualizar el estado de carga y error cuando cambien los hooks
   useEffect(() => {
-    setIsLoading(fetchLoading || createLoading || updateLoading || deleteLoading)
-  }, [fetchLoading, createLoading, updateLoading, deleteLoading])
+    setIsLoading(fetchLoading || deleteLoading)
+  }, [fetchLoading, deleteLoading])
 
   // Consolidar errores de los diferentes hooks
   useEffect(() => {
-    const error = fetchError || createError || updateError || deleteError
+    const error = fetchError || deleteError
     setErrorMessage(error ? `Error: ${error}` : "")
-  }, [fetchError, createError, updateError, deleteError])
+  }, [fetchError, deleteError])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,13 +90,11 @@ const Evaluations = () => {
   }, [])
 
   const handleAddEvaluation = () => {
-    setCurrentEvaluation(null)
-    setIsFormOpen(true)
+    navigate("/programacion/evaluaciones/crear")
   }
 
   const handleEditEvaluation = (evaluation) => {
-    setCurrentEvaluation(evaluation)
-    setIsFormOpen(true)
+    navigate(`/programacion/evaluaciones/editar/${evaluation.id}`)
   }
 
   const handleDeleteEvaluation = (id) => {
@@ -113,93 +106,6 @@ const Evaluations = () => {
   const handleShowEvaluation = (evaluation) => {
     setCurrentEvaluation(evaluation)
     setIsDetailModalOpen(true)
-  }
-
-  const handleFormSubmit = async (formData) => {
-    try {
-      setIsLoading(true)
-      setErrorMessage("")
-
-      // Verificar si formData es una instancia de FormData
-      if (formData instanceof FormData) {
-        console.log("Recibido FormData válido")
-
-        // Si es una edición, añadir el ID
-        if (currentEvaluation) {
-          formData.append("id", currentEvaluation.id)
-          await updateEvaluation(currentEvaluation.id, formData)
-          setSuccessTitle("Evaluación Editada")
-          setSuccessMessage("La evaluación ha sido editada con éxito")
-        } else {
-          // Crear nueva evaluación
-          await createEvaluation(formData)
-          setSuccessTitle("Evaluación Creada")
-          setSuccessMessage("La evaluación ha sido creada con éxito")
-        }
-      } else {
-        // Si no es FormData, usar el enfoque anterior
-        console.log("Recibido objeto regular, convirtiendo a FormData")
-
-        // Crear un nuevo FormData
-        const data = new FormData()
-
-        // Añadir campos básicos
-        data.append("nombre", formData.nombre)
-        data.append("tematica", formData.tematica)
-        data.append("tipoEvaluacion", formData.tipoEvaluacion)
-        data.append("estado", formData.estado)
-        data.append("descripcion", formData.descripcion || "")
-
-        // Añadir material si existe
-        if (formData.material && formData.material instanceof File) {
-          data.append("material", formData.material)
-        }
-
-        // Procesar preguntas
-        const preguntasModificadas = [...formData.preguntas]
-
-        // Procesar archivos de preguntas
-        formData.preguntas.forEach((pregunta, index) => {
-          if (pregunta.tipo === "imagen" && pregunta.imagen instanceof File) {
-            const fileKey = `imagen_pregunta_${index}`
-            data.append(fileKey, pregunta.imagen)
-            preguntasModificadas[index].imagen = fileKey
-          }
-
-          if (pregunta.tipo === "audio" && pregunta.audio instanceof File) {
-            const fileKey = `audio_pregunta_${index}`
-            data.append(fileKey, pregunta.audio)
-            preguntasModificadas[index].audio = fileKey
-          }
-        })
-
-        // Añadir las preguntas modificadas
-        data.append("preguntas", JSON.stringify(preguntasModificadas))
-
-        // Ejecutar la operación correspondiente
-        if (currentEvaluation) {
-          data.append("id", currentEvaluation.id)
-          await updateEvaluation(currentEvaluation.id, data)
-          setSuccessTitle("Evaluación Editada")
-          setSuccessMessage("La evaluación ha sido editada con éxito")
-        } else {
-          await createEvaluation(data)
-          setSuccessTitle("Evaluación Creada")
-          setSuccessMessage("La evaluación ha sido creada con éxito")
-        }
-      }
-
-      // Refrescar la lista
-      refetch()
-
-      setIsFormOpen(false)
-      setIsSuccessModalOpen(true)
-    } catch (error) {
-      console.error("Error al procesar la evaluación:", error)
-      setErrorMessage(`Error: ${error.message || "Ocurrió un error al procesar la evaluación"}`)
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   const handleConfirmDelete = async () => {
@@ -266,6 +172,10 @@ const Evaluations = () => {
       </header>
 
       <div className="container mx-auto px-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">Lista de evaluaciones</h2>
+        </div>
+
         {/* Mostrar error si existe */}
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
@@ -280,26 +190,15 @@ const Evaluations = () => {
           <GenericTable
             data={evaluationsData}
             columns={columns}
+            onAdd={handleAddEvaluation}
             onShow={handleShowEvaluation}
             onEdit={handleEditEvaluation}
             onDelete={handleDeleteEvaluation}
-            onAdd={handleAddEvaluation}
             title="Listado de Evaluaciones"
             showActions={{ show: true, edit: true, delete: true, add: true }}
           />
         )}
       </div>
-
-      {/* Modal de formulario para crear/editar */}
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <EvaluationForm
-            evaluation={currentEvaluation}
-            onSubmit={handleFormSubmit}
-            onCancel={() => setIsFormOpen(false)}
-          />
-        </div>
-      )}
 
       {/* Modal de detalle para ver evaluación */}
       <EvaluationDetailModal
