@@ -2,12 +2,12 @@
 
 import { useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
 import EvaluationForm from "../components/EvaluationForm"
 import usePostEvaluation from "../hooks/usePostEvaluation"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-import CustomAlert from "../components/customAlert"
+import CustomAlert from "../components/CustomAlert"
 
 const CreateEvaluationPage = () => {
   const navigate = useNavigate()
@@ -64,13 +64,7 @@ const CreateEvaluationPage = () => {
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 text-[#1f384c] hover:text-gray-600 transition-colors mr-4"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Volver</span>
-            </button>
+            <h1 className="text-2xl font-bold text-[#1f384c]">Evaluaciones</h1>
           </div>
 
           {/* User Dropdown */}
@@ -115,7 +109,7 @@ const CreateEvaluationPage = () => {
 
           {/* Form */}
           <div className="bg-white rounded-lg shadow-sm">
-            <EvaluationForm evaluation={null} onSubmit={handleSubmit} onCancel={handleCancel} />
+            <EvaluationForm evaluation={null} onSubmit={handleSubmit} onCancel={handleCancel} isCreating={true} />
           </div>
         </div>
       </div>

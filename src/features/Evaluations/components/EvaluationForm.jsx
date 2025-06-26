@@ -2,18 +2,18 @@
 
 import { useState, useEffect } from "react"
 import { FiUpload, FiChevronDown, FiPlus } from "react-icons/fi"
-import { Trash, Pencil } from "lucide-react" // Importar Pencil para el botón de editar
+import { Trash, Pencil } from "lucide-react"
 
-const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
+const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = false }) => {
   // Modificar el estado inicial para incluir un modo de edición de pregunta
   const [formData, setFormData] = useState({
     nombre: "",
-    tematica: "", // Añadir esta línea
+    tematica: "",
     tipoEvaluacion: "Examen",
-    estado: "Activo",
+    estado: "Activo", // Siempre activo por defecto
     descripcion: "",
     material: null,
-    materialName: "", // Añadir para mostrar el nombre del archivo existente
+    materialName: "",
     preguntas: [],
   })
 
@@ -26,15 +26,14 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     respuestaCorrecta: 0,
     puntaje: 10,
     imagen: null,
-    imagenName: "", // Añadir para mostrar el nombre del archivo existente
+    imagenName: "",
     audio: null,
-    audioName: "", // Añadir para mostrar el nombre del archivo existente
+    audioName: "",
     completarTexto: "",
     palabrasCompletar: ["", ""],
     opcionesRelleno: ["", "", ""],
   })
   const [editingQuestionIndex, setEditingQuestionIndex] = useState(null)
-  // Agregar un nuevo estado para manejar errores de validación
   const [validationError, setValidationError] = useState("")
 
   useEffect(() => {
@@ -58,7 +57,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
         materialName: extractFileName(evaluation.material),
         preguntas: evaluation.preguntas
           ? evaluation.preguntas.map((pregunta) => {
-              // Para cada pregunta, extraer nombres de archivo si existen
               return {
                 ...pregunta,
                 imagenName: pregunta.tipo === "imagen" ? extractFileName(pregunta.imagen) : "",
@@ -126,14 +124,11 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }
   }
 
-  // Agregar función para editar una pregunta existente
   const handleEditQuestion = (index) => {
     const questionToEdit = formData.preguntas[index]
     setQuestionData({
       ...questionToEdit,
-      // Asegurarse de que las opciones de relleno existan
       opcionesRelleno: questionToEdit.opcionesRelleno || ["", "", ""],
-      // Mantener los nombres de archivo
       imagenName: questionToEdit.imagenName || "",
       audioName: questionToEdit.audioName || "",
     })
@@ -141,9 +136,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     setEditingQuestionIndex(index)
   }
 
-  // Modificar la función addQuestion para manejar tanto agregar como actualizar
   const addQuestion = () => {
-    // Validar que el enunciado no esté vacío
+    // Validaciones...
     if (
       (currentQuestionType !== "completar" && (!questionData.texto || questionData.texto.trim() === "")) ||
       (currentQuestionType === "completar" &&
@@ -153,62 +147,49 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       return
     }
 
-    // Validar opciones según el tipo de pregunta
     if (currentQuestionType === "seleccion" || currentQuestionType === "imagen" || currentQuestionType === "audio") {
-      // Verificar que todas las opciones tengan contenido
       if (questionData.opciones.some((opcion) => !opcion || opcion.trim() === "")) {
         setValidationError("Todas las opciones deben tener contenido")
         return
       }
     }
 
-    // Validaciones adicionales para preguntas de completar espacios
     if (currentQuestionType === "completar") {
-      // Verificar que haya al menos un espacio para completar
       const matches = questionData.completarTexto.match(/\[\s*\]/g) || []
       if (matches.length === 0) {
         setValidationError("Debe incluir al menos un espacio para completar usando []")
         return
       }
 
-      // Verificar que todas las palabras a completar tengan contenido
       if (questionData.palabrasCompletar.some((palabra) => !palabra || palabra.trim() === "")) {
         setValidationError("Todas las palabras a completar deben tener contenido")
         return
       }
 
-      // Verificar que las opciones de relleno no estén vacías
       if (questionData.opcionesRelleno.some((opcion) => !opcion || opcion.trim() === "")) {
         setValidationError("Todas las opciones de relleno deben tener contenido")
         return
       }
     }
 
-    // Validar que se haya seleccionado un archivo para preguntas con imagen
-    // Para modo edición, permitir que imagen sea un string (URL existente) o un File
     if (currentQuestionType === "imagen" && !questionData.imagen && !questionData.imagenName) {
       setValidationError("Debe seleccionar una imagen para este tipo de pregunta")
       return
     }
 
-    // Validar que se haya seleccionado un archivo para preguntas con audio
-    // Para modo edición, permitir que audio sea un string (URL existente) o un File
     if (currentQuestionType === "audio" && !questionData.audio && !questionData.audioName) {
       setValidationError("Debe seleccionar un archivo de audio para este tipo de pregunta")
       return
     }
 
-    // Si pasa todas las validaciones, limpiar el error
     setValidationError("")
 
     if (editingQuestionIndex !== null) {
-      // Actualizar pregunta existente
       setFormData((prev) => {
         const updatedPreguntas = [...prev.preguntas]
         updatedPreguntas[editingQuestionIndex] = {
           ...questionData,
           id: prev.preguntas[editingQuestionIndex].id,
-          // Preservar URLs originales si no se seleccionó un nuevo archivo
           imagen: questionData.imagen || (questionData.imagenName ? prev.preguntas[editingQuestionIndex].imagen : null),
           audio: questionData.audio || (questionData.audioName ? prev.preguntas[editingQuestionIndex].audio : null),
         }
@@ -219,7 +200,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       })
       setEditingQuestionIndex(null)
     } else {
-      // Agregar nueva pregunta
       setFormData((prev) => ({
         ...prev,
         preguntas: [...prev.preguntas, { ...questionData, id: Date.now() }],
@@ -285,7 +265,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
     }))
   }
 
-  // Agregar función para eliminar una opción de relleno
   const removeOpcionRelleno = (index) => {
     if (questionData.opcionesRelleno.length > 1) {
       setQuestionData((prev) => ({
@@ -316,9 +295,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    // Validar que el puntaje sea válido
     if (!isPuntajeValid()) {
-      // Si el puntaje no es válido, mostrar un mensaje o scroll hacia la advertencia
       const alertElement = document.getElementById("puntaje-alert")
       if (alertElement) {
         alertElement.scrollIntoView({ behavior: "smooth" })
@@ -326,85 +303,52 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       return
     }
 
-    // Crear un nuevo FormData para enviar los archivos
     const data = new FormData()
 
-    // Añadir campos básicos
     data.append("nombre", formData.nombre)
     data.append("tematica", formData.tematica)
     data.append("tipoEvaluacion", formData.tipoEvaluacion)
     data.append("estado", formData.estado)
     data.append("descripcion", formData.descripcion || "")
 
-    // Añadir el ID si estamos editando
     if (evaluation && evaluation.id) {
       data.append("id", evaluation.id)
     }
 
-    // Añadir material si existe y es un File (nuevo archivo)
     if (formData.material instanceof File) {
       data.append("material", formData.material)
-      console.log("Añadiendo nuevo material:", formData.material.name)
     } else if (formData.material && typeof formData.material === "string" && evaluation) {
-      // Si es una edición y el material es una URL existente, conservarla
       data.append("materialUrl", formData.material)
-      console.log("Conservando material existente:", formData.material)
     }
 
-    // Procesar preguntas para manejar archivos
     const preguntasModificadas = JSON.parse(JSON.stringify(formData.preguntas))
 
-    // Procesar archivos de preguntas
     formData.preguntas.forEach((pregunta, index) => {
-      // Limpiar propiedades auxiliares que no queremos enviar al servidor
       delete preguntasModificadas[index].imagenName
       delete preguntasModificadas[index].audioName
 
-      // Manejar preguntas con imágenes
       if (pregunta.tipo === "imagen") {
         if (pregunta.imagen instanceof File) {
-          // Si es un nuevo archivo, añadirlo al FormData
           const fileKey = `imagen_pregunta_${index}`
           data.append(fileKey, pregunta.imagen)
           preguntasModificadas[index].imagen = fileKey
-          console.log(`Añadiendo nueva imagen para pregunta ${index}:`, pregunta.imagen.name)
         } else if (typeof pregunta.imagen === "string" && pregunta.imagen) {
-          // Si es una URL existente, conservarla
           preguntasModificadas[index].imagen = pregunta.imagen
-          console.log(`Conservando imagen existente para pregunta ${index}:`, pregunta.imagen)
         }
       }
 
-      // Manejar preguntas con audio
       if (pregunta.tipo === "audio") {
         if (pregunta.audio instanceof File) {
-          // Si es un nuevo archivo, añadirlo al FormData
           const fileKey = `audio_pregunta_${index}`
           data.append(fileKey, pregunta.audio)
           preguntasModificadas[index].audio = fileKey
-          console.log(`Añadiendo nuevo audio para pregunta ${index}:`, pregunta.audio.name)
         } else if (typeof pregunta.audio === "string" && pregunta.audio) {
-          // Si es una URL existente, conservarla
           preguntasModificadas[index].audio = pregunta.audio
-          console.log(`Conservando audio existente para pregunta ${index}:`, pregunta.audio)
         }
       }
     })
 
-    // Añadir las preguntas modificadas como JSON
     data.append("preguntas", JSON.stringify(preguntasModificadas))
-
-    // Depuración - Mostrar todo lo que contiene el FormData
-    console.log("Contenido del FormData:")
-    for (const pair of data.entries()) {
-      if (pair[1] instanceof File) {
-        console.log(`${pair[0]}: File - ${pair[1].name} (${pair[1].size} bytes)`)
-      } else {
-        console.log(`${pair[0]}: ${pair[1]}`)
-      }
-    }
-
-    // Llamar a la función onSubmit con el FormData
     onSubmit(data)
   }
 
@@ -415,13 +359,10 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
       completarTexto: text,
     }))
 
-    // Contar cuántos espacios [] hay en el texto
     const matches = text.match(/\[\s*\]/g) || []
     const numSpaces = matches.length
 
-    // Ajustar el array de palabras para completar según el número de espacios
     if (numSpaces > questionData.palabrasCompletar.length) {
-      // Añadir campos adicionales si hay más espacios
       const newPalabras = [...questionData.palabrasCompletar]
       for (let i = questionData.palabrasCompletar.length; i < numSpaces; i++) {
         newPalabras.push("")
@@ -431,7 +372,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
         palabrasCompletar: newPalabras,
       }))
     } else if (numSpaces < questionData.palabrasCompletar.length) {
-      // Reducir campos si hay menos espacios
       setQuestionData((prev) => ({
         ...prev,
         palabrasCompletar: prev.palabrasCompletar.slice(0, numSpaces),
@@ -447,7 +387,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-3">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Primera fila: Nombre y Temática */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-[14px] font-medium mb-1">Nombre de la Evaluacion</label>
               <input
@@ -479,10 +420,12 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                 <option value="reading">Reading</option>
               </select>
             </div>
+          </div>
 
+          {/* Segunda fila: Tipo y Estado (solo en edición) */}
+          <div className={`grid grid-cols-1 ${!isCreating ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-6`}>
             <div>
-              <label className="block text-[14px] font-medium mb-1">Tipo</label>{" "}
-              {/* Cambiado de "Tipo evaluación" a "Tipo" */}
+              <label className="block text-[14px] font-medium mb-1">Tipo</label>
               <select
                 name="tipoEvaluacion"
                 value={formData.tipoEvaluacion}
@@ -494,51 +437,52 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                 <option value="Actividad">Actividad</option>
               </select>
             </div>
+
+            {/* Estado solo se muestra en modo edición */}
+            {!isCreating && (
+              <div>
+                <label className="block text-[14px] font-medium mb-1">Estado</label>
+                <div className="flex items-center pt-1">
+                  <button
+                    type="button"
+                    onClick={handleToggleEstado}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                      formData.estado === "Activo" ? "bg-green-600" : "bg-gray-200"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.estado === "Activo" ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <span className="ml-3 text-[14px] font-medium">
+                    {formData.estado === "Activo" ? "Activo" : "Inactivo"}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {" "}
-            {/* Reducido el gap de 6 a 4 */}
-            <div>
-              <label className="block text-[14px] font-medium mb-1">Estado</label>
-              <div className="flex items-center pt-1">
-                <button
-                  type="button"
-                  onClick={handleToggleEstado}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                    formData.estado === "Activo" ? "bg-green-600" : "bg-gray-200"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.estado === "Activo" ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-                <span className="ml-3 text-[14px] font-medium">
-                  {formData.estado === "Activo" ? "Activo" : "Inactivo"}
-                </span>
+          {/* Tercera fila: Material solo */}
+          <div>
+            <label className="block text-[14px] font-medium mb-1">Material</label>
+            <div className="flex items-center">
+              <input type="file" id="material" onChange={handleFileChange} className="hidden" />
+              <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
+                {formData.material instanceof File
+                  ? formData.material.name
+                  : formData.materialName
+                    ? formData.materialName
+                    : "Seleccionar archivo. Ningún archivo seleccionado"}
               </div>
-            </div>
-            <div>
-              <label className="block text-[14px] font-medium mb-1">Material</label>
-              <div className="flex items-center">
-                <input type="file" id="material" onChange={handleFileChange} className="hidden" />
-                <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                  {formData.material instanceof File
-                    ? formData.material.name
-                    : formData.materialName
-                      ? formData.materialName
-                      : "Seleccionar archivo. Ningún archivo seleccionado"}
-                </div>
-                <label
-                  htmlFor="material"
-                  className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
-                >
-                  <FiUpload className="mr-2" />
-                  Subir
-                </label>
-              </div>
+              <label
+                htmlFor="material"
+                className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
+              >
+                <FiUpload className="mr-2" />
+                Subir
+              </label>
             </div>
           </div>
 
@@ -617,7 +561,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                   {formData.preguntas.map((pregunta, index) => (
                     <div
                       key={pregunta.id}
-                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50" // Quitado cursor-pointer del div
+                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50"
                     >
                       <div>
                         <p className="text-[14px]">
@@ -637,11 +581,9 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {" "}
-                        {/* Contenedor para los botones */}
                         <button
                           type="button"
-                          onClick={() => handleEditQuestion(index)} // Botón de editar
+                          onClick={() => handleEditQuestion(index)}
                           className="text-blue-500 hover:text-blue-700"
                         >
                           <Pencil className="h-4 w-4" />
@@ -666,7 +608,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
               </div>
             )}
 
-            {/* Formulario de pregunta con imagen */}
+            {/* Formularios de preguntas... (mantener igual) */}
             {currentQuestionType === "imagen" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -756,7 +698,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
               </div>
             )}
 
-            {/* Formulario de pregunta de selección múltiple */}
+            {/* Resto de formularios de preguntas... (mantener igual que antes) */}
             {currentQuestionType === "seleccion" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -822,7 +764,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
               </div>
             )}
 
-            {/* Formulario de pregunta verdadero/falso */}
             {currentQuestionType === "verdaderoFalso" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -888,7 +829,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
               </div>
             )}
 
-            {/* Formulario de pregunta con audio */}
             {currentQuestionType === "audio" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -1031,7 +971,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel }) => {
                     </div>
                   )}
 
-                  {/* Opciones de relleno para completar espacios */}
                   <div>
                     <div className="flex justify-between items-center">
                       <h4 className="text-[14px] font-medium mb-2">Opciones de Relleno</h4>

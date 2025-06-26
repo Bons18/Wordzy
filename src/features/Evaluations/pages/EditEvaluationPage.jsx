@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ChevronLeft, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
 import EvaluationForm from "../components/EvaluationForm"
 import useGetEvaluations from "../hooks/useGetEvaluations"
@@ -94,13 +94,7 @@ const EditEvaluationPage = () => {
         <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
           <div className="container mx-auto flex justify-between items-center">
             <div className="flex items-center">
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-2 text-[#1f384c] hover:text-gray-600 transition-colors mr-4"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <span>Volver</span>
-              </button>
+              <h1 className="text-2xl font-bold text-[#1f384c]">Evaluaciones</h1>
             </div>
 
             {/* User Dropdown */}
@@ -144,13 +138,7 @@ const EditEvaluationPage = () => {
         <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
           <div className="container mx-auto flex justify-between items-center">
             <div className="flex items-center">
-              <button
-                onClick={handleCancel}
-                className="flex items-center gap-2 text-[#1f384c] hover:text-gray-600 transition-colors mr-4"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <span>Volver</span>
-              </button>
+              <h1 className="text-2xl font-bold text-[#1f384c]">Evaluaciones</h1>
             </div>
 
             {/* User Dropdown */}
@@ -193,13 +181,7 @@ const EditEvaluationPage = () => {
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 text-[#1f384c] hover:text-gray-600 transition-colors mr-4"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Volver</span>
-            </button>
+            <h1 className="text-2xl font-bold text-[#1f384c]">Evaluaciones</h1>
           </div>
 
           {/* User Dropdown */}
@@ -247,7 +229,12 @@ const EditEvaluationPage = () => {
           {/* Form */}
           {evaluation && (
             <div className="bg-white rounded-lg shadow-sm">
-              <EvaluationForm evaluation={evaluation} onSubmit={handleSubmit} onCancel={handleCancel} />
+              <EvaluationForm
+                evaluation={evaluation}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isCreating={false}
+              />
             </div>
           )}
         </div>
