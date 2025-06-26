@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../contexts/AuthContext"
@@ -12,17 +10,22 @@ import {
   LayoutDashboard,
   GraduationCap,
   Calendar,
-  BookOpen,
   Users,
   Settings,
-  FileText,
-  User,
   Award,
   Star,
-  List,
   TrendingUp,
   MessageSquare,
-  Shield,
+  CalendarCheck,
+  BookOpenText,
+  ShieldCheck,
+  ClipboardCheck,
+  ClipboardList,
+  UserCog,
+  Paperclip,
+  TestTubes,
+  Gauge,
+  ListChecks,
 } from "lucide-react"
 
 const Navbar = () => {
@@ -132,22 +135,22 @@ const Navbar = () => {
           {openSections.formacion && (
             <div className="ml-4 border-l border-[#3a5d7a] pl-4 py-1 space-y-1">
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<GraduationCap size={16} />}
                 text="Programas"
                 onClick={() => handleNavigation("/formacion/programas")}
               />
               <NavSubItem
-                icon={<List size={16} />}
+                icon={<ClipboardList size={16} />}
                 text="Fichas"
                 onClick={() => handleNavigation("/formacion/fichas")}
               />
               <NavSubItem
-                icon={<Users size={16} />}
+                icon={<UserCog size={16} />}
                 text="Instructores"
                 onClick={() => handleNavigation("/formacion/instructores")}
               />
               <NavSubItem
-                icon={<User size={16} />}
+                icon={<Users size={16} />}
                 text="Aprendices"
                 onClick={() => handleNavigation("/formacion/aprendices")}
               />
@@ -174,24 +177,29 @@ const Navbar = () => {
           {openSections.programacion && (
             <div className="ml-4 border-l border-[#707fdd] pl-4">
               <NavSubItem
-                icon={<BookOpen size={16} />}
+                icon={<BookOpenText size={16} />}
                 text="Temas"
                 onClick={() => handleNavigation("/programacion/temas")}
               />
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<Paperclip size={16} />}
                 text="Materiales de Apoyo"
                 onClick={() => handleNavigation("/programacion/materiales")}
               />
               <NavSubItem
-                icon={<FileText size={16} />}
+                icon={<TestTubes size={16} />}
                 text="Evaluaciones"
                 onClick={() => handleNavigation("/programacion/evaluaciones")}
               />
               <NavSubItem
-                icon={<Calendar size={16} />}
+                icon={<CalendarCheck size={16} />}
                 text="Programación de Cursos"
                 onClick={() => handleNavigation("/programacion/programacionCursos")}
+              />
+              <NavSubItem
+                icon={<ClipboardCheck size={16} />}
+                text="Asignación de Niveles"
+                onClick={() => handleNavigation("/programacion/asignacionNiveles")}
               />
               <NavSubItem
                 icon={<Star size={16} />}
@@ -210,7 +218,7 @@ const Navbar = () => {
         {/* Progreso */}
         <div>
           <NavItem
-            icon={<BookOpen size={18} />}
+            icon={<Gauge size={18} />}
             text="Progreso"
             hasSubmenu={true}
             isOpen={openSections.progreso}
@@ -223,7 +231,7 @@ const Navbar = () => {
           {openSections.progreso && (
             <div className="ml-4 border-l border-[#707fdd] pl-4">
               <NavSubItem
-                icon={<List size={16} />}
+                icon={<ListChecks size={16} />}
                 text="Cursos Programados"
                 onClick={() => handleNavigation("/progreso/cursosProgramados")}
               />
@@ -261,7 +269,7 @@ const Navbar = () => {
             {openSections.configuracion && (
               <div className="ml-4 border-l border-[#707fdd] pl-4">
                 <NavSubItem
-                  icon={<Shield size={16} />}
+                  icon={<ShieldCheck size={16} />}
                   text="Roles"
                   onClick={() => handleNavigation("/configuracion/roles")}
                 />

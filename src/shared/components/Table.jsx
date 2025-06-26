@@ -209,7 +209,7 @@ const GenericTable = ({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-2 flex flex-col min-h-0">
+    <div className="bg-white rounded-[10px] shadow-sm p-2 flex flex-col min-h-0">
       {/* Table Controls */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
