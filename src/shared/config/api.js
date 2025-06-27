@@ -36,7 +36,7 @@ export const API_ENDPOINTS = {
   PROGRAMS: `${API_BASE_URL}/program`,
   PROGRAM_BY_ID: (id) => `${API_BASE_URL}/program/${id}`,
 
-  // Cursos
+  // Cursos/Fichas
   COURSES: `${API_BASE_URL}/course`,
   COURSE_BY_ID: (id) => `${API_BASE_URL}/course/${id}`,
 

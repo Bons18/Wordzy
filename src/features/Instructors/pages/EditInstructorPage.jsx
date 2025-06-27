@@ -1,9 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { ChevronDown } from "lucide-react"
+import { useAuth } from "../../auth/hooks/useAuth"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import useGetInstructors from "../hooks/useGetInstructors"
+import usePutInstructor from "../hooks/usePutInstructor"
 import useGetCourses from "../hooks/useGetCourses"
+import { validateInstructorData, processServerError, extractFichaIds } from "../services/instructorValidationService"
 
-const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loading }) => {
+const EditInstructorPage = () => {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const { logout } = useAuth()
+  const { instructors, loading: loadingInstructors } = useGetInstructors()
+  const { updateInstructor, loading } = usePutInstructor()
+  const { courses, loading: coursesLoading, error: coursesError } = useGetCourses()
+
+  const [instructor, setInstructor] = useState(null)
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -12,60 +27,49 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
     estado: "Activo",
     telefono: "",
     correo: "",
-    fichas: [], // Array de IDs de fichas
+    fichas: [],
   })
 
   const [errors, setErrors] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
-  const { courses, loading: coursesLoading, error: coursesError } = useGetCourses()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const dropdownRef = useRef(null)
 
-  // Resetear formulario cuando se abre/cierra o cambia el instructor
   useEffect(() => {
-    if (isOpen) {
-      if (isEditMode && instructor) {
-        console.log("Cargando datos del instructor para edición:", instructor)
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Cargar datos del instructor
+  useEffect(() => {
+    if (instructors.length > 0 && id) {
+      const foundInstructor = instructors.find((inst) => inst._id === id || inst.id === id)
+      if (foundInstructor) {
+        setInstructor(foundInstructor)
 
         // Extraer IDs de fichas si vienen como objetos poblados
-        let fichasIds = []
-        if (instructor.fichas && Array.isArray(instructor.fichas)) {
-          fichasIds = instructor.fichas.map((ficha) => {
-            // Si la ficha es un objeto, extraer el ID
-            if (typeof ficha === "object" && ficha !== null) {
-              return ficha._id || ficha.id
-            }
-            // Si ya es un string (ID), usarlo directamente
-            return ficha
-          })
-        }
+        const fichasIds = extractFichaIds(foundInstructor.fichas || [])
 
         setFormData({
-          nombre: instructor.nombre || "",
-          apellido: instructor.apellido || "",
-          documento: instructor.documento || "",
-          tipoDocumento: instructor.tipoDocumento || "CC",
-          estado: instructor.estado || "Activo",
-          telefono: instructor.telefono || "",
-          correo: instructor.correo || "",
+          nombre: foundInstructor.nombre || "",
+          apellido: foundInstructor.apellido || "",
+          documento: foundInstructor.documento || "",
+          tipoDocumento: foundInstructor.tipoDocumento || "CC",
+          estado: foundInstructor.estado || "Activo",
+          telefono: foundInstructor.telefono || "",
+          correo: foundInstructor.correo || "",
           fichas: fichasIds,
         })
-        console.log("Fichas cargadas para edición:", fichasIds)
-      } else {
-        // Resetear para nuevo instructor
-        setFormData({
-          nombre: "",
-          apellido: "",
-          documento: "",
-          tipoDocumento: "CC",
-          estado: "Activo",
-          telefono: "",
-          correo: "",
-          fichas: [],
-        })
       }
-      setErrors({})
-      setSearchTerm("") // Limpiar búsqueda
     }
-  }, [isOpen, isEditMode, instructor])
+  }, [instructors, id])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -91,7 +95,6 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
   }
 
   const handleFichaToggle = (fichaId) => {
-    console.log("Toggling ficha:", fichaId)
     setFormData((prev) => {
       const currentFichas = prev.fichas || []
       const isSelected = currentFichas.includes(fichaId)
@@ -103,7 +106,6 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
         newFichas = [...currentFichas, fichaId]
       }
 
-      console.log("Fichas actualizadas:", newFichas)
       return {
         ...prev,
         fichas: newFichas,
@@ -111,47 +113,17 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
     })
   }
 
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.nombre?.trim()) {
-      newErrors.nombre = "El nombre es obligatorio"
-    }
-
-    if (!formData.apellido?.trim()) {
-      newErrors.apellido = "El apellido es obligatorio"
-    }
-
-    if (!formData.documento?.trim()) {
-      newErrors.documento = "El documento es obligatorio"
-    }
-
-    if (!formData.correo?.trim()) {
-      newErrors.correo = "El correo es obligatorio"
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(formData.correo)) {
-        newErrors.correo = "El formato del correo no es válido"
-      }
-    }
-
-    if (!formData.telefono?.trim()) {
-      newErrors.telefono = "El teléfono es obligatorio"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!validateForm()) {
+    // Validar formulario
+    const validationErrors = await validateInstructorData(formData, true, id)
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
       return
     }
 
     try {
-      // Preparar datos directamente aquí para evitar problemas con servicios externos
       const instructorData = {
         tipoUsuario: "instructor",
         nombre: formData.nombre?.trim(),
@@ -161,18 +133,30 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
         estado: formData.estado,
         telefono: formData.telefono?.trim(),
         correo: formData.correo?.toLowerCase().trim(),
-        fichas: formData.fichas || [], // Asegurar que fichas siempre sea un array
+        fichas: formData.fichas || [],
       }
 
-      console.log("=== DATOS A ENVIAR AL SERVIDOR ===")
-      console.log("Instructor data:", instructorData)
-      console.log("Fichas seleccionadas:", instructorData.fichas)
-      console.log("Cantidad de fichas:", instructorData.fichas.length)
-
-      await onSubmit(instructorData)
+      await updateInstructor(id, instructorData)
+      navigate("/formacion/instructores")
     } catch (error) {
-      console.error("Error en el formulario:", error)
+      console.error("Error al actualizar instructor:", error)
+      const serverErrors = processServerError(error)
+      setErrors(serverErrors)
     }
+  }
+
+  const handleCancel = () => {
+    navigate("/formacion/instructores")
+  }
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
   }
 
   // Filtrar fichas basado en el término de búsqueda
@@ -188,40 +172,87 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
     )
   })
 
-  if (!isOpen) return null
+  if (loadingInstructors) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1f384c] mx-auto mb-4"></div>
+          <p className="text-[#1f384c] font-medium">Cargando instructor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!instructor) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Instructor no encontrado</p>
+          <button
+            onClick={handleCancel}
+            className="mt-4 px-4 py-2 bg-[#1f384c] text-white rounded-md hover:bg-[#2d4a5c]"
+          >
+            Volver a la lista
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-[#1f384c]">
-              {isEditMode ? "EDITAR INSTRUCTOR" : "CREAR INSTRUCTOR"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Cerrar modal"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-[#1f384c]">Editar Instructor</h1>
+            </div>
+
+            {/* Dropdown de usuario */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
+                <span>Administrador</span>
+                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="px-6 py-4">
-          {errors.general && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{errors.general}</div>
-          )}
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {instructor.nombre} {instructor.apellido}
+            </h2>
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            {/* Información Personal */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-[#1f384c] mb-4">Información Personal</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="p-6">
+            {errors.general && (
+              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">{errors.general}</div>
+            )}
+
+            {/* Campos del formulario */}
+            <div className="mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nombre <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -238,7 +269,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Apellido <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -255,7 +286,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de Documento <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -273,7 +304,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Documento <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -290,7 +321,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Teléfono <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -307,7 +338,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Estado <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center mt-2">
@@ -328,9 +359,9 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Correo Electrónico <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -349,7 +380,7 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
             </div>
 
             {/* Sección de Fichas */}
-            <div className="mb-6">
+            <div className="mb-8">
               <h3 className="text-lg font-semibold text-[#1f384c] mb-4">
                 Fichas Asignadas
                 {formData.fichas.length > 0 && (
@@ -474,11 +505,11 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
               )}
             </div>
 
-            {/* Botones */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            {/* Botones centrados */}
+            <div className="flex justify-center space-x-4 pt-6 border-t border-gray-200">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleCancel}
                 className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1f384c]"
                 disabled={loading}
               >
@@ -486,24 +517,35 @@ const InstructorForm = ({ isOpen, onClose, onSubmit, instructor, isEditMode, loa
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 text-sm font-medium text-white bg-[#1f384c] border border-transparent rounded-md hover:bg-[#2d4a5c] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1f384c] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading || coursesLoading}
               >
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
+                    Actualizando...
                   </div>
                 ) : (
-                  `${isEditMode ? "Actualizar" : "Crear"} Instructor`
+                  "Actualizar Instructor"
                 )}
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Modal de confirmación para cerrar sesión */}
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro de que desea cerrar la sesión actual?"
+        confirmText="Cerrar Sesión"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
     </div>
   )
 }
 
-export default InstructorForm
+export default EditInstructorPage

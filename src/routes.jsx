@@ -30,6 +30,8 @@ import CourseProgrammingDetail from "./features/CourseProgramming/components/cou
 import LevelAssignmentPage from "./features/LevelAssignment/pages/LevelAssignmentPage"
 import CreateEvaluationPage from "./features/Evaluations/pages/CreateEvaluationPage"
 import EditEvaluationPage from "./features/Evaluations/pages/EditEvaluationPage"
+import CreateInstructorPage from "./features/Instructors/pages/CreateInstructorPage"
+import EditInstructorPage from "./features/Instructors/pages/EditInstructorPage"
 
 // Definición de rutas
 const routes = [
@@ -73,6 +75,14 @@ const routes = [
         <InstructorsPage />
       </ProtectedRoute>
     ),
+  },
+    {
+    path: "/formacion/instructores/crear",
+    element: <CreateInstructorPage />,
+  },
+  {
+    path: "/formacion/instructores/editar/:id",
+    element: <EditInstructorPage />,
   },
   {
     path: "/formacion/aprendices",

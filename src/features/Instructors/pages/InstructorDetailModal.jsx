@@ -1,102 +1,196 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { FiEye } from "react-icons/fi"
+import { useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
-const InstructorDetailModal = ({ instructor, isOpen, onClose, onViewFicha }) => {
-  const modalRef = useRef(null)
+const InstructorDetailModal = ({ instructor, isOpen, onClose }) => {
+  const [fichasCollapsed, setFichasCollapsed] = useState(false)
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose()
-      }
-    }
+  if (!isOpen || !instructor) return null
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [isOpen, onClose])
-
-  if (!isOpen) return null
+  const toggleFichasCollapse = () => {
+    setFichasCollapsed(!fichasCollapsed)
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-[18px] font-bold text-center text-[#1f384c] mb-6">DETALLE DEL INSTRUCTOR</h2>
-
-        <div className="space-y-3 px-8">
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Nombre:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.nombre}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Apellido:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.apellido}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Documento:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.documento}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Tipo documento:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.tipoDocumento}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Telefono:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.telefono}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Estado:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.estado}</div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="w-2/5 font-bold text-[14px]">Correo:</div>
-            <div className="w-3/5 text-[14px] text-gray-500">{instructor.correo}</div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-[14px] font-bold mb-3 text-center">Fichas en formacion asociadas</h3>
-
-            <div className="space-y-2">
-              {instructor.fichas &&
-                instructor.fichas.map((ficha, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <div className="text-[14px] text-gray-500">{ficha.numero}</div>
-                    <div className="text-[14px] text-gray-500">
-                      Nivel {ficha.nivel || Math.floor(Math.random() * 6) + 1}
-                    </div>
-                    <button
-                      onClick={() => onViewFicha(ficha)}
-                      className="p-2 text-white rounded-lg transition-colors flex items-center justify-center"
-                      style={{ backgroundColor: "#1F384C" }}
-                      aria-label="Ver detalle de ficha"
-                    >
-                      <FiEye size={18} />
-                    </button>
-                  </div>
-                ))}
-            </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-[#1f384c]">DETALLE DEL INSTRUCTOR</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={onClose}
-            className="bg-[#f44144] text-white py-2 px-8 rounded-lg text-[14px] font-medium hover:bg-red-600 transition-colors"
-          >
-            Cerrar
-          </button>
+        {/* Content */}
+        <div className="px-6 py-4">
+          {/* Información Personal */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-[#1f384c] mb-4">Información Personal</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-600 mb-1">Nombre Completo</label>
+                <p className="text-gray-900 font-medium">
+                  {instructor.nombre} {instructor.apellido}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-600 mb-1">Documento</label>
+                <p className="text-gray-900">
+                  {instructor.tipoDocumento}: {instructor.documento}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-600 mb-1">Teléfono</label>
+                <p className="text-gray-900">{instructor.telefono}</p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-600 mb-1">Correo Electrónico</label>
+                <p className="text-gray-900">{instructor.correo}</p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                    instructor.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {instructor.estado}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Fichas Asignadas */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[#1f384c]">
+                Fichas Asignadas
+                {instructor.fichas && instructor.fichas.length > 0 && (
+                  <span className="ml-2 text-sm font-normal text-gray-600">
+                    ({instructor.fichas.length} ficha{instructor.fichas.length !== 1 ? "s" : ""})
+                  </span>
+                )}
+              </h3>
+
+              {instructor.fichas && instructor.fichas.length > 0 && (
+                <button
+                  onClick={toggleFichasCollapse}
+                  className="flex items-center gap-2 px-3 py-1 text-sm text-[#1f384c] hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  {fichasCollapsed ? (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Mostrar
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Ocultar
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {instructor.fichas && instructor.fichas.length > 0 ? (
+              fichasCollapsed ? (
+                <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-md">
+                  <p>Fichas ocultas. Haz clic en "Mostrar" para verlas.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {instructor.fichas.map((ficha, index) => (
+                    <div
+                      key={ficha._id || ficha.id || index}
+                      className="border border-gray-200 rounded-lg p-4 bg-white"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-semibold text-[#1f384c]">
+                          {typeof ficha === "object" ? ficha.code || ficha.codigo : `Ficha ${index + 1}`}
+                        </div>
+                        {typeof ficha === "object" && ficha.course_status && (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              ficha.course_status === "EN EJECUCION"
+                                ? "bg-green-100 text-green-800"
+                                : ficha.course_status === "TERMINADO"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {ficha.course_status}
+                          </span>
+                        )}
+                      </div>
+
+                      {typeof ficha === "object" && (
+                        <div className="text-sm text-gray-600 space-y-1">
+                          {ficha.fk_programs && (
+                            <div>
+                              <strong>Programa:</strong> {ficha.fk_programs}
+                            </div>
+                          )}
+                          {ficha.area && (
+                            <div>
+                              <strong>Área:</strong> {ficha.area}
+                            </div>
+                          )}
+                          {ficha.offer_type && (
+                            <div>
+                              <strong>Tipo:</strong> {ficha.offer_type}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
+                <svg
+                  className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p>No hay fichas asignadas a este instructor</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg">
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1f384c]"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -104,4 +198,3 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose, onViewFicha }) => 
 }
 
 export default InstructorDetailModal
-
