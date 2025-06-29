@@ -14,7 +14,7 @@ const determineUserRole = (document) => {
 }
 
 // Función para buscar estudiante por documento en la API local
-const findStudentByDocument = async (documentType, document) => {
+const findStudentByDocument = async (document) => {
   try {
     const response = await fetch(API_BASE_URL, {
       method: "GET",
@@ -32,23 +32,10 @@ const findStudentByDocument = async (documentType, document) => {
     // Convertir el documento a string para asegurar comparación correcta
     const documentStr = document.toString()
 
-    // Buscar si existe el documento independientemente del tipo
+    // Buscar si existe el documento
     const studentWithDocument = students.find((s) => s.documento.toString() === documentStr)
 
-    if (studentWithDocument) {
-      // Si existe el documento pero con diferente tipo
-      if (studentWithDocument.tipoDocumento !== documentType) {
-        throw new Error(
-          `El documento ${document} está registrado como ${studentWithDocument.tipoDocumento}, no como ${documentType}`,
-        )
-      }
-
-      // Si coinciden tanto el documento como el tipo
-      return studentWithDocument
-    }
-
-    // Si no existe el documento en absoluto
-    return null
+    return studentWithDocument || null
   } catch (error) {
     console.error("Error buscando estudiante:", error)
     throw error
@@ -60,18 +47,13 @@ export const loginUser = async (credentials) => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   // Basic validation
-  if (!credentials.documentType || !credentials.document || !credentials.password) {
+  if (!credentials.document || !credentials.password) {
     throw new Error("Todos los campos son requeridos")
   }
 
   // Validar que el documento solo contenga números
   if (!/^\d+$/.test(credentials.document)) {
     throw new Error("El documento debe contener solo números")
-  }
-
-  // Validar que la contraseña coincida con el documento
-  if (credentials.password !== credentials.document) {
-    throw new Error("La contraseña debe ser igual al número de documento")
   }
 
   // Determinar el rol del usuario
@@ -120,38 +102,29 @@ export const loginUser = async (credentials) => {
       }
 
       const mockUser = mockUsers[credentials.document]
-      if (mockUser) {
-        // Verificar que el tipo de documento coincida también para usuarios mock
-        if (mockUser.tipoDocumento !== credentials.documentType) {
-          throw new Error(
-            `El documento ${credentials.document} está registrado como ${mockUser.tipoDocumento}, no como ${credentials.documentType}`,
-          )
-        }
-
-        if (mockUser.contraseña === credentials.document) {
-          return {
-            id: mockUser._id,
-            name: `${mockUser.nombre} ${mockUser.apellido}`,
-            document: mockUser.documento,
-            documentType: mockUser.tipoDocumento,
-            email: mockUser.correo,
-            phone: mockUser.telefono,
-            state: mockUser.estado,
-            courseNumber: mockUser.ficha[0],
-            level: mockUser.nivel,
-            program: mockUser.programa,
-            currentProgress: mockUser.progresoActual,
-            levelProgress: mockUser.progresoNiveles,
-            points: mockUser.puntos,
-            role: userRole,
-            userType: mockUser.tipoUsuario,
-          }
+      if (mockUser && mockUser.contraseña === credentials.password) {
+        return {
+          id: mockUser._id,
+          name: `${mockUser.nombre} ${mockUser.apellido}`,
+          document: mockUser.documento,
+          documentType: mockUser.tipoDocumento,
+          email: mockUser.correo,
+          phone: mockUser.telefono,
+          state: mockUser.estado,
+          courseNumber: mockUser.ficha[0],
+          level: mockUser.nivel,
+          program: mockUser.programa,
+          currentProgress: mockUser.progresoActual,
+          levelProgress: mockUser.progresoNiveles,
+          points: mockUser.puntos,
+          role: userRole,
+          userType: mockUser.tipoUsuario,
         }
       }
     }
 
     // Buscar el estudiante en la API local
-    const student = await findStudentByDocument(credentials.documentType, credentials.document)
+    const student = await findStudentByDocument(credentials.document)
 
     if (!student) {
       throw new Error("Número de documento no encontrado en el sistema")
@@ -162,8 +135,8 @@ export const loginUser = async (credentials) => {
       throw new Error(`No puede acceder. Estado actual: ${student.estado}`)
     }
 
-    // Verificar que la contraseña coincida (debe ser igual al documento)
-    if (student.contraseña !== credentials.document) {
+    // Verificar que la contraseña coincida
+    if (student.contraseña !== credentials.password) {
       throw new Error("Contraseña incorrecta")
     }
 
