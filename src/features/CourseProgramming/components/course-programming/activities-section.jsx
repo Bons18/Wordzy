@@ -8,7 +8,7 @@ import CustomSelect from "./ui/custom-select"
 
 import SupportMaterialModal from "../../../SupportMaterials/pages/support-material-modal"
 import MaterialDetail from "../../../SupportMaterials/pages/MaterialDetail"
-import useSupportMaterials from "../../../../shared/hooks/useSupportMaterials"
+import useSupportMaterials from "../../../SupportMaterials/hooks/useSupportMaterials"
 
 import useGetEvaluations from "../../../Evaluations/hooks/useGetEvaluations"
 import usePostEvaluation from "../../../Evaluations/hooks/usePostEvaluation"
