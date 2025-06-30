@@ -538,8 +538,6 @@ const ProgressView = () => {
         </div>
       ),
     },
-    { key: "duracion", label: "Duración", width: "12%" },
-    { key: "intentos", label: "Intentos", width: "9%" },
   ]
 
   // Función para manejar la retroalimentación

@@ -5,13 +5,9 @@ import { ChevronDown } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import GenericTable from "../../../shared/components/Table"
 import InstructorDetailModal from "./InstructorDetailModal"
-import FichaDetailModal from "./FichaDetailModal"
-import InstructorForm from "../components/InstructorForm"
 import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 import useGetInstructors from "../hooks/useGetInstructors"
-import usePostInstructor from "../hooks/usePostInstructor"
-import usePutInstructor from "../hooks/usePutInstructor"
 import useDeleteInstructor from "../hooks/useDeleteInstructor"
 
 const columns = [
@@ -36,11 +32,7 @@ const columns = [
 
 const InstructorsPage = () => {
   const [selectedInstructor, setSelectedInstructor] = useState(null)
-  const [selectedFicha, setSelectedFicha] = useState(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [isFichaModalOpen, setIsFichaModalOpen] = useState(false)
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -52,8 +44,6 @@ const InstructorsPage = () => {
 
   // Hooks para API
   const { instructors, loading, error, refetch } = useGetInstructors()
-  const { createInstructor, loading: creating } = usePostInstructor()
-  const { updateInstructor, loading: updating } = usePutInstructor()
   const { deleteInstructor, loading: deleting } = useDeleteInstructor()
 
   useEffect(() => {
@@ -76,31 +66,18 @@ const InstructorsPage = () => {
     setIsDetailModalOpen(false)
   }
 
-  const handleViewFicha = (ficha) => {
-    setSelectedFicha(ficha)
-    setIsFichaModalOpen(true)
-  }
-
-  const handleCloseFichaModal = () => {
-    setIsFichaModalOpen(false)
-  }
-
   const handleCreateInstructor = () => {
-    setSelectedInstructor(null)
-    setIsEditMode(false)
-    setIsFormModalOpen(true)
+    navigate("/formacion/instructores/crear")
   }
 
   const handleEditInstructor = (instructor) => {
-    setSelectedInstructor(instructor)
-    setIsEditMode(true)
-    setIsFormModalOpen(true)
+    const instructorId = instructor._id || instructor.id
+    navigate(`/formacion/instructores/editar/${instructorId}`)
   }
 
   const handleDeleteInstructor = (instructorData) => {
-    console.log("Datos recibidos para eliminar:", instructorData) // Debug
+    console.log("Datos recibidos para eliminar:", instructorData)
 
-    // Si instructorData es un string (ID), buscar el instructor completo
     let instructorToDelete
     if (typeof instructorData === "string") {
       instructorToDelete = instructors.find((inst) => inst._id === instructorData || inst.id === instructorData)
@@ -121,16 +98,14 @@ const InstructorsPage = () => {
   const handleConfirmDelete = async () => {
     if (instructorToDelete) {
       try {
-        // Si instructorToDelete es un objeto, extraer el ID
         let instructorId
         if (typeof instructorToDelete === "object") {
           instructorId = instructorToDelete._id || instructorToDelete.id
         } else {
-          // Si es un string, usar directamente
           instructorId = instructorToDelete
         }
 
-        console.log("ID del instructor a eliminar:", instructorId) // Debug
+        console.log("ID del instructor a eliminar:", instructorId)
 
         if (!instructorId) {
           console.error("No se encontró ID del instructor:", instructorToDelete)
@@ -147,23 +122,6 @@ const InstructorsPage = () => {
     }
   }
 
-  const handleFormSubmit = async (formData) => {
-    try {
-      if (isEditMode && selectedInstructor) {
-        const instructorId = selectedInstructor._id || selectedInstructor.id
-        await updateInstructor(instructorId, formData)
-      } else {
-        await createInstructor(formData)
-      }
-
-      setIsFormModalOpen(false)
-      setSelectedInstructor(null)
-      refetch()
-    } catch (error) {
-      console.error("Error en el formulario:", error)
-    }
-  }
-
   const handleLogoutClick = () => {
     setIsDropdownOpen(false)
     setShowLogoutConfirm(true)
@@ -174,7 +132,6 @@ const InstructorsPage = () => {
     navigate("/login")
   }
 
-  // Mostrar estado de carga
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -186,7 +143,6 @@ const InstructorsPage = () => {
     )
   }
 
-  // Mostrar error si existe
   const displayError = error && !instructors.length ? error : null
 
   return (
@@ -218,7 +174,6 @@ const InstructorsPage = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        {/* Mostrar errores si los hay */}
         {displayError && (
           <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">Error: {displayError}</div>
         )}
@@ -235,33 +190,15 @@ const InstructorsPage = () => {
           tooltipText="Ver detalle del instructor"
         />
 
-        {/* Modal de Detalle */}
         {selectedInstructor && (
           <InstructorDetailModal
             instructor={selectedInstructor}
             isOpen={isDetailModalOpen}
             onClose={handleCloseDetailModal}
-            onViewFicha={handleViewFicha}
           />
         )}
-
-        {/* Modal de Ficha */}
-        {selectedFicha && (
-          <FichaDetailModal ficha={selectedFicha} isOpen={isFichaModalOpen} onClose={handleCloseFichaModal} />
-        )}
-
-        {/* Modal de Formulario */}
-        <InstructorForm
-          isOpen={isFormModalOpen}
-          onClose={() => setIsFormModalOpen(false)}
-          onSubmit={handleFormSubmit}
-          instructor={isEditMode ? selectedInstructor : null}
-          isEditMode={isEditMode}
-          loading={creating || updating}
-        />
       </div>
 
-      {/* Modal de confirmación para cerrar sesión */}
       <ConfirmationModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
@@ -272,7 +209,6 @@ const InstructorsPage = () => {
         confirmColor="bg-[#f44144] hover:bg-red-600"
       />
 
-      {/* Modal de confirmación para eliminar */}
       <ConfirmationModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}

@@ -28,6 +28,10 @@ import CourseProgrammingPage from "./features/CourseProgramming/pages/course-pro
 import CourseProgramming from "./features/CourseProgramming/components/course-programming"
 import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
 import LevelAssignmentPage from "./features/LevelAssignment/pages/LevelAssignmentPage"
+import CreateEvaluationPage from "./features/Evaluations/pages/CreateEvaluationPage"
+import EditEvaluationPage from "./features/Evaluations/pages/EditEvaluationPage"
+import CreateInstructorPage from "./features/Instructors/pages/CreateInstructorPage"
+import EditInstructorPage from "./features/Instructors/pages/EditInstructorPage"
 
 // Definición de rutas
 const routes = [
@@ -72,6 +76,14 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+    {
+    path: "/formacion/instructores/crear",
+    element: <CreateInstructorPage />,
+  },
+  {
+    path: "/formacion/instructores/editar/:id",
+    element: <EditInstructorPage />,
+  },
   {
     path: "/formacion/aprendices",
     element: (
@@ -104,6 +116,14 @@ const routes = [
         <Evaluations />
       </ProtectedRoute>
     ),
+  },
+      {
+    path: "/programacion/evaluaciones/crear",
+    element: <CreateEvaluationPage />,
+  },
+  {
+    path: "/programacion/evaluaciones/editar/:id",
+    element: <EditEvaluationPage />,
   },
   {
     path: "/programacion/programacionCursos",
