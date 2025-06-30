@@ -1,139 +1,148 @@
-// Servicio para operaciones relacionadas con aprendices en la tabla usuarios
+import { API_URL } from "@/shared/config/api"
+
+// Configuración de API
+const COURSES_API_URL = import.meta.env.VITE_COURSES_API_URL || "http://localhost:3000/api/course"
 
 /**
- * Prepara los datos del aprendiz antes de enviarlos a la API
+ * Obtiene el programa correspondiente a una ficha desde la API de cursos
  */
-export const prepareApprenticeForSubmit = (apprenticeData) => {
-  return {
-    tipoUsuario: "aprendiz", // Campo obligatorio para identificar el tipo
-    nombre: apprenticeData.nombre?.trim(),
-    apellido: apprenticeData.apellido?.trim(),
-    documento: apprenticeData.documento?.trim(),
-    tipoDocumento: apprenticeData.tipoDocumento,
-    ficha: Array.isArray(apprenticeData.ficha) ? apprenticeData.ficha : [apprenticeData.ficha],
-    nivel: Number.parseInt(apprenticeData.nivel) || 1,
-    estado: apprenticeData.estado || "En formación",
-    telefono: apprenticeData.telefono?.trim(),
-    programa: apprenticeData.programa?.trim(),
-    correo: apprenticeData.correo?.trim().toLowerCase(),
-    progresoActual: Number.parseInt(apprenticeData.progresoActual) || 0,
-    progresoNiveles: apprenticeData.progresoNiveles || [
-      { nivel: 1, porcentaje: 0 },
-      { nivel: 2, porcentaje: 0 },
-      { nivel: 3, porcentaje: 0 },
-    ],
-  }
-}
+const getProgramByFicha = async (fichaNumber) => {
+  try {
+    console.log(`🔍 [APPRENTICE SERVICE] Obteniendo programa para ficha: ${fichaNumber}`)
 
-/**
- * Valida los datos del aprendiz antes de enviarlos
- */
-export const validateApprentice = (apprenticeData) => {
-  const errors = []
-
-  if (!apprenticeData.nombre?.trim()) {
-    errors.push("El nombre es obligatorio")
-  }
-
-  if (!apprenticeData.apellido?.trim()) {
-    errors.push("El apellido es obligatorio")
-  }
-
-  if (!apprenticeData.documento?.trim()) {
-    errors.push("El documento es obligatorio")
-  }
-
-  if (!apprenticeData.tipoDocumento) {
-    errors.push("El tipo de documento es obligatorio")
-  }
-
-  if (!apprenticeData.correo?.trim()) {
-    errors.push("El correo es obligatorio")
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(apprenticeData.correo)) {
-      errors.push("El formato del correo no es válido")
+    const response = await fetch(COURSES_API_URL)
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
     }
-  }
 
-  if (!apprenticeData.telefono?.trim()) {
-    errors.push("El teléfono es obligatorio")
-  }
+    const courses = await response.json()
+    const matchingCourse = courses.find((course) => course.code === String(fichaNumber))
 
-  if (!apprenticeData.programa?.trim()) {
-    errors.push("El programa es obligatorio")
-  }
-
-  if (!apprenticeData.ficha || (Array.isArray(apprenticeData.ficha) && apprenticeData.ficha.length === 0)) {
-    errors.push("La ficha es obligatoria")
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
+    if (matchingCourse && matchingCourse.fk_programs) {
+      console.log(
+        `✅ [APPRENTICE SERVICE] Programa encontrado: "${matchingCourse.fk_programs}" para ficha ${fichaNumber}`,
+      )
+      return matchingCourse.fk_programs
+    } else {
+      console.warn(`⚠️ [APPRENTICE SERVICE] No se encontró programa para ficha ${fichaNumber}`)
+      return "Programa no asignado"
+    }
+  } catch (error) {
+    console.error(`❌ [APPRENTICE SERVICE] Error obteniendo programa para ficha ${fichaNumber}:`, error)
+    return "Programa no asignado"
   }
 }
 
 /**
- * Normaliza un aprendiz recibido de la API de usuarios
+ * Prepara los datos del aprendiz para envío al backend
+ * Obtiene automáticamente el programa basado en la ficha
  */
-export const normalizeApprentice = (apprentice) => {
-  return {
-    ...apprentice,
-    id: apprentice._id || apprentice.id,
-    tipoUsuario: "aprendiz", // Asegurar que siempre tenga el tipo correcto
-    ficha: Array.isArray(apprentice.ficha) ? apprentice.ficha : [apprentice.ficha],
-    progresoNiveles: apprentice.progresoNiveles || [
-      { nivel: 1, porcentaje: 0 },
-      { nivel: 2, porcentaje: 0 },
-      { nivel: 3, porcentaje: 0 },
-    ],
+const prepareApprenticeForSubmit = async (apprenticeData) => {
+  try {
+    console.log("🔄 [APPRENTICE SERVICE] Preparando datos del aprendiz para envío...")
+
+    // Obtener programa automáticamente basado en la primera ficha
+    const fichaNumber = Array.isArray(apprenticeData.ficha) ? apprenticeData.ficha[0] : apprenticeData.ficha
+    const programa = await getProgramByFicha(fichaNumber)
+
+    const preparedData = {
+      tipoUsuario: "aprendiz",
+      nombre: apprenticeData.nombre?.trim() || "",
+      apellido: apprenticeData.apellido?.trim() || "",
+      documento: apprenticeData.documento?.trim() || "",
+      tipoDocumento: apprenticeData.tipoDocumento || "CC",
+      telefono: apprenticeData.telefono?.trim() || "",
+      correo: apprenticeData.correo?.toLowerCase().trim() || "",
+      contraseña: apprenticeData.contraseña || apprenticeData.documento,
+      estado: apprenticeData.estado || "En formación",
+      ficha: Array.isArray(apprenticeData.ficha) ? apprenticeData.ficha : [apprenticeData.ficha],
+      nivel: Number(apprenticeData.nivel) || 1,
+      programa: programa, // ✅ Programa obtenido automáticamente
+      progresoActual: Number(apprenticeData.progresoActual) || 0,
+      progresoNiveles: apprenticeData.progresoNiveles || [
+        { nivel: 1, porcentaje: 0 },
+        { nivel: 2, porcentaje: 0 },
+        { nivel: 3, porcentaje: 0 },
+      ],
+      puntos: Number(apprenticeData.puntos) || 200,
+    }
+
+    console.log(`✅ [APPRENTICE SERVICE] Datos preparados con programa: ${programa}`)
+    return preparedData
+  } catch (error) {
+    console.error("❌ [APPRENTICE SERVICE] Error preparando datos del aprendiz:", error)
+    throw error
   }
 }
 
 /**
- * Normaliza una lista de aprendices recibida de la API de usuarios
+ * Obtiene todos los aprendices
  */
-export const normalizeApprentices = (apprentices) => {
-  return apprentices
-    .filter((user) => user.tipoUsuario === "aprendiz") // Filtro adicional por seguridad
-    .map(normalizeApprentice)
-}
+export const getAllApprentices = async (filters = {}) => {
+  try {
+    console.log("🔍 [APPRENTICE SERVICE] Obteniendo todos los aprendices...")
 
-/**
- * Calcula el progreso general basado en los niveles
- */
-export const calculateOverallProgress = (progresoNiveles) => {
-  if (!Array.isArray(progresoNiveles) || progresoNiveles.length === 0) {
-    return 0
+    const queryParams = new URLSearchParams()
+    queryParams.append("tipoUsuario", "aprendiz")
+
+    // Agregar filtros si existen
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value)
+      }
+    })
+
+    const response = await fetch(`${API_URL}/user?${queryParams.toString()}`)
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const apprentices = await response.json()
+    console.log(`✅ [APPRENTICE SERVICE] ${apprentices.length} aprendices obtenidos`)
+    return apprentices
+  } catch (error) {
+    console.error("❌ [APPRENTICE SERVICE] Error obteniendo aprendices:", error)
+    throw error
   }
-
-  const totalProgress = progresoNiveles.reduce((sum, nivel) => sum + nivel.porcentaje, 0)
-  return Math.round(totalProgress / progresoNiveles.length)
 }
 
 /**
- * Actualiza el progreso de un nivel específico
+ * Obtiene un aprendiz por ID
  */
-export const updateLevelProgress = (progresoNiveles, nivel, nuevoPorcentaje) => {
-  return progresoNiveles.map((progreso) =>
-    progreso.nivel === nivel ? { ...progreso, porcentaje: Math.max(0, Math.min(100, nuevoPorcentaje)) } : progreso,
-  )
+export const getApprenticeById = async (id) => {
+  try {
+    console.log(`🔍 [APPRENTICE SERVICE] Obteniendo aprendiz con ID: ${id}`)
+
+    const response = await fetch(`${API_URL}/user/${id}`)
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const apprentice = await response.json()
+    console.log(`✅ [APPRENTICE SERVICE] Aprendiz obtenido: ${apprentice.nombre} ${apprentice.apellido}`)
+    return apprentice
+  } catch (error) {
+    console.error(`❌ [APPRENTICE SERVICE] Error obteniendo aprendiz ${id}:`, error)
+    throw error
+  }
 }
 
 /**
- * Crea un nuevo aprendiz en la tabla usuarios
+ * Crea un nuevo aprendiz
  */
 export const createApprentice = async (apprenticeData) => {
   try {
-    const preparedData = prepareApprenticeForSubmit(apprenticeData)
-    const validation = validateApprentice(preparedData)
+    console.log("🔄 [APPRENTICE SERVICE] Creando nuevo aprendiz...")
 
-    if (!validation.isValid) {
-      throw new Error(validation.errors.join(", "))
-    }
+    // Preparar datos con programa automático
+    const preparedData = await prepareApprenticeForSubmit(apprenticeData)
 
-    const response = await fetch("http://localhost:3000/api/user", {
+    const response = await fetch(`${API_URL}/user`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -143,30 +152,31 @@ export const createApprentice = async (apprenticeData) => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || "Error al crear aprendiz")
+      throw new Error(errorData.message || `Error ${response.status}`)
     }
 
-    const data = await response.json()
-    return normalizeApprentice(data)
+    const newApprentice = await response.json()
+    console.log(
+      `✅ [APPRENTICE SERVICE] Aprendiz creado: ${newApprentice.nombre} ${newApprentice.apellido} - Programa: ${newApprentice.programa}`,
+    )
+    return newApprentice
   } catch (error) {
-    console.error("Error en createApprentice:", error)
+    console.error("❌ [APPRENTICE SERVICE] Error creando aprendiz:", error)
     throw error
   }
 }
 
 /**
- * Actualiza un aprendiz en la tabla usuarios
+ * Actualiza un aprendiz existente
  */
 export const updateApprentice = async (id, apprenticeData) => {
   try {
-    const preparedData = prepareApprenticeForSubmit(apprenticeData)
-    const validation = validateApprentice(preparedData)
+    console.log(`🔄 [APPRENTICE SERVICE] Actualizando aprendiz ${id}...`)
 
-    if (!validation.isValid) {
-      throw new Error(validation.errors.join(", "))
-    }
+    // Preparar datos con programa automático
+    const preparedData = await prepareApprenticeForSubmit(apprenticeData)
 
-    const response = await fetch(`http://localhost:3000/api/user/${id}`, {
+    const response = await fetch(`${API_URL}/user/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -176,34 +186,40 @@ export const updateApprentice = async (id, apprenticeData) => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || "Error al actualizar aprendiz")
+      throw new Error(errorData.message || `Error ${response.status}`)
     }
 
-    const data = await response.json()
-    return normalizeApprentice(data)
+    const updatedApprentice = await response.json()
+    console.log(
+      `✅ [APPRENTICE SERVICE] Aprendiz actualizado: ${updatedApprentice.nombre} ${updatedApprentice.apellido} - Programa: ${updatedApprentice.programa}`,
+    )
+    return updatedApprentice
   } catch (error) {
-    console.error("Error en updateApprentice:", error)
+    console.error(`❌ [APPRENTICE SERVICE] Error actualizando aprendiz ${id}:`, error)
     throw error
   }
 }
 
 /**
- * Elimina un aprendiz de la tabla usuarios
+ * Elimina un aprendiz
  */
 export const deleteApprentice = async (id) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/user/${id}`, {
+    console.log(`🗑️ [APPRENTICE SERVICE] Eliminando aprendiz ${id}...`)
+
+    const response = await fetch(`${API_URL}/user/${id}`, {
       method: "DELETE",
     })
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || "Error al eliminar aprendiz")
+      throw new Error(errorData.message || `Error ${response.status}`)
     }
 
-    return await response.json()
+    console.log(`✅ [APPRENTICE SERVICE] Aprendiz eliminado exitosamente`)
+    return true
   } catch (error) {
-    console.error("Error en deleteApprentice:", error)
+    console.error(`❌ [APPRENTICE SERVICE] Error eliminando aprendiz ${id}:`, error)
     throw error
   }
 }
@@ -211,25 +227,119 @@ export const deleteApprentice = async (id) => {
 /**
  * Actualiza el progreso de un aprendiz
  */
-export const updateApprenticeProgress = async (id, progresoNiveles) => {
+export const updateApprenticeProgress = async (id, progressData) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/user/${id}/progress`, {
+    console.log(`🔄 [APPRENTICE SERVICE] Actualizando progreso del aprendiz ${id}...`)
+
+    const response = await fetch(`${API_URL}/user/${id}/progress`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ progresoNiveles }),
+      body: JSON.stringify(progressData),
     })
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || "Error al actualizar progreso")
+      throw new Error(errorData.message || `Error ${response.status}`)
     }
 
-    const data = await response.json()
-    return normalizeApprentice(data)
+    const updatedApprentice = await response.json()
+    console.log(
+      `✅ [APPRENTICE SERVICE] Progreso actualizado para: ${updatedApprentice.nombre} ${updatedApprentice.apellido}`,
+    )
+    return updatedApprentice
   } catch (error) {
-    console.error("Error en updateApprenticeProgress:", error)
+    console.error(`❌ [APPRENTICE SERVICE] Error actualizando progreso del aprendiz ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Actualiza los puntos de un aprendiz
+ */
+export const updateApprenticePoints = async (id, pointsData) => {
+  try {
+    console.log(`🔄 [APPRENTICE SERVICE] Actualizando puntos del aprendiz ${id}...`)
+
+    const response = await fetch(`${API_URL}/user/${id}/points`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(pointsData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || `Error ${response.status}`)
+    }
+
+    const updatedApprentice = await response.json()
+    console.log(
+      `✅ [APPRENTICE SERVICE] Puntos actualizados para: ${updatedApprentice.nombre} ${updatedApprentice.apellido}`,
+    )
+    return updatedApprentice
+  } catch (error) {
+    console.error(`❌ [APPRENTICE SERVICE] Error actualizando puntos del aprendiz ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Obtiene estadísticas de aprendices
+ */
+export const getApprenticeStats = async () => {
+  try {
+    console.log("📊 [APPRENTICE SERVICE] Obteniendo estadísticas de aprendices...")
+
+    const response = await fetch(`${API_URL}/user/stats?tipoUsuario=aprendiz`)
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const stats = await response.json()
+    console.log("✅ [APPRENTICE SERVICE] Estadísticas obtenidas:", stats)
+    return stats
+  } catch (error) {
+    console.error("❌ [APPRENTICE SERVICE] Error obteniendo estadísticas:", error)
+    throw error
+  }
+}
+
+/**
+ * Busca aprendices por término de búsqueda
+ */
+export const searchApprentices = async (searchTerm, filters = {}) => {
+  try {
+    console.log(`🔍 [APPRENTICE SERVICE] Buscando aprendices con término: "${searchTerm}"`)
+
+    const queryParams = new URLSearchParams()
+    queryParams.append("tipoUsuario", "aprendiz")
+
+    if (searchTerm) {
+      queryParams.append("search", searchTerm)
+    }
+
+    // Agregar filtros adicionales
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value)
+      }
+    })
+
+    const response = await fetch(`${API_URL}/user?${queryParams.toString()}`)
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const apprentices = await response.json()
+    console.log(`✅ [APPRENTICE SERVICE] ${apprentices.length} aprendices encontrados`)
+    return apprentices
+  } catch (error) {
+    console.error("❌ [APPRENTICE SERVICE] Error buscando aprendices:", error)
     throw error
   }
 }

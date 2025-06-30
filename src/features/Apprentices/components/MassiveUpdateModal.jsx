@@ -237,7 +237,7 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
                           API Local: {connectivity.local ? "Conectada" : "Error"}
                         </span>
                       </div>
-                      {connectivity.errors.length > 0 && (
+                      {connectivity.errors && connectivity.errors.length > 0 && (
                         <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
                           <strong>Errores:</strong>
                           <ul className="list-disc list-inside mt-1">
@@ -300,7 +300,7 @@ const MassiveUpdateModal = ({ isOpen, onClose, onComplete }) => {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-700">{progress.message}</span>
-                  <span className="text-sm text-gray-500">{progress.percentage}%</span>
+                  <span className="text-sm text-gray-500">{Math.round(progress.percentage)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div

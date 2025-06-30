@@ -22,11 +22,22 @@ const useGetCourses = () => {
         },
       })
 
+      const responseText = await response.text()
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
+        throw new Error(
+          `Error ${response.status}: ${response.statusText}. Respuesta del servidor: ${responseText.substring(0, 100)}...`,
+        )
       }
 
-      const data = await response.json()
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch (e) {
+        console.error("Error al parsear JSON:", responseText)
+        throw new Error("La respuesta del servidor no es un JSON válido.")
+      }
+
       console.log("✅ Fichas/cursos recibidos:", data)
 
       // Normalizar datos para el frontend

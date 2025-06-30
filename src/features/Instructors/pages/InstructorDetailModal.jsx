@@ -32,7 +32,7 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 pb-6">
           {/* Información Personal */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-[#1f384c] mb-4">Información Personal</h3>
@@ -178,18 +178,6 @@ const InstructorDetailModal = ({ instructor, isOpen, onClose }) => {
                 <p>No hay fichas asignadas a este instructor</p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg">
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1f384c]"
-            >
-              Cerrar
-            </button>
           </div>
         </div>
       </div>
