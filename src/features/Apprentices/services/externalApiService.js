@@ -1,26 +1,74 @@
-// Configuración desde variables de entorno (obligatorias)
+// Configuración de APIs
 const EXTERNAL_API_URL = import.meta.env.VITE_EXTERNAL_API_URL
 const EXTERNAL_API_KEY = import.meta.env.VITE_EXTERNAL_API_KEY
-const LOCAL_API_URL = import.meta.env.VITE_LOCAL_DB_URL
+const LOCAL_API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+const COURSES_API_URL = import.meta.env.VITE_COURSES_API_URL || "http://localhost:3000/api/course"
 
-// Validar que las variables de entorno estén configuradas
-if (!EXTERNAL_API_URL) {
-  throw new Error("VITE_EXTERNAL_API_URL no está configurada en el archivo .env")
+// Validar configuración
+if (!EXTERNAL_API_URL || !EXTERNAL_API_KEY) {
+  console.error("❌ Variables de entorno faltantes para API externa")
 }
 
-if (!EXTERNAL_API_KEY) {
-  throw new Error("VITE_EXTERNAL_API_KEY no está configurada en el archivo .env")
+// Cache para cursos (evitar múltiples llamadas)
+let coursesCache = null
+let cacheTimestamp = null
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+
+/**
+ * Obtiene todos los cursos y los mantiene en cache
+ */
+const getCachedCourses = async () => {
+  try {
+    const now = Date.now()
+
+    // Verificar si el cache es válido
+    if (coursesCache && cacheTimestamp && now - cacheTimestamp < CACHE_DURATION) {
+      console.log("📚 [EXTERNAL API] Usando cache de cursos")
+      return coursesCache
+    }
+
+    console.log("🔄 [EXTERNAL API] Actualizando cache de cursos...")
+    const response = await fetch(COURSES_API_URL)
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const courses = await response.json()
+    console.log(`📚 [EXTERNAL API] Cache actualizado con ${courses.length} cursos`)
+
+    // Actualizar cache
+    coursesCache = courses
+    cacheTimestamp = now
+
+    return courses
+  } catch (error) {
+    console.error("❌ [EXTERNAL API] Error obteniendo cursos:", error)
+    // Si hay error, devolver cache anterior si existe
+    return coursesCache || []
+  }
 }
 
-if (!LOCAL_API_URL) {
-  throw new Error("VITE_LOCAL_DB_URL no está configurada en el archivo .env")
-}
+/**
+ * Obtiene el programa correspondiente a una ficha
+ */
+const getProgramByFicha = async (fichaNumber) => {
+  try {
+    const courses = await getCachedCourses()
+    const matchingCourse = courses.find((course) => course.code === String(fichaNumber))
 
-// Configuración de headers para la API externa
-const getExternalApiHeaders = () => ({
-  "x-api-key": EXTERNAL_API_KEY,
-  "Content-Type": "application/json",
-})
+    if (matchingCourse) {
+      console.log(`✅ [EXTERNAL API] Programa encontrado para ficha ${fichaNumber}: ${matchingCourse.fk_programs}`)
+      return matchingCourse.fk_programs
+    } else {
+      console.warn(`⚠️ [EXTERNAL API] No se encontró programa para ficha ${fichaNumber}`)
+      return "Programa no asignado"
+    }
+  } catch (error) {
+    console.error(`❌ [EXTERNAL API] Error obteniendo programa para ficha ${fichaNumber}:`, error)
+    return "Programa no asignado"
+  }
+}
 
 /**
  * Busca el rol de "Aprendiz" en la API local
@@ -50,6 +98,57 @@ const findApprenticeRole = async () => {
 }
 
 /**
+ * Verifica la conectividad con la API externa
+ */
+export const checkExternalApiConnectivity = async () => {
+  try {
+    console.log("🔍 [EXTERNAL API] Verificando conectividad con API externa...")
+
+    const response = await fetch(`${EXTERNAL_API_URL}/courses-students?page=1`, {
+      method: "GET",
+      headers: {
+        "x-api-key": EXTERNAL_API_KEY,
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (response.ok) {
+      console.log("✅ [EXTERNAL API] Conectividad con API externa exitosa")
+      return { success: true, message: "Conectividad exitosa" }
+    } else {
+      const errorText = await response.text()
+      console.error(`❌ [EXTERNAL API] Error de conectividad: ${response.status} - ${errorText}`)
+      return { success: false, message: `Error ${response.status}: ${errorText}` }
+    }
+  } catch (error) {
+    console.error("❌ [EXTERNAL API] Error de conectividad:", error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
+ * Verifica la conectividad con la API local
+ */
+export const checkLocalApiConnectivity = async () => {
+  try {
+    console.log("🔍 [EXTERNAL API] Verificando conectividad con API local...")
+
+    const response = await fetch(`${LOCAL_API_URL}/user?tipoUsuario=aprendiz&limit=1`)
+
+    if (response.ok) {
+      console.log("✅ [EXTERNAL API] Conectividad con API local exitosa")
+      return { success: true, message: "Conectividad exitosa" }
+    } else {
+      console.error(`❌ [EXTERNAL API] Error de conectividad local: ${response.status}`)
+      return { success: false, message: `Error ${response.status}` }
+    }
+  } catch (error) {
+    console.error("❌ [EXTERNAL API] Error de conectividad local:", error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
  * Obtiene una página específica de estudiantes de la API externa
  */
 export const fetchStudentsPage = async (page = 1) => {
@@ -58,7 +157,10 @@ export const fetchStudentsPage = async (page = 1) => {
     console.log(`🔍 Obteniendo página ${page} de estudiantes desde: ${url}`)
 
     const response = await fetch(url, {
-      headers: getExternalApiHeaders(),
+      headers: {
+        "x-api-key": EXTERNAL_API_KEY,
+        "Content-Type": "application/json",
+      },
     })
 
     if (!response.ok) {
@@ -83,6 +185,95 @@ export const fetchStudentsPage = async (page = 1) => {
 }
 
 /**
+ * Transforma un estudiante de la API externa al formato local
+ */
+const transformExternalStudent = async (externalStudent, roleId, coursesCache) => {
+  console.log("🔄 Transformando estudiante:", externalStudent)
+
+  // Validar que el estudiante tenga los campos mínimos requeridos
+  if (!externalStudent.document) {
+    throw new Error("Estudiante sin documento")
+  }
+
+  if (!externalStudent.name || !externalStudent.last_name) {
+    throw new Error("Estudiante sin nombre o apellido")
+  }
+
+  // Asegurar que course_number sea un número
+  const fichaNumber = Number.parseInt(externalStudent.course_number)
+
+  // Manejar teléfono vacío o inválido
+  const telefono = externalStudent.phone?.toString().trim() || "No especificado"
+
+  // OBTENER PROGRAMA AUTOMÁTICAMENTE
+  let programa = "Programa no asignado"
+  if (coursesCache) {
+    const matchingCourse = coursesCache.find((course) => course.code === fichaNumber.toString())
+    if (matchingCourse && matchingCourse.fk_programs) {
+      programa = matchingCourse.fk_programs
+    }
+  } else {
+    programa = await getProgramByFicha(fichaNumber)
+  }
+
+  const transformed = {
+    // Campo obligatorio para el modelo unificado
+    tipoUsuario: "aprendiz",
+
+    // Campos básicos del usuario
+    nombre: externalStudent.name?.trim() || "",
+    apellido: externalStudent.last_name?.trim() || "",
+    documento: externalStudent.document?.toString().trim() || "",
+    tipoDocumento: externalStudent.document_type || "CC",
+    telefono: telefono,
+    correo: externalStudent.email?.toLowerCase().trim() || `${externalStudent.document}@temp.com`,
+    contraseña: externalStudent.document?.toString().trim() || "", // Contraseña igual al documento
+    estado: mapExternalStatus(externalStudent.state),
+
+    // NUEVO: Vinculación con rol
+    role: roleId, // ID del rol de Aprendiz
+
+    // Campos específicos de aprendices - FORMATO CORRECTO
+    ficha: [fichaNumber], // Array con el número de ficha
+    nivel: 1, // Nivel por defecto
+    programa: programa, // PROGRAMA OBTENIDO AUTOMÁTICAMENTE
+    progresoActual: 0,
+    puntos: 200, // Puntos iniciales para todos los aprendices
+    progresoNiveles: [
+      { nivel: 1, porcentaje: 0 },
+      { nivel: 2, porcentaje: 0 },
+      { nivel: 3, porcentaje: 0 },
+    ],
+
+    // Campo adicional para tracking
+    externalId: externalStudent._id,
+  }
+
+  console.log("✅ [FRONTEND] Estudiante transformado con programa:", transformed.programa)
+  return transformed
+}
+
+/**
+ * Mapea el estado de la API externa al formato local
+ */
+const mapExternalStatus = (externalStatus) => {
+  const statusMap = {
+    "EN FORMACION": "En formación",
+    CANCELADO: "Retirado",
+    "RETIRO VOLUNTARIO": "Retirado",
+    GRADUADO: "Graduado",
+    CONDICIONADO: "Condicionado",
+    // Fallbacks adicionales
+    active: "En formación",
+    inactive: "Retirado",
+    graduated: "Graduado",
+    conditional: "Condicionado",
+  }
+
+  return statusMap[externalStatus] || "En formación"
+}
+
+/**
  * Obtiene todos los estudiantes de todas las páginas
  */
 export const fetchAllExternalApprentices = async (onProgress = null) => {
@@ -91,6 +282,15 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
 
     // Primero obtener el ID del rol de Aprendiz
     const apprenticeRoleId = await findApprenticeRole()
+
+    // Obtener TODOS los cursos de una vez para usarlos como caché
+    console.log("⬇️ [FRONTEND] Descargando lista completa de cursos para caché...")
+    const coursesResponse = await fetch(COURSES_API_URL)
+    if (!coursesResponse.ok) {
+      throw new Error("No se pudo obtener la lista de cursos")
+    }
+    const coursesCache = await coursesResponse.json()
+    console.log(`✅ [FRONTEND] Caché de ${coursesCache.length} cursos creada`)
 
     let allStudents = []
     let currentPage = 1
@@ -117,17 +317,18 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
         if (pageData.success && pageData.data && Array.isArray(pageData.data)) {
           console.log(`📄 Procesando página ${currentPage} con ${pageData.data.length} estudiantes`)
 
-          // Transformar estudiantes de esta página
-          const transformedStudents = pageData.data
-            .map((student, index) => {
-              try {
-                return transformExternalStudent(student, apprenticeRoleId)
-              } catch (error) {
-                console.error(`❌ Error transformando estudiante ${index}:`, error, student)
-                return null
+          // Transformar estudiantes de esta página usando el caché
+          const transformedStudents = []
+          for (const student of pageData.data) {
+            try {
+              const transformed = await transformExternalStudent(student, apprenticeRoleId, coursesCache)
+              if (transformed) {
+                transformedStudents.push(transformed)
               }
-            })
-            .filter(Boolean) // Filtrar elementos null
+            } catch (error) {
+              console.error(`❌ Error transformando estudiante:`, error, student)
+            }
+          }
 
           allStudents = allStudents.concat(transformedStudents)
 
@@ -170,85 +371,7 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
 }
 
 /**
- * Transforma un estudiante de la API externa al formato local
- */
-const transformExternalStudent = (externalStudent, roleId) => {
-  console.log("🔄 Transformando estudiante:", externalStudent)
-
-  // Validar que el estudiante tenga los campos mínimos requeridos
-  if (!externalStudent.document) {
-    throw new Error("Estudiante sin documento")
-  }
-
-  if (!externalStudent.name || !externalStudent.last_name) {
-    throw new Error("Estudiante sin nombre o apellido")
-  }
-
-  // Asegurar que course_number sea un número
-  const fichaNumber = Number.parseInt(externalStudent.course_number)
-
-  // Manejar teléfono vacío o inválido
-  const telefono = externalStudent.phone?.toString().trim() || "No especificado"
-
-  const transformed = {
-    // Campo obligatorio para el modelo unificado
-    tipoUsuario: "aprendiz",
-
-    // Campos básicos del usuario
-    nombre: externalStudent.name?.trim() || "",
-    apellido: externalStudent.last_name?.trim() || "",
-    documento: externalStudent.document?.toString().trim() || "",
-    tipoDocumento: externalStudent.document_type || "CC",
-    telefono: telefono,
-    correo: externalStudent.email?.toLowerCase().trim() || `${externalStudent.document}@temp.com`,
-    contraseña: externalStudent.document?.toString().trim() || "", // Contraseña igual al documento
-    estado: mapExternalStatus(externalStudent.state),
-
-    // NUEVO: Vinculación con rol
-    role: roleId, // ID del rol de Aprendiz
-
-    // Campos específicos de aprendices - FORMATO CORRECTO
-    ficha: [fichaNumber], // Array con el número de ficha
-    nivel: 1, // Nivel por defecto
-    programa: externalStudent.course_name || "Programa por definir",
-    progresoActual: 0,
-    puntos: 200, // Puntos iniciales para todos los aprendices
-    progresoNiveles: [
-      { nivel: 1, porcentaje: 0 },
-      { nivel: 2, porcentaje: 0 },
-      { nivel: 3, porcentaje: 0 },
-    ],
-
-    // Campo adicional para tracking
-    externalId: externalStudent._id,
-  }
-
-  console.log("✅ Estudiante transformado:", transformed)
-  return transformed
-}
-
-/**
- * Mapea el estado de la API externa al formato local
- */
-const mapExternalStatus = (externalStatus) => {
-  const statusMap = {
-    "EN FORMACION": "En formación",
-    CANCELADO: "Retirado",
-    "RETIRO VOLUNTARIO": "Retirado",
-    GRADUADO: "Graduado",
-    CONDICIONADO: "Condicionado",
-    // Fallbacks adicionales
-    active: "En formación",
-    inactive: "Retirado",
-    graduated: "Graduado",
-    conditional: "Condicionado",
-  }
-
-  return statusMap[externalStatus] || "En formación"
-}
-
-/**
- * Valida un aprendiz transformado
+ * Valida los datos transformados de un aprendiz
  */
 export const validateTransformedApprentice = (apprentice) => {
   const errors = []
@@ -308,59 +431,5 @@ export const validateTransformedApprentice = (apprentice) => {
   return {
     isValid: errors.length === 0,
     errors,
-  }
-}
-
-/**
- * Verifica la conectividad con la API externa
- */
-export const checkExternalApiConnectivity = async () => {
-  try {
-    console.log("🔍 Verificando conectividad con API externa...")
-    const response = await fetch(`${EXTERNAL_API_URL}/courses-students?page=1`, {
-      headers: getExternalApiHeaders(),
-    })
-
-    const result = {
-      success: response.ok,
-      status: response.status,
-      message: response.ok ? "Conectado" : `Error HTTP ${response.status}`,
-    }
-
-    console.log("📡 Resultado conectividad API externa:", result)
-    return result
-  } catch (error) {
-    console.error("❌ Error verificando API externa:", error)
-    return {
-      success: false,
-      status: 0,
-      message: error.message,
-    }
-  }
-}
-
-/**
- * Verifica la conectividad con la API local
- */
-export const checkLocalApiConnectivity = async () => {
-  try {
-    console.log("🔍 Verificando conectividad con API local...")
-    const response = await fetch(`${LOCAL_API_URL}/user`)
-
-    const result = {
-      success: response.ok,
-      status: response.status,
-      message: response.ok ? "Conectado" : `Error HTTP ${response.status}`,
-    }
-
-    console.log("📡 Resultado conectividad API local:", result)
-    return result
-  } catch (error) {
-    console.error("❌ Error verificando API local:", error)
-    return {
-      success: false,
-      status: 0,
-      message: error.message,
-    }
   }
 }

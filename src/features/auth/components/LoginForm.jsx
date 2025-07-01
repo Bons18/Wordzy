@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { User, Eye, EyeOff, Lock, CreditCard } from "lucide-react"
+import { User, Eye, EyeOff, Lock } from "lucide-react"
 
 const LoginForm = ({ onLoginSuccess, login }) => {
   const [formData, setFormData] = useState({
-    documentType: "",
     document: "",
     password: "",
     rememberMe: false,
@@ -13,14 +12,6 @@ const LoginForm = ({ onLoginSuccess, login }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-
-  const documentTypes = [
-    { value: "", label: "Seleccionar tipo de documento" },
-    { value: "CC", label: "Cédula de Ciudadanía (CC)" },
-    { value: "TI", label: "Tarjeta de Identidad (TI)" },
-    { value: "CE", label: "Cédula de Extranjería (CE)" },
-    { value: "PEP", label: "Permiso Especial de Permanencia (PEP)" },
-  ]
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -45,47 +36,14 @@ const LoginForm = ({ onLoginSuccess, login }) => {
     }
   }
 
+  const handleForgotPassword = () => {
+    // TODO: Implement forgot password functionality
+    alert("Funcionalidad de recuperación de contraseña próximamente")
+  }
+
   return (
     <div className="w-full max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Tipo de Documento */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento</label>
-          <div className="relative">
-            <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <select
-              name="documentType"
-              value={formData.documentType}
-              onChange={handleChange}
-              className="w-full pl-10 pr-12 py-3 
-                         border border-gray-300 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                         text-base text-gray-900
-                         bg-white appearance-none cursor-pointer
-                         hover:border-gray-400 transition-colors
-                         placeholder:text-gray-400"
-              required
-            >
-              {documentTypes.map((type) => (
-                <option
-                  key={type.value}
-                  value={type.value}
-                  className="text-base text-gray-900"
-                  disabled={type.value === ""}
-                >
-                  {type.label}
-                </option>
-              ))}
-            </select>
-            {/* Custom dropdown arrow */}
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
         {/* Número de Documento */}
         <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-2">Número de Documento</label>
@@ -110,7 +68,7 @@ const LoginForm = ({ onLoginSuccess, login }) => {
           </div>
         </div>
 
-        {/* Contraseña (Documento) */}
+        {/* Contraseña */}
         <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
           <div className="relative">
@@ -120,15 +78,13 @@ const LoginForm = ({ onLoginSuccess, login }) => {
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={handleChange}
-              placeholder="Confirme su número de documento"
+              placeholder="Ingrese su contraseña"
               className="w-full pl-10 pr-12 py-3
                          border border-gray-300 rounded-lg
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                          text-base text-gray-900
                          placeholder:text-gray-400
                          hover:border-gray-400 transition-colors"
-              pattern="[0-9]*"
-              inputMode="numeric"
               required
             />
             <button
@@ -141,19 +97,28 @@ const LoginForm = ({ onLoginSuccess, login }) => {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Su contraseña es el mismo número de documento</p>
         </div>
 
         {/* Remember Me */}
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="rememberMe"
-            checked={formData.rememberMe}
-            onChange={handleChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label className="ml-2 block text-sm text-gray-700">Recuérdame</label>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onChange={handleChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label className="ml-2 block text-sm text-gray-700">Recuérdame</label>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
         </div>
 
         {/* Error Message */}
@@ -163,7 +128,7 @@ const LoginForm = ({ onLoginSuccess, login }) => {
               <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 00-1.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -201,12 +166,6 @@ const LoginForm = ({ onLoginSuccess, login }) => {
             "Iniciar Sesión"
           )}
         </button>
-
-        {/* Help Text */}
-        <div className="text-center space-y-1 pt-4">
-          <p className="text-sm text-gray-500">¿Problemas para acceder?</p>
-          <p className="text-sm text-gray-700 font-medium">Contacte al administrador del sistema</p>
-        </div>
       </form>
     </div>
   )

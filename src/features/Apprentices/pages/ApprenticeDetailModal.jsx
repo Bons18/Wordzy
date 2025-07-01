@@ -122,7 +122,13 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                     <p className="font-bold text-sm">Estado:</p>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        apprenticeData.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        apprenticeData.estado === "En formación"
+                          ? "bg-green-100 text-green-800"
+                          : apprenticeData.estado === "Condicionado"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : apprenticeData.estado === "Graduado"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-red-100 text-red-800"
                       }`}
                     >
                       {apprenticeData.estado}
@@ -138,40 +144,46 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                   </div>
                   <div>
                     <p className="font-bold text-sm">Programa:</p>
-                    <p className="text-gray-600 text-sm">{apprenticeData.programa}</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.programa || "No asignado"}</p>
                   </div>
                   <div>
                     <p className="font-bold text-sm">Progreso Actual:</p>
-                    <p className="text-gray-600 text-sm">{apprenticeData.progresoActual}%</p>
+                    <p className="text-gray-600 text-sm">{apprenticeData.progresoActual || 0}%</p>
                   </div>
+                  {apprenticeData.puntos !== undefined && (
+                    <div>
+                      <p className="font-bold text-sm">Puntos:</p>
+                      <p className="text-gray-600 text-sm">{apprenticeData.puntos}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div>
                 <h4 className="text-sm font-semibold mb-3">Progreso por Niveles</h4>
-                {apprenticeData ? (
+                {apprenticeData && apprenticeData.progresoNiveles ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {getProgressByLevels(apprenticeData.progresoActual, apprenticeData.nivel).map((level, index) => (
+                    {apprenticeData.progresoNiveles.map((nivelData, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-3">
                         <div className="text-center mb-2">
-                          <h5 className="font-bold text-sm text-gray-800">{level.level}</h5>
+                          <h5 className="font-bold text-sm text-gray-800">Nivel {nivelData.nivel}</h5>
                         </div>
                         <div className="flex flex-col items-center">
                           <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                             <div
                               className={`h-3 rounded-full transition-all duration-300 ${
-                                level.progress >= 80
+                                nivelData.porcentaje >= 80
                                   ? "bg-green-500"
-                                  : level.progress >= 50
+                                  : nivelData.porcentaje >= 50
                                     ? "bg-yellow-500"
-                                    : level.progress > 0
+                                    : nivelData.porcentaje > 0
                                       ? "bg-blue-500"
                                       : "bg-gray-300"
                               }`}
-                              style={{ width: `${level.progress}%` }}
+                              style={{ width: `${nivelData.porcentaje}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-medium text-gray-700">{level.progress}%</span>
+                          <span className="text-sm font-medium text-gray-700">{nivelData.porcentaje}%</span>
                         </div>
                       </div>
                     ))}

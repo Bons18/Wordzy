@@ -5,12 +5,12 @@ import { FiUpload, FiChevronDown, FiPlus } from "react-icons/fi"
 import { Trash, Pencil } from "lucide-react"
 
 const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = false }) => {
-  // Modificar el estado inicial para incluir un modo de edición de pregunta
+  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: "",
     tematica: "",
     tipoEvaluacion: "Examen",
-    estado: "Activo", // Siempre activo por defecto
+    estado: "Activo",
     descripcion: "",
     material: null,
     materialName: "",
@@ -283,13 +283,37 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     setShowQuestionTypes(false)
   }
 
+  // Función para calcular el total de puntos incluyendo la pregunta actual
   const getTotalPoints = () => {
+    const existingPoints = formData.preguntas
+      .filter((_, index) => index !== editingQuestionIndex) // Excluir la pregunta que se está editando
+      .reduce((total, pregunta) => total + Number(pregunta.puntaje), 0)
+
+    // Si estamos creando/editando una pregunta, incluir sus puntos
+    const currentQuestionPoints = currentQuestionType ? Number(questionData.puntaje) : 0
+
+    return existingPoints + currentQuestionPoints
+  }
+
+  // Función para calcular puntos solo de preguntas guardadas
+  const getSavedQuestionsPoints = () => {
     return formData.preguntas.reduce((total, pregunta) => total + Number(pregunta.puntaje), 0)
   }
 
   const isPuntajeValid = () => {
-    const total = getTotalPoints()
+    const total = getSavedQuestionsPoints()
     return total === 100
+  }
+
+  // Función para obtener el estilo y texto del indicador de puntos
+  const getPointsIndicator = () => {
+    const totalPoints = getTotalPoints()
+    const isValid = totalPoints === 100
+
+    return {
+      color: isValid ? "text-green-600" : "text-red-600",
+      text: `${totalPoints} de 100`,
+    }
   }
 
   const handleSubmit = (e) => {
@@ -422,8 +446,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
             </div>
           </div>
 
-          {/* Segunda fila: Tipo y Estado (solo en edición) */}
-          <div className={`grid grid-cols-1 ${!isCreating ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-6`}>
+          {/* Segunda fila: Tipo y Material */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-[14px] font-medium mb-1">Tipo</label>
               <select
@@ -438,8 +462,31 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
               </select>
             </div>
 
-            {/* Estado solo se muestra en modo edición */}
-            {!isCreating && (
+            <div>
+              <label className="block text-[14px] font-medium mb-1">Material</label>
+              <div className="flex items-center">
+                <input type="file" id="material" onChange={handleFileChange} className="hidden" />
+                <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
+                  {formData.material instanceof File
+                    ? formData.material.name
+                    : formData.materialName
+                      ? formData.materialName
+                      : "Seleccionar archivo. Ningún archivo seleccionado"}
+                </div>
+                <label
+                  htmlFor="material"
+                  className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
+                >
+                  <FiUpload className="mr-2" />
+                  Subir
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Tercera fila: Estado (solo en edición) */}
+          {!isCreating && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[14px] font-medium mb-1">Estado</label>
                 <div className="flex items-center pt-1">
@@ -461,30 +508,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                   </span>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Tercera fila: Material solo */}
-          <div>
-            <label className="block text-[14px] font-medium mb-1">Material</label>
-            <div className="flex items-center">
-              <input type="file" id="material" onChange={handleFileChange} className="hidden" />
-              <div className="flex-1 border border-gray-300 rounded-l-md p-2 text-[14px] bg-white text-gray-500 truncate">
-                {formData.material instanceof File
-                  ? formData.material.name
-                  : formData.materialName
-                    ? formData.materialName
-                    : "Seleccionar archivo. Ningún archivo seleccionado"}
-              </div>
-              <label
-                htmlFor="material"
-                className="flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-r-md cursor-pointer text-[14px]"
-              >
-                <FiUpload className="mr-2" />
-                Subir
-              </label>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-[14px] font-medium mb-1">Descripción General</label>
@@ -498,8 +523,65 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
           </div>
 
           <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between items-center mb-4">
-              <label className="block text-[14px] font-medium">Preguntas</label>
+            <div className="mb-4">
+              <label className="block text-[14px] font-medium mb-4">Preguntas</label>
+
+              {/* Lista de preguntas agregadas */}
+              {formData.preguntas.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-[14px] font-medium mb-2">Preguntas agregadas:</h3>
+                  <div className="space-y-2">
+                    {formData.preguntas.map((pregunta, index) => (
+                      <div
+                        key={pregunta.id}
+                        className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50"
+                      >
+                        <div>
+                          <p className="text-[14px]">
+                            {index + 1}.{" "}
+                            {pregunta.texto
+                              ? pregunta.texto.substring(0, 30)
+                              : pregunta.completarTexto
+                                ? pregunta.completarTexto.substring(0, 30)
+                                : ""}
+                            {(pregunta.texto && pregunta.texto.length > 30) ||
+                            (pregunta.completarTexto && pregunta.completarTexto.length > 30)
+                              ? "..."
+                              : ""}
+                          </p>
+                          <p className="text-[12px] text-gray-500">
+                            Tipo: {pregunta.tipo} | Puntaje: {pregunta.puntaje}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditQuestion(index)}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setFormData((prev) => ({
+                                ...prev,
+                                preguntas: prev.preguntas.filter((_, i) => i !== index),
+                              }))
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Botón para agregar nueva pregunta - ahora debajo de la lista */}
               <div className="relative">
                 <button
                   type="button"
@@ -510,7 +592,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                   <FiChevronDown className="ml-2" />
                 </button>
                 {showQuestionTypes && (
-                  <div className="absolute right-0 bottom-full mb-1 w-64 bg-[#f3edf7] rounded-md shadow-lg z-10 p-2">
+                  <div className="absolute left-0 top-full mt-1 w-64 bg-[#f3edf7] rounded-md shadow-lg z-10 p-2">
                     <div className="space-y-2">
                       <button
                         type="button"
@@ -553,76 +635,30 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
               </div>
             </div>
 
-            {/* Lista de preguntas agregadas */}
-            {formData.preguntas.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-[14px] font-medium mb-2">Preguntas agregadas:</h3>
-                <div className="space-y-2">
-                  {formData.preguntas.map((pregunta, index) => (
-                    <div
-                      key={pregunta.id}
-                      className="flex justify-between items-center p-2 border border-gray-200 rounded-md hover:bg-gray-50"
-                    >
-                      <div>
-                        <p className="text-[14px]">
-                          {index + 1}.{" "}
-                          {pregunta.texto
-                            ? pregunta.texto.substring(0, 30)
-                            : pregunta.completarTexto
-                              ? pregunta.completarTexto.substring(0, 30)
-                              : ""}
-                          {(pregunta.texto && pregunta.texto.length > 30) ||
-                          (pregunta.completarTexto && pregunta.completarTexto.length > 30)
-                            ? "..."
-                            : ""}
-                        </p>
-                        <p className="text-[12px] text-gray-500">
-                          Tipo: {pregunta.tipo} | Puntaje: {pregunta.puntaje}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEditQuestion(index)}
-                          className="text-blue-500 hover:text-blue-700"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setFormData((prev) => ({
-                              ...prev,
-                              preguntas: prev.preguntas.filter((_, i) => i !== index),
-                            }))
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Formularios de preguntas... (mantener igual) */}
+            {/* Formularios de preguntas */}
             {currentQuestionType === "imagen" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[14px] font-medium">Pregunta con imagen</h3>
                   <div className="flex items-center">
-                    <span className="text-[14px] mr-2">Puntos:</span>
-                    <input
-                      type="number"
-                      name="puntaje"
-                      value={questionData.puntaje}
-                      onChange={handleQuestionChange}
-                      className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
-                      min="1"
-                    />
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <span className="text-[14px] mr-2">Puntos:</span>
+                        <input
+                          type="number"
+                          name="puntaje"
+                          value={questionData.puntaje}
+                          onChange={handleQuestionChange}
+                          className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
+                          min="1"
+                        />
+                      </div>
+                      {currentQuestionType && (
+                        <div className={`text-[12px] mt-1 ${getPointsIndicator().color}`}>
+                          {getPointsIndicator().text}
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
                       <Trash className="h-4 w-6 text-red-500" />
                     </button>
@@ -698,21 +734,29 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
               </div>
             )}
 
-            {/* Resto de formularios de preguntas... (mantener igual que antes) */}
             {currentQuestionType === "seleccion" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[14px] font-medium">Pregunta Selección Múltiple Única respuesta</h3>
                   <div className="flex items-center">
-                    <span className="text-[14px] mr-2">Puntos:</span>
-                    <input
-                      type="number"
-                      name="puntaje"
-                      value={questionData.puntaje}
-                      onChange={handleQuestionChange}
-                      className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
-                      min="1"
-                    />
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <span className="text-[14px] mr-2">Puntos:</span>
+                        <input
+                          type="number"
+                          name="puntaje"
+                          value={questionData.puntaje}
+                          onChange={handleQuestionChange}
+                          className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
+                          min="1"
+                        />
+                      </div>
+                      {currentQuestionType && (
+                        <div className={`text-[12px] mt-1 ${getPointsIndicator().color}`}>
+                          {getPointsIndicator().text}
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
                       <Trash className="h-4 w-6 text-red-500" />
                     </button>
@@ -769,15 +813,24 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[14px] font-medium">Pregunta Verdadero o Falso</h3>
                   <div className="flex items-center">
-                    <span className="text-[14px] mr-2">Puntos:</span>
-                    <input
-                      type="number"
-                      name="puntaje"
-                      value={questionData.puntaje}
-                      onChange={handleQuestionChange}
-                      className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
-                      min="1"
-                    />
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <span className="text-[14px] mr-2">Puntos:</span>
+                        <input
+                          type="number"
+                          name="puntaje"
+                          value={questionData.puntaje}
+                          onChange={handleQuestionChange}
+                          className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
+                          min="1"
+                        />
+                      </div>
+                      {currentQuestionType && (
+                        <div className={`text-[12px] mt-1 ${getPointsIndicator().color}`}>
+                          {getPointsIndicator().text}
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
                       <Trash className="h-4 w-6 text-red-500" />
                     </button>
@@ -834,15 +887,24 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[14px] font-medium">Pregunta con audio</h3>
                   <div className="flex items-center">
-                    <span className="text-[14px] mr-2">Puntos:</span>
-                    <input
-                      type="number"
-                      name="puntaje"
-                      value={questionData.puntaje}
-                      onChange={handleQuestionChange}
-                      className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
-                      min="1"
-                    />
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <span className="text-[14px] mr-2">Puntos:</span>
+                        <input
+                          type="number"
+                          name="puntaje"
+                          value={questionData.puntaje}
+                          onChange={handleQuestionChange}
+                          className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
+                          min="1"
+                        />
+                      </div>
+                      {currentQuestionType && (
+                        <div className={`text-[12px] mt-1 ${getPointsIndicator().color}`}>
+                          {getPointsIndicator().text}
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
                       <Trash className="h-4 w-6 text-red-500" />
                     </button>
@@ -923,15 +985,24 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[14px] font-medium">Pregunta de Completar Espacios</h3>
                   <div className="flex items-center">
-                    <span className="text-[14px] mr-2">Puntos:</span>
-                    <input
-                      type="number"
-                      name="puntaje"
-                      value={questionData.puntaje}
-                      onChange={handleQuestionChange}
-                      className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
-                      min="1"
-                    />
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <span className="text-[14px] mr-2">Puntos:</span>
+                        <input
+                          type="number"
+                          name="puntaje"
+                          value={questionData.puntaje}
+                          onChange={handleQuestionChange}
+                          className="w-16 p-1 border border-gray-300 rounded-md text-[14px]"
+                          min="1"
+                        />
+                      </div>
+                      {currentQuestionType && (
+                        <div className={`text-[12px] mt-1 ${getPointsIndicator().color}`}>
+                          {getPointsIndicator().text}
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setCurrentQuestionType(null)} className="ml-2 text-red-500">
                       <Trash className="h-4 w-6 text-red-500" />
                     </button>
@@ -1031,7 +1102,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                 <div>
                   <p className="text-[16px] font-bold">Total puntos de las Preguntas</p>
                   <p className="text-[14px] text-gray-500">
-                    El total de puntos es {getTotalPoints()}. Debe sumar 100 para poder guardar el examen
+                    El total de puntos es {getSavedQuestionsPoints()}. Debe sumar 100 para poder guardar el examen
                   </p>
                 </div>
               </div>
