@@ -18,7 +18,6 @@ import Badges3 from "./features/Badges/pages/Badges3"
 import Ranking from "./features/Ranking/pages/Ranking"
 import Dashboard from "./features/Dashboard/pages/Dashboard"
 import LoginPage from "./features/auth/pages/LoginPage"
-import FilePage from "./features/ScheduledCourses/pages/FilePage"
 import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
 import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
 import RolesPage from "./features/Role/pages/RolesPage"
@@ -30,6 +29,7 @@ import CourseProgrammingDetail from "./features/CourseProgramming/components/cou
 import LevelAssignmentPage from "./features/LevelAssignment/pages/LevelAssignmentPage"
 import CreateEvaluationPage from "./features/Evaluations/pages/CreateEvaluationPage"
 import EditEvaluationPage from "./features/Evaluations/pages/EditEvaluationPage"
+import LevelsPage from "./features/ScheduledCourses/pages/LevelsPage"
 
 // Definición de rutas
 const routes = [
@@ -193,15 +193,15 @@ const routes = [
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas",
+    path: "/progreso/cursosProgramados/niveles",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
-        <FilePage />
+        <LevelsPage />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas/aprendices",
+    path: "/progreso/cursosProgramados/niveles/aprendices",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
         <TraineesPage />
@@ -209,7 +209,7 @@ const routes = [
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas/aprendices/progreso/:nombre",
+    path: "/progreso/cursosProgramados/niveles/aprendices/progreso/:nombre",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
         <ProgressView />

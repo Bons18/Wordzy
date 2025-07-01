@@ -210,7 +210,7 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                       </p>
                     )}
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex">
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Valor <span className="text-red-500">*</span>
