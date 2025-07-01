@@ -7,13 +7,17 @@ import { useAuth } from "../../auth/hooks/useAuth"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 import usePostInstructor from "../hooks/usePostInstructor"
 import useGetCourses from "../hooks/useGetCourses"
-import { validateInstructorData, processServerError } from "../services/instructorValidationService"
+import {
+  validateInstructorData,
+  processServerError,
+  prepareInstructorData,
+} from "../services/instructorValidationService"
 
 const CreateInstructorPage = () => {
   const navigate = useNavigate()
   const { logout } = useAuth()
-  const { createInstructor, loading } = usePostInstructor()
-  const { courses, loading: coursesLoading, error: coursesError } = useGetCourses()
+  const { createInstructor, loading: creating } = usePostInstructor()
+  const { courses, loading: coursesLoading, error: coursesError, hasLoaded, loadCoursesOnDemand } = useGetCourses()
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -80,7 +84,7 @@ const CreateInstructorPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Validar formulario
+    // Validar formulario (modo creación)
     const validationErrors = await validateInstructorData(formData, false)
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
@@ -88,17 +92,7 @@ const CreateInstructorPage = () => {
     }
 
     try {
-      const instructorData = {
-        tipoUsuario: "instructor",
-        nombre: formData.nombre?.trim(),
-        apellido: formData.apellido?.trim(),
-        documento: formData.documento?.trim(),
-        tipoDocumento: formData.tipoDocumento,
-        estado: "Activo", // Siempre activo al crear
-        telefono: formData.telefono?.trim(),
-        correo: formData.correo?.toLowerCase().trim(),
-        fichas: formData.fichas || [],
-      }
+      const instructorData = prepareInstructorData(formData, false)
 
       await createInstructor(instructorData)
       navigate("/formacion/instructores")
@@ -123,18 +117,44 @@ const CreateInstructorPage = () => {
     navigate("/login")
   }
 
-  // Filtrar fichas basado en el término de búsqueda
-  const filteredCourses = courses.filter((course) => {
-    if (!searchTerm) return true
+  // Manejar cambio en el campo de búsqueda
+  const handleSearchChange = async (e) => {
+    const value = e.target.value
+    setSearchTerm(value)
 
+    // Si el usuario empieza a escribir y no hemos cargado los cursos, cargarlos
+    if (value.trim() && !hasLoaded && !coursesLoading) {
+      try {
+        console.log("🔄 Cargando cursos por búsqueda...")
+        await loadCoursesOnDemand()
+        console.log("✅ Cursos cargados por búsqueda")
+      } catch (error) {
+        console.error("❌ Error al cargar cursos por búsqueda:", error)
+      }
+    }
+  }
+
+  // Filtrar fichas basado en el término de búsqueda
+  const getDisplayedCourses = () => {
+    if (!hasLoaded) return []
+
+    // Si no hay término de búsqueda, mostrar solo las fichas seleccionadas
+    if (!searchTerm.trim()) {
+      return courses.filter((course) => formData.fichas.includes(course.id))
+    }
+
+    // Si hay término de búsqueda, filtrar normalmente entre TODAS las fichas
     const searchLower = searchTerm.toLowerCase()
-    return (
-      course.code?.toLowerCase().includes(searchLower) ||
-      course.fk_programs?.toLowerCase().includes(searchLower) ||
-      course.area?.toLowerCase().includes(searchLower) ||
-      course.course_status?.toLowerCase().includes(searchLower)
+    return courses.filter(
+      (course) =>
+        course.code?.toLowerCase().includes(searchLower) ||
+        course.fk_programs?.toLowerCase().includes(searchLower) ||
+        course.area?.toLowerCase().includes(searchLower) ||
+        course.course_status?.toLowerCase().includes(searchLower),
     )
-  })
+  }
+
+  const displayedCourses = getDisplayedCourses()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -143,7 +163,7 @@ const CreateInstructorPage = () => {
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-[#1f384c]">Crear Instructor</h1>
+              <h1 className="text-2xl font-bold text-[#1f384c]">Crear Nuevo Instructor</h1>
             </div>
 
             {/* Dropdown de usuario */}
@@ -302,119 +322,163 @@ const CreateInstructorPage = () => {
                 )}
               </h3>
 
-              {coursesLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1f384c] mx-auto"></div>
-                  <p className="text-sm text-gray-500 mt-2">Cargando fichas...</p>
-                </div>
-              ) : coursesError ? (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-                  Error al cargar fichas: {coursesError}
-                </div>
-              ) : courses.length > 0 ? (
-                <div className="border border-gray-200 rounded-md">
-                  {/* Buscador de fichas */}
-                  <div className="p-4 border-b border-gray-200 bg-gray-50">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Buscar fichas por código, programa, área o estado..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#1f384c] focus:border-[#1f384c]"
-                      />
+              <div className="border border-gray-200 rounded-md">
+                {/* Buscador de fichas */}
+                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
                     </div>
-                    {searchTerm && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        Mostrando {filteredCourses.length} de {courses.length} fichas
-                      </p>
+                    <input
+                      type="text"
+                      placeholder="Buscar fichas por código, programa, área o estado..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#1f384c] focus:border-[#1f384c]"
+                    />
+                    {coursesLoading && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#1f384c]"></div>
+                      </div>
                     )}
                   </div>
+                  {!hasLoaded && !coursesLoading && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      💡 Escribe en el campo de búsqueda para cargar y buscar fichas
+                    </p>
+                  )}
+                  {searchTerm && hasLoaded && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Mostrando {displayedCourses.length} de {courses.length} fichas
+                    </p>
+                  )}
+                  {!searchTerm && hasLoaded && formData.fichas.length > 0 && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Mostrando {displayedCourses.length} ficha{displayedCourses.length !== 1 ? "s" : ""} seleccionada
+                      {displayedCourses.length !== 1 ? "s" : ""}
+                    </p>
+                  )}
+                </div>
 
-                  <div className="max-h-80 overflow-y-auto">
-                    {filteredCourses.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
-                        {filteredCourses.map((course) => (
-                          <div
-                            key={course.id}
-                            className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
-                              formData.fichas.includes(course.id)
-                                ? "border-[#1f384c] bg-blue-50"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
-                            onClick={() => handleFichaToggle(course.id)}
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={formData.fichas.includes(course.id)}
-                                  onChange={() => handleFichaToggle(course.id)}
-                                  className="h-4 w-4 text-[#1f384c] focus:ring-[#1f384c] border-gray-300 rounded mr-2"
-                                />
-                                <div className="font-semibold text-sm text-[#1f384c]">{course.code}</div>
-                              </div>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  course.course_status === "EN EJECUCION"
-                                    ? "bg-green-100 text-green-800"
-                                    : course.course_status === "TERMINADO"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {course.course_status}
-                              </span>
+                <div className="max-h-80 overflow-y-auto">
+                  {coursesLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1f384c] mx-auto"></div>
+                      <p className="text-sm text-gray-500 mt-2">Cargando fichas...</p>
+                    </div>
+                  ) : coursesError ? (
+                    <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md m-4">
+                      Error al cargar fichas: {coursesError}
+                    </div>
+                  ) : !hasLoaded ? (
+                    <div className="text-gray-500 text-sm text-center py-8 bg-gray-50">
+                      <svg
+                        className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <p>Escribe en el campo de búsqueda para cargar las fichas disponibles</p>
+                    </div>
+                  ) : displayedCourses.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                      {displayedCourses.map((course) => (
+                        <div
+                          key={course.id}
+                          className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                            formData.fichas.includes(course.id)
+                              ? "border-[#1f384c] bg-blue-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                          onClick={() => handleFichaToggle(course.id)}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={formData.fichas.includes(course.id)}
+                                onChange={() => handleFichaToggle(course.id)}
+                                className="h-4 w-4 text-[#1f384c] focus:ring-[#1f384c] border-gray-300 rounded mr-2"
+                              />
+                              <div className="font-semibold text-sm text-[#1f384c]">{course.code}</div>
                             </div>
-                            <div className="text-xs text-gray-600 space-y-1">
-                              <div>
-                                <strong>Programa:</strong> {course.fk_programs}
-                              </div>
-                              <div>
-                                <strong>Área:</strong> {course.area}
-                              </div>
-                              <div>
-                                <strong>Tipo:</strong> {course.offer_type}
-                              </div>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                course.course_status === "EN EJECUCION"
+                                  ? "bg-green-100 text-green-800"
+                                  : course.course_status === "TERMINADO"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {course.course_status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div>
+                              <strong>Programa:</strong> {course.fk_programs}
+                            </div>
+                            <div>
+                              <strong>Área:</strong> {course.area}
+                            </div>
+                            <div>
+                              <strong>Tipo:</strong> {course.offer_type}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <svg
-                          className="w-12 h-12 mx-auto mb-2 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        <p>No se encontraron fichas que coincidan con "{searchTerm}"</p>
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : hasLoaded && searchTerm ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg
+                        className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <p>No se encontraron fichas que coincidan con "{searchTerm}"</p>
+                    </div>
+                  ) : hasLoaded && !searchTerm && formData.fichas.length === 0 ? (
+                    <div className="text-gray-500 text-sm text-center py-8 bg-gray-50">
+                      <svg
+                        className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <p>No hay fichas seleccionadas. Busca fichas para asignar al instructor.</p>
+                    </div>
+                  ) : null}
                 </div>
-              ) : (
-                <div className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-md">
-                  No hay fichas disponibles
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Botones centrados */}
@@ -423,16 +487,16 @@ const CreateInstructorPage = () => {
                 type="button"
                 onClick={handleCancel}
                 className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1f384c]"
-                disabled={loading}
+                disabled={creating}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 className="px-6 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading || coursesLoading}
+                disabled={creating || coursesLoading}
               >
-                {loading ? (
+                {creating ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Creando...

@@ -1,87 +1,41 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { API_ENDPOINTS } from "../../../shared/config/api"
+import { useState } from "react"
+import { getCourses } from "../services/courseService"
 
 const useGetCourses = () => {
   const [courses, setCourses] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [hasLoaded, setHasLoaded] = useState(false)
 
-  const fetchCourses = async () => {
+  const loadCoursesOnDemand = async () => {
+    if (hasLoaded || loading) return // Evitar cargas duplicadas
+
     try {
       setLoading(true)
       setError(null)
 
-      console.log("🔍 Obteniendo fichas/cursos desde API...")
+      console.log("🔄 Iniciando carga de cursos...")
+      const data = await getCourses()
+      console.log("✅ Cursos cargados en hook:", data)
 
-      const response = await fetch(API_ENDPOINTS.COURSES, {
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      })
-
-      const responseText = await response.text()
-
-      if (!response.ok) {
-        throw new Error(
-          `Error ${response.status}: ${response.statusText}. Respuesta del servidor: ${responseText.substring(0, 100)}...`,
-        )
-      }
-
-      let data
-      try {
-        data = JSON.parse(responseText)
-      } catch (e) {
-        console.error("Error al parsear JSON:", responseText)
-        throw new Error("La respuesta del servidor no es un JSON válido.")
-      }
-
-      console.log("✅ Fichas/cursos recibidos:", data)
-
-      // Normalizar datos para el frontend
-      const normalizedCourses = data.map((course) => ({
-        id: course._id || course.id,
-        code: course.code,
-        area: course.area,
-        fk_programs: course.fk_programs,
-        course_status: course.course_status,
-        offer_type: course.offer_type,
-        start_date: course.start_date,
-        end_date: course.end_date,
-        status: course.status,
-        // Campos adicionales que pueden ser útiles
-        quarter: course.quarter,
-        fk_coordination: course.fk_coordination,
-        fk_itinerary: course.fk_itinerary,
-      }))
-
-      setCourses(normalizedCourses)
-      console.log(`✅ ${normalizedCourses.length} fichas/cursos cargados exitosamente`)
+      setCourses(data)
+      setHasLoaded(true)
     } catch (err) {
-      console.error("❌ Error al obtener fichas/cursos:", err)
-      setError(err.message)
-      setCourses([])
+      console.error("❌ Error al cargar cursos en hook:", err)
+      setError(err.message || "Error al cargar los cursos")
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchCourses()
-  }, [])
-
-  const refetch = () => {
-    console.log("🔄 Refrescando datos de fichas/cursos...")
-    return fetchCourses()
   }
 
   return {
     courses,
     loading,
     error,
-    refetch,
+    hasLoaded,
+    loadCoursesOnDemand,
   }
 }
 

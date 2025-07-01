@@ -14,39 +14,29 @@ let coursesCache = null
 let cacheTimestamp = null
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
 
-/**
- * Obtiene todos los cursos y los mantiene en cache
- */
 const getCachedCourses = async () => {
-  try {
-    const now = Date.now()
-
-    // Verificar si el cache es válido
-    if (coursesCache && cacheTimestamp && now - cacheTimestamp < CACHE_DURATION) {
-      console.log("📚 [EXTERNAL API] Usando cache de cursos")
-      return coursesCache
-    }
-
-    console.log("🔄 [EXTERNAL API] Actualizando cache de cursos...")
-    const response = await fetch(COURSES_API_URL)
-
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`)
-    }
-
-    const courses = await response.json()
-    console.log(`📚 [EXTERNAL API] Cache actualizado con ${courses.length} cursos`)
-
-    // Actualizar cache
-    coursesCache = courses
-    cacheTimestamp = now
-
-    return courses
-  } catch (error) {
-    console.error("❌ [EXTERNAL API] Error obteniendo cursos:", error)
-    // Si hay error, devolver cache anterior si existe
-    return coursesCache || []
+  const now = Date.now()
+  // Verificar si el cache es válido
+  if (coursesCache && cacheTimestamp && now - cacheTimestamp < CACHE_DURATION) {
+    console.log("📚 [EXTERNAL API] Usando cache de cursos")
+    return coursesCache // ← AQUÍ: Evita hacer 3000 requests de cursos
   }
+
+  console.log("🔄 [EXTERNAL API] Actualizando cache de cursos...")
+  const response = await fetch(COURSES_API_URL)
+
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`)
+  }
+
+  const courses = await response.json()
+  console.log(`📚 [EXTERNAL API] Cache actualizado con ${courses.length} cursos`)
+
+  // Actualizar cache
+  coursesCache = courses
+  cacheTimestamp = now
+
+  return courses
 }
 
 /**
@@ -168,13 +158,14 @@ export const fetchStudentsPage = async (page = 1) => {
     }
 
     const data = await response.json()
+    // ← AQUÍ: La API externa devuelve data.data con ~50 registros por página
     console.log(`📊 Respuesta de página ${page}:`, {
       success: data.success,
       totalPages: data.pagination?.totalPages,
       totalItems: data.pagination?.totalItems,
       currentPage: data.pagination?.currentPage,
-      dataLength: data.data?.length,
-      sampleData: data.data?.[0], // Mostrar primer elemento como muestra
+      dataLength: data.data?.length, // ← ESTE es el límite (~50)
+      sampleData: data.data?.[0],
     })
 
     return data
@@ -235,7 +226,6 @@ const transformExternalStudent = async (externalStudent, roleId, coursesCache) =
 
     // Campos específicos de aprendices - FORMATO CORRECTO
     ficha: [fichaNumber], // Array con el número de ficha
-    nivel: 1, // Nivel por defecto
     programa: programa, // PROGRAMA OBTENIDO AUTOMÁTICAMENTE
     progresoActual: 0,
     puntos: 200, // Puntos iniciales para todos los aprendices
@@ -309,7 +299,7 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
     console.log(`📈 Total de páginas: ${totalPages}`)
     console.log(`📈 Total de estudiantes: ${totalItems}`)
 
-    // Procesar todas las páginas
+    // Procesar todas las páginas UNA POR UNA (no todas juntas)
     for (currentPage = 1; currentPage <= totalPages; currentPage++) {
       try {
         const pageData = currentPage === 1 ? firstPageData : await fetchStudentsPage(currentPage)
@@ -317,9 +307,10 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
         if (pageData.success && pageData.data && Array.isArray(pageData.data)) {
           console.log(`📄 Procesando página ${currentPage} con ${pageData.data.length} estudiantes`)
 
-          // Transformar estudiantes de esta página usando el caché
+          // ← AQUÍ: pageData.data contiene solo ~50 estudiantes por iteración
           const transformedStudents = []
           for (const student of pageData.data) {
+            // ← Solo itera sobre ~50, no 3000
             try {
               const transformed = await transformExternalStudent(student, apprenticeRoleId, coursesCache)
               if (transformed) {
@@ -332,21 +323,15 @@ export const fetchAllExternalApprentices = async (onProgress = null) => {
 
           allStudents = allStudents.concat(transformedStudents)
 
-          // Reportar progreso
-          if (onProgress) {
-            onProgress({
-              message: `Descargando página ${currentPage} de ${totalPages}...`,
-              percentage: (currentPage / totalPages) * 100,
-              apprenticesCount: allStudents.length,
-            })
+          // ← AQUÍ: Pausa de 100ms entre páginas para no saturar la API
+          if (currentPage < totalPages) {
+            await new Promise((resolve) => setTimeout(resolve, 100))
           }
-
-          console.log(`✅ Página ${currentPage}/${totalPages} procesada. Estudiantes acumulados: ${allStudents.length}`)
         } else {
           console.warn(`⚠️ Página ${currentPage} no contiene datos válidos:`, pageData)
         }
 
-        // Pequeña pausa para no sobrecargar la API
+        // ← AQUÍ: Pausa de 100ms entre páginas para no saturar la API
         if (currentPage < totalPages) {
           await new Promise((resolve) => setTimeout(resolve, 100))
         }
@@ -409,10 +394,6 @@ export const validateTransformedApprentice = (apprentice) => {
   // Validaciones específicas de aprendices
   if (!Array.isArray(apprentice.ficha) || apprentice.ficha.length === 0) {
     errors.push("Ficha debe ser un array con al menos un elemento")
-  }
-
-  if (typeof apprentice.nivel !== "number" || apprentice.nivel < 1 || apprentice.nivel > 3) {
-    errors.push("Nivel debe ser un número entre 1 y 3")
   }
 
   if (!apprentice.programa || apprentice.programa.length < 2) {

@@ -18,7 +18,6 @@ const useGetApprentices = () => {
         documento: "1023456789",
         tipoDocumento: "CC",
         ficha: [2889927],
-        nivel: 1,
         estado: "En formación",
         telefono: "3102568799",
         programa: "ADSO",
@@ -38,7 +37,6 @@ const useGetApprentices = () => {
         documento: "1029876543",
         tipoDocumento: "PPT",
         ficha: [2996778],
-        nivel: 2,
         estado: "Condicionado",
         telefono: "3156789012",
         programa: "Contabilidad",
@@ -58,7 +56,6 @@ const useGetApprentices = () => {
         documento: "1034567890",
         tipoDocumento: "PEP",
         ficha: [2889927, 2996778],
-        nivel: 3,
         estado: "En formación",
         telefono: "3209876543",
         programa: "Diseño Gráfico",
@@ -78,7 +75,6 @@ const useGetApprentices = () => {
         documento: "2345447567",
         tipoDocumento: "CC",
         ficha: [2889927],
-        nivel: 3,
         estado: "En formación",
         telefono: "3102568799",
         programa: "ADSO",
@@ -101,8 +97,8 @@ const useGetApprentices = () => {
 
       console.log("🔍 Obteniendo aprendices desde API...")
 
-      // Usar la ruta específica de aprendices en puerto 3000
-      const response = await fetch("http://localhost:3000/api/apprentice", {
+      // Usar la ruta específica de aprendices usando la variable de entorno
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_DB_URL}/apprentice`, {
         headers: {
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
