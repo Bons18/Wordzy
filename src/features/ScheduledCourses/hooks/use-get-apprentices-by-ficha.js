@@ -22,7 +22,7 @@ export function useGetApprenticesByFicha(fichaNumber) {
         setError(null)
       } catch (err) {
         setError("Error al filtrar aprendices por ficha")
-        console.error("Error filtering apprentices:", err)
+        console.error("Error al filtrar aprendices:", err)
       }
     }
 

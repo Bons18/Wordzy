@@ -14,7 +14,7 @@ const columns = [
     key: "nombre",
     label: "Nombre",
     render: (item) => `${item.nombre} ${item.apellido}`,
-    width: "40%"
+    width: "40%",
   },
   { key: "telefono", label: "Teléfono" },
   {
@@ -94,14 +94,6 @@ const TraineesPageUpdated = () => {
     const selectedNivelNumber = sessionStorage.getItem("selectedNivelNumber")
     const selectedFichaId = sessionStorage.getItem("selectedFichaId")
 
-    console.log("📋 Datos del sessionStorage:", {
-      selectedNivelNombre,
-      selectedFichaNombre,
-      selectedFichaPrograma,
-      selectedNivelNumber,
-      selectedFichaId,
-    })
-
     if (selectedNivelNombre && selectedFichaNombre && selectedFichaId) {
       setNivelNombre(selectedNivelNombre)
       setFichaNombre(selectedFichaNombre)
@@ -116,7 +108,6 @@ const TraineesPageUpdated = () => {
   useEffect(() => {
     // Filtrar aprendices que están en el nivel actual
     if (apprentices.length > 0) {
-      console.log("📊 Aprendices con progreso calculado:", apprentices)
       setFilteredTrainees(apprentices)
     }
   }, [apprentices, nivelNumber])
@@ -143,7 +134,6 @@ const TraineesPageUpdated = () => {
   }
 
   const handleShowProgress = (trainee) => {
-    console.log("🔍 Seleccionando aprendiz:", trainee)
     sessionStorage.setItem("selectedTraineeId", trainee.id || trainee._id)
     sessionStorage.setItem("selectedTraineeData", JSON.stringify(trainee))
     navigate(
@@ -157,9 +147,36 @@ const TraineesPageUpdated = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-        <span className="ml-2">Calculando progreso de aprendices...</span>
+      <div className="min-h-screen">
+        <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
+                <span>Administrador</span>
+                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+        <div className="flex justify-center my-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          <span className="ml-2">Cargando...</span>
+        </div>
       </div>
     )
   }

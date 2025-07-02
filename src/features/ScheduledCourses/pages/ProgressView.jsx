@@ -11,7 +11,6 @@ import { useGetProgrammingByProgramName } from "../hooks/use-get-programming-by-
 import { formatDate } from "../../../shared/utils/dateFormatter"
 import CustomSelect from "../../CourseProgramming/components/course-programming/ui/custom-select"
 
-
 const ProgressViewWithTopicsFinal = () => {
   const { nombre } = useParams()
   const navigate = useNavigate()
@@ -88,18 +87,17 @@ const ProgressViewWithTopicsFinal = () => {
       // Obtener el nivel actual de la programación
       const currentLevel = programming.levels?.[nivelNumber - 1]
       if (!currentLevel) {
-        console.log("❌ No se encontró el nivel en la programación")
         setCalculatedStats(null)
         return
       }
 
-      // Obtener evaluaciones programadas para este nivel
-      const evaluacionesProgramadas = getEvaluationsFromLevel(currentLevel)
+      // Obtener evaluaciones programadas para este nivel (TODAS, sin filtrar)
+      const evaluacionesProgramadasTotales = getEvaluationsFromLevel(currentLevel)
 
-      // Filtrar evaluaciones programadas por tema si hay un tema seleccionado
-      let evaluacionesProgramadasFiltradas = evaluacionesProgramadas
+      // Filtrar evaluaciones programadas por tema SOLO para el conteo filtrado
+      let evaluacionesProgramadasFiltradas = evaluacionesProgramadasTotales
       if (selectedTopic !== "all") {
-        evaluacionesProgramadasFiltradas = evaluacionesProgramadas.filter(
+        evaluacionesProgramadasFiltradas = evaluacionesProgramadasTotales.filter(
           (evalProgramada) => evalProgramada.topicId === selectedTopic,
         )
       }
@@ -108,7 +106,7 @@ const ProgressViewWithTopicsFinal = () => {
       let progressFiltrado = progress
       if (selectedTopic !== "all") {
         progressFiltrado = progress.filter((attempt) => {
-          const evaluationProgramada = evaluacionesProgramadas.find(
+          const evaluationProgramada = evaluacionesProgramadasTotales.find(
             (evalItem) =>
               evalItem.evaluationId === attempt.evaluationId ||
               evalItem.evaluationId === attempt.evaluationId?._id ||
@@ -118,30 +116,35 @@ const ProgressViewWithTopicsFinal = () => {
         })
       }
 
-      // Filtrar solo evaluaciones aprobadas del progreso filtrado
-      const evaluacionesAprobadas = progressFiltrado.filter((p) => p.passed === true)
+      // === ESTADÍSTICAS TOTALES DEL NIVEL (NO CAMBIAN CON EL FILTRO) ===
+      // Filtrar solo evaluaciones aprobadas de TODO el progreso del nivel
+      const evaluacionesAprobadasTotales = progress.filter((p) => p.passed === true)
 
-      // Calcular puntos solo de evaluaciones aprobadas del filtro actual
-      const puntosAprobadas = evaluacionesAprobadas.reduce((sum, p) => sum + (p.score || 0), 0)
-      // Contar evaluaciones aprobadas vs programadas (del filtro actual)
-      let evaluacionesAprobadasProgramadas = 0
-      evaluacionesProgramadasFiltradas.forEach((evalProgramada) => {
+      // Calcular puntos totales de evaluaciones aprobadas de TODO el nivel
+      const puntosTotalesAprobadas = evaluacionesAprobadasTotales.reduce((sum, p) => sum + (p.score || 0), 0)
+
+      // Contar evaluaciones aprobadas vs programadas de TODO el nivel
+      let evaluacionesAprobadasProgramadasTotales = 0
+      evaluacionesProgramadasTotales.forEach((evalProgramada) => {
         const evalId = evalProgramada.evaluationId
-        const evalAprobada = evaluacionesAprobadas.find(
+        const evalAprobada = evaluacionesAprobadasTotales.find(
           (er) =>
             er.evaluationId === evalId ||
             er.evaluationId?._id === evalId ||
             er.evaluationId?.toString() === evalId?.toString(),
         )
         if (evalAprobada) {
-          evaluacionesAprobadasProgramadas++
+          evaluacionesAprobadasProgramadasTotales++
         }
       })
 
       setCalculatedStats({
-        evaluacionesAprobadas: evaluacionesAprobadasProgramadas,
-        evaluacionesProgramadas: evaluacionesProgramadasFiltradas.length,
-        puntosAprobadas: puntosAprobadas,
+        // Estadísticas que NO cambian con el filtro (totales del nivel)
+        evaluacionesAprobadas: evaluacionesAprobadasProgramadasTotales,
+        evaluacionesProgramadas: evaluacionesProgramadasTotales.length,
+        puntosAprobadas: puntosTotalesAprobadas,
+
+        // Estadísticas que SÍ cambian con el filtro (para mostrar en la tabla)
         totalEvaluacionesRealizadas: progressFiltrado.length,
         temaSeleccionado:
           selectedTopic === "all"
@@ -161,7 +164,6 @@ const ProgressViewWithTopicsFinal = () => {
         const currentLevel = programming.levels?.[nivelNumber - 1]
 
         if (!currentLevel || !currentLevel.topics) {
-          console.log("❌ No se encontraron temas en el nivel actual")
           setAvailableTopics([])
           setFilteredProgress(progress)
           return
@@ -300,7 +302,6 @@ const ProgressViewWithTopicsFinal = () => {
           tipoDocumento: traineeData.tipoDocumento,
         })
       } catch (error) {
-        console.error("Error parsing trainee data:", error)
         navigate("/progreso/cursosProgramados/niveles/aprendices")
       }
     } else {
@@ -329,8 +330,36 @@ const ProgressViewWithTopicsFinal = () => {
 
   if (!learnerData) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      <div className="min-h-screen">
+        <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
+                <span>Administrador</span>
+                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+        <div className="flex justify-center my-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          <span className="ml-2">Cargando...</span>
+        </div>
       </div>
     )
   }
@@ -476,7 +505,7 @@ const ProgressViewWithTopicsFinal = () => {
                     <tr key={item.id} className="border-b border-gray-200 last:border-b-0">
                       <td className="py-2 px-4 font-semibold text-[#1F384C]  bg-gray-50 w-[30%]">{item.atributo}</td>
                       <td className="py-2 px-4 w-[70%]">
-                        {typeof item.valor === "object" ? item.valor : item.valor || "N/A"}
+                        {typeof item.valor === "object" ? item.valor : item.valor || "0"}
                       </td>
                     </tr>
                   ))}
@@ -492,17 +521,7 @@ const ProgressViewWithTopicsFinal = () => {
                 <label htmlFor="topic-select" className="text-base font-semibold text-gray-700 mb-2 block">
                   Filtrar por Tema:
                 </label>
-                <CustomSelect
-                  options={topicSelectOptions}
-                  value={selectedTopic}
-                  onChange={setSelectedTopic}
-                />
-              </div>
-              <div className="text-sm text-gray-600 mt-6">
-                <div className="text-sm font-medium">Evaluaciones mostradas:</div>
-                <div>
-                  {formattedProgress.length} de {progress.length} total
-                </div>
+                <CustomSelect options={topicSelectOptions} value={selectedTopic} onChange={setSelectedTopic} />
               </div>
             </div>
           </div>
@@ -513,7 +532,7 @@ const ProgressViewWithTopicsFinal = () => {
               <h2 className="text-lg font-bold text-[#1F384C]">
                 TABLA DE PROGRESO
                 {selectedTopic !== "all" && (
-                  <span className="text-sm font-normal text-gray-600 ml-2">
+                  <span className="text-sm font-medium text-gray-600 ml-2">
                     - {availableTopics.find((t) => t.id === selectedTopic)?.name || "Tema seleccionado"}
                   </span>
                 )}
@@ -522,15 +541,14 @@ const ProgressViewWithTopicsFinal = () => {
                 <div className="text-sm text-gray-600 flex gap-4">
                   <span>Filtradas: {formattedProgress.length}</span>
                   <span>Total: {calculatedStats.totalEvaluacionesRealizadas}</span>
-                  <span>Puntos: {calculatedStats.puntosAprobadas}</span>
                 </div>
               )}
             </div>
 
             {progressLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
-                <span className="ml-2">Cargando evaluaciones...</span>
+              <div className="flex justify-center my-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                <span className="ml-2">Cargando...</span>
               </div>
             ) : progressError ? (
               <div className="text-red-500 text-center py-4 bg-red-50 rounded-lg">
@@ -542,19 +560,6 @@ const ProgressViewWithTopicsFinal = () => {
                 >
                   Reintentar
                 </button>
-              </div>
-            ) : formattedProgress.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">
-                  {selectedTopic === "all"
-                    ? "No hay evaluaciones registradas para este nivel"
-                    : `No hay evaluaciones registradas para el tema seleccionado`}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {selectedTopic === "all"
-                    ? "Las evaluaciones aparecerán aquí una vez que el aprendiz las complete"
-                    : "Selecciona 'Todos los temas' para ver todas las evaluaciones o elige otro tema"}
-                </p>
               </div>
             ) : (
               <GenericTable

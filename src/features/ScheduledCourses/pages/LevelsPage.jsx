@@ -92,13 +92,11 @@ const LevelsPageUpdated = () => {
     if (!apprentices.length) return []
 
     try {
-      console.log("🔍 Obteniendo progreso para", apprentices.length, "aprendices...")
       const allProgress = await Promise.all(
         apprentices.map(async (apprentice) => {
           const apprenticeId = apprentice._id || apprentice.id
           const response = await fetch(`http://localhost:3000/api/apprentice-progress?apprenticeId=${apprenticeId}`)
           const data = await response.json()
-          console.log(`📊 Progreso para ${apprentice.nombre}:`, data.success ? data.data.length : 0, "evaluaciones")
           return {
             apprenticeId,
             progress: data.success ? data.data : [],
@@ -118,11 +116,6 @@ const LevelsPageUpdated = () => {
     const selectedFichaNombre = sessionStorage.getItem("selectedFichaNombre")
     const selectedFichaPrograma = sessionStorage.getItem("selectedFichaPrograma")
 
-    console.log("📋 Datos recuperados del sessionStorage:")
-    console.log("- Ficha ID:", selectedFichaId)
-    console.log("- Ficha Nombre:", selectedFichaNombre)
-    console.log("- Ficha Programa:", selectedFichaPrograma)
-
     if (selectedFichaId) {
       setFichaId(Number.parseInt(selectedFichaId))
       setFichaNombre(selectedFichaNombre || `Ficha ${selectedFichaId}`)
@@ -134,27 +127,15 @@ const LevelsPageUpdated = () => {
 
   useEffect(() => {
     const calculateLevelsProgress = async () => {
-      console.log("🔄 Calculando progreso de niveles...")
-      console.log("- Programming:", !!programming)
-      console.log("- Programming Loading:", programmingLoading)
-      console.log("- Apprentices:", apprentices.length)
-      console.log("- Apprentices Loading:", apprenticesLoading)
-
       if (programming && !programmingLoading && !apprenticesLoading) {
-        console.log("✅ Procesando niveles de la programación:", programming.levels?.length || 0)
-
         // Obtener progreso de todos los aprendices
         const allApprenticesProgress = await fetchAllApprenticesProgress()
-        console.log("📊 Progreso obtenido para", allApprenticesProgress.length, "aprendices")
 
         if (programming.levels && programming.levels.length > 0) {
           const processedLevels = programming.levels.map((level, index) => {
             const nivelNumero = index + 1
             const evaluacionesProgramadas = getEvaluationsFromLevel(level)
             const topicsProgramados = level.topics?.length || 0
-
-            console.log(`📚 Procesando Nivel ${nivelNumero}: ${level.name}`)
-            console.log(`📝 Topics: ${topicsProgramados}, Evaluaciones: ${evaluacionesProgramadas.length}`)
 
             // Calcular progreso promedio de todos los aprendices en este nivel
             let totalPorcentajeCompletitud = 0
@@ -185,10 +166,6 @@ const LevelsPageUpdated = () => {
                 const porcentajeCompletitud = (evaluacionesAprobadas / evaluacionesProgramadas.length) * 100
                 totalPorcentajeCompletitud += porcentajeCompletitud
                 aprendicesConProgreso++ // Contar TODOS los aprendices, incluso los que tienen 0%
-
-                console.log(
-                  `  👤 ${apprenticeId}: ${evaluacionesAprobadas}/${evaluacionesProgramadas.length} evaluaciones APROBADAS (${Math.round(porcentajeCompletitud)}%)`,
-                )
               })
             }
 
@@ -196,10 +173,6 @@ const LevelsPageUpdated = () => {
             // Si un aprendiz no tiene evaluaciones aprobadas, su progreso es 0%
             const promedioProgreso =
               apprentices.length > 0 ? Math.round(totalPorcentajeCompletitud / apprentices.length) : 0
-
-            console.log(
-              `📊 Nivel ${nivelNumero} - Progreso promedio: ${promedioProgreso}% (${apprentices.length} aprendices total)`,
-            )
 
             return {
               id: level._id,
@@ -212,21 +185,15 @@ const LevelsPageUpdated = () => {
             }
           })
 
-          console.log("✅ Niveles procesados:", processedLevels)
           setLevels(processedLevels)
         } else {
-          console.log("⚠️ No hay niveles en la programación")
           setLevels([])
         }
-      } else if (programmingError) {
-        console.error("❌ Error en programación:", programmingError)
-      } else if (apprenticesError) {
-        console.error("❌ Error en aprendices:", apprenticesError)
       }
     }
 
     calculateLevelsProgress()
-  }, [programming, programmingLoading, apprentices, apprenticesLoading, programmingError, apprenticesError])
+  }, [programming, programmingLoading, apprentices, apprenticesLoading])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -263,9 +230,36 @@ const LevelsPageUpdated = () => {
 
   if (programmingLoading || apprenticesLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-        <span className="ml-2">Cargando datos de programación y aprendices...</span>
+      <div className="min-h-screen">
+        <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
+                <span>Administrador</span>
+                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-2 text-[#f44144] hover:bg-gray-50 rounded-lg"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+        <div className="flex justify-center my-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          <span className="ml-2">Cargando...</span>
+        </div>
       </div>
     )
   }
@@ -320,15 +314,9 @@ const LevelsPageUpdated = () => {
         {/* Estado de carga y errores */}
         {(programmingError || apprenticesError) && (
           <div className="mb-4 p-4 bg-red-50 rounded-lg">
-            <h4 className="font-semibold text-red-800">❌ Errores:</h4>
-            {programmingError && <p className="text-red-600">Programación: {programmingError}</p>}
-            {apprenticesError && <p className="text-red-600">Aprendices: {apprenticesError}</p>}
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              Reintentar
-            </button>
+            <h4 className="font-semibold text-red-800">❌ ¡ERROR!</h4>
+            {programmingError && <p className="text-red-600">{programmingError}</p>}
+            {apprenticesError && <p className="text-red-600">{apprenticesError}</p>}
           </div>
         )}
 
@@ -337,8 +325,7 @@ const LevelsPageUpdated = () => {
           <h4 className="font-semibold">📊 Estado Actual:</h4>
           <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
             <div>
-              <span className="font-medium">Ficha:</span>{" "}
-              {fichaNombre}
+              <span className="font-medium">Ficha:</span> {fichaNombre}
             </div>
             <div>
               <span className="font-medium">Programa:</span> {fichaPrograma || "No especificado"}
@@ -347,24 +334,13 @@ const LevelsPageUpdated = () => {
         </div>
 
         {/* Tabla de niveles */}
-        {levels.length > 0 ? (
-          <GenericTable
-            data={levels}
-            columns={columns}
-            onShow={handleShowAprendices}
-            tooltipText="Ver Aprendices"
-            showActions={{ show: true, edit: false, delete: false, add: false }}
-          />
-        ) : (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600 font-medium">No se encontraron niveles</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {programming
-                ? "La programación no tiene niveles configurados"
-                : "No se pudo cargar la programación del curso"}
-            </p>
-          </div>
-        )}
+        <GenericTable
+          data={levels}
+          columns={columns}
+          onShow={handleShowAprendices}
+          tooltipText="Ver Aprendices"
+          showActions={{ show: true, edit: false, delete: false, add: false }}
+        />
 
         <ConfirmationModal
           isOpen={showLogoutConfirm}

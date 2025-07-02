@@ -18,8 +18,6 @@ export function useApprenticeProgress(apprenticeId, level) {
     setError(null)
 
     try {
-      console.log(`🔍 Obteniendo progreso para aprendiz ${apprenticeId}, nivel ${level}`)
-
       const response = await fetch(
         `http://localhost:3000/api/apprentice-progress/apprentice/${apprenticeId}/level/${level}`,
         {
@@ -35,8 +33,6 @@ export function useApprenticeProgress(apprenticeId, level) {
       }
 
       const data = await response.json()
-      console.log("✅ Datos de progreso recibidos:", data)
-
       if (data.success) {
         setProgress(data.data.attempts || [])
         setStatistics(data.data.statistics || null)
@@ -131,8 +127,6 @@ export function useFichaProgress(courseId) {
     setError(null)
 
     try {
-      console.log(`🔍 Obteniendo progreso de la ficha: ${courseId}`)
-
       const response = await fetch(`http://localhost:3000/api/apprentice-progress/course/${courseId}`, {
         headers: {
           "Cache-Control": "no-cache",
@@ -145,8 +139,6 @@ export function useFichaProgress(courseId) {
       }
 
       const data = await response.json()
-      console.log("✅ Progreso de ficha recibido:", data)
-
       if (data.success) {
         // Los datos vienen con la estructura de agregación de MongoDB
         // Necesitamos transformarlos para que sean más fáciles de usar

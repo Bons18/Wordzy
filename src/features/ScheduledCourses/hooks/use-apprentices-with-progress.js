@@ -87,18 +87,12 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
     const calculateProgressForApprentices = async () => {
       if (!apprenticesLoading && !programmingLoading && apprentices.length > 0 && programming) {
         try {
-          console.log("🔄 Calculando progreso basado en programación del curso...")
-          console.log("📋 Programación encontrada:", programming)
-          console.log("📊 Niveles en programación:", programming.levels?.length || 0)
-
           const apprenticesWithCalculatedProgress = await Promise.all(
             apprentices.map(async (apprentice) => {
               const apprenticeId = apprentice._id || apprentice.id
-              console.log(`👤 Procesando aprendiz: ${apprentice.nombre} ${apprentice.apellido} (${apprenticeId})`)
 
               // Obtener todas las evaluaciones realizadas por el aprendiz
               const progressData = await fetchApprenticeProgress(apprenticeId)
-              console.log(`📊 Evaluaciones realizadas por ${apprentice.nombre}:`, progressData.length)
 
               // Calcular progreso por nivel basado en la programación
               const progresoNiveles = []
@@ -107,16 +101,13 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
               if (programming.levels && programming.levels.length > 0) {
                 programming.levels.forEach((levelConfig, levelIndex) => {
                   const nivelNumero = levelIndex + 1
-                  console.log(`📚 Procesando Nivel ${nivelNumero}: ${levelConfig.name}`)
 
                   // Obtener todas las evaluaciones programadas para este nivel
                   const evaluacionesProgramadas = getEvaluationsFromLevel(levelConfig)
-                  console.log(`📝 Evaluaciones programadas en nivel ${nivelNumero}:`, evaluacionesProgramadas.length)
 
                   if (evaluacionesProgramadas.length > 0) {
                     // Obtener evaluaciones realizadas para este nivel
                     const evaluacionesRealizadas = progressData.filter((p) => p.level === nivelNumero)
-                    console.log(`✅ Evaluaciones realizadas en nivel ${nivelNumero}:`, evaluacionesRealizadas.length)
 
                     // Para cada evaluación programada, verificar si fue APROBADA
                     let evaluacionesAprobadas = 0
@@ -150,14 +141,6 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
                               er.evaluationId?.toString() === evalId?.toString()) &&
                             er.passed === false,
                         )
-
-                        if (evalRealizadaNoAprobada) {
-                          console.log(
-                            `  ❌ Evaluación NO APROBADA: ${evalProgramada.type} (${evalId}) - ${evalRealizadaNoAprobada.score} puntos (no cuenta)`,
-                          )
-                        } else {
-                          console.log(`  ⏳ Evaluación pendiente: ${evalProgramada.type} (${evalId})`)
-                        }
                       }
                     })
 
@@ -176,9 +159,6 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
                       evaluacionesPendientes: evaluacionesProgramadas.length - evaluacionesAprobadas,
                     })
 
-                    console.log(
-                      `  📈 Nivel ${nivelNumero} resultado: ${evaluacionesAprobadas}/${evaluacionesProgramadas.length} evaluaciones APROBADAS (${porcentajeCompletitud}%) - ${puntosObtenidos} puntos obtenidos`,
-                    )
                   } else {
                     // Nivel sin evaluaciones programadas
                     progresoNiveles.push({
@@ -190,7 +170,6 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
                       evaluacionesAprobadas: 0,
                       evaluacionesPendientes: 0,
                     })
-                    console.log(`  📝 Nivel ${nivelNumero}: Sin evaluaciones programadas`)
                   }
                 })
               }
@@ -199,10 +178,6 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
               const nivelActual = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
               const progresoNivelActual = progresoNiveles.find((p) => p.nivel === nivelActual)
               const puntosTotales = progresoNivelActual?.puntosObtenidos || 0
-
-              console.log(
-                `✅ ${apprentice.nombre}: ${puntosTotales} puntos en nivel ${nivelActual}, progreso: ${progresoNivelActual?.porcentaje || 0}%`,
-              )
 
               return {
                 ...apprentice,
@@ -222,7 +197,6 @@ export function useApprenticesWithProgress(fichaNumber, fichaId) {
             }),
           )
 
-          console.log("✅ Progreso calculado para todos los aprendices basado en programación")
           setApprenticesWithProgress(apprenticesWithCalculatedProgress)
           setError(null)
         } catch (err) {
