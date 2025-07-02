@@ -14,13 +14,42 @@ const columns = [
     key: "nombre",
     label: "Nombre",
     render: (item) => `${item.nombre} ${item.apellido}`,
+    width: "40%"
   },
-  { key: "correo", label: "Correo" },
   { key: "telefono", label: "Teléfono" },
+  {
+    key: "puntos",
+    label: "Puntos Totales",
+    width: "15%",
+    render: (item) => {
+      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
+      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
+      const totalPoints = levelProgress?.puntosObtenidos || 0
+
+      return <span>{totalPoints}</span>
+    },
+  },
+  {
+    key: "evaluaciones",
+    label: "Evaluaciones",
+    width: "15%",
+    render: (item) => {
+      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
+      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
+      const aprobadas = levelProgress?.evaluacionesAprobadas || 0
+      const programadas = levelProgress?.evaluacionesProgramadas || 0
+
+      return (
+        <span>
+          {aprobadas}/{programadas}
+        </span>
+      )
+    },
+  },
   {
     key: "progreso",
     label: "Progreso",
-    width: "18%",
+    width: "25%",
     render: (item) => {
       const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
       const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
@@ -33,37 +62,8 @@ const columns = [
               <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
             </div>
           </div>
-          <span className="text-sm text-gray-600 w-11 text-right mr-8">{progressPercentage}%</span>
+          <span className="text-sm text-gray-600 w-13 text-right">{progressPercentage}%</span>
         </div>
-      )
-    },
-  },
-  {
-    key: "puntos",
-    label: "Puntos Totales",
-    width: "12%",
-    render: (item) => {
-      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
-      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-      const totalPoints = levelProgress?.puntosObtenidos || 0
-
-      return <span className="font-medium text-gray-800">{totalPoints}</span>
-    },
-  },
-  {
-    key: "evaluaciones",
-    label: "Evaluaciones",
-    width: "12%",
-    render: (item) => {
-      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
-      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-      const aprobadas = levelProgress?.evaluacionesAprobadas || 0
-      const programadas = levelProgress?.evaluacionesProgramadas || 0
-
-      return (
-        <span className="text-sm">
-          {aprobadas}/{programadas}
-        </span>
       )
     },
   },
@@ -72,7 +72,7 @@ const columns = [
 const TraineesPageUpdated = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showDebug, setShowDebug] = useState(true)
+  const [showDebug, setShowDebug] = useState(false)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const [filteredTrainees, setFilteredTrainees] = useState([])
@@ -185,11 +185,6 @@ const TraineesPageUpdated = () => {
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
-          <div className="text-sm text-gray-500 mt-1">
-            <span className="font-medium text-green-600">
-              Aprendices del {nivelNombre} - Ficha {fichaNombre}
-            </span>
-          </div>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -233,9 +228,9 @@ const TraineesPageUpdated = () => {
         {showDebug && <ProgrammingDebugInfo programName={fichaPrograma} />}
 
         {/* Información de estado */}
-        <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-semibold text-blue-800">📊 Estado Actual:</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold">📊 Estado Actual:</h4>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
             <div>
               <span className="font-medium">Nivel:</span> {nivelNombre} (#{nivelNumber})
             </div>

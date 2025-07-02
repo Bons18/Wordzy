@@ -11,13 +11,14 @@ import { useGetProgrammingByProgramName } from "../hooks/use-get-programming-by-
 import ProgrammingDebugInfo from "./programming-debug-info"
 
 const columns = [
-  { key: "name", label: "Nivel" },
-  { key: "cantidadAprendices", label: "Cantidad Aprendices" },
-  { key: "evaluacionesProgramadas", label: "Evaluaciones Programadas" },
-  { key: "topicsProgramados", label: "Topics Programados" },
+  { key: "name", label: "Nivel", width: "15%" },
+  { key: "cantidadAprendices", label: "N° Aprendices", width: "15%" },
+  { key: "evaluacionesProgramadas", label: "Evaluaciones", width: "15%" },
+  { key: "topicsProgramados", label: "Temas", width: "15%" },
   {
     key: "progreso",
     label: "Progreso General",
+    width: "25%",
     render: (item) => (
       <div className="flex items-center gap-2 w-full">
         <div className="flex-1 min-w-[100px]">
@@ -39,7 +40,7 @@ const LevelsPageUpdated = () => {
   const [fichaId, setFichaId] = useState(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showDebug, setShowDebug] = useState(true)
+  const [showDebug, setShowDebug] = useState(false)
   const { logout } = useAuth()
   const dropdownRef = useRef(null)
 
@@ -274,11 +275,6 @@ const LevelsPageUpdated = () => {
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
-          <div className="text-sm text-gray-500 mt-1">
-            <span className="font-medium text-green-600">
-              Niveles de la Ficha {fichaNombre} - {fichaPrograma}
-            </span>
-          </div>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -337,18 +333,12 @@ const LevelsPageUpdated = () => {
         )}
 
         {/* Información de estado */}
-        <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-semibold text-blue-800">📊 Estado Actual:</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold">📊 Estado Actual:</h4>
+          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
             <div>
-              <span className="font-medium">Programación:</span>{" "}
-              {programming ? "✅ Cargada" : programmingLoading ? "🔄 Cargando..." : "❌ No encontrada"}
-            </div>
-            <div>
-              <span className="font-medium">Niveles:</span> {levels.length}
-            </div>
-            <div>
-              <span className="font-medium">Aprendices:</span> {apprentices.length}
+              <span className="font-medium">Ficha:</span>{" "}
+              {fichaNombre}
             </div>
             <div>
               <span className="font-medium">Programa:</span> {fichaPrograma || "No especificado"}
