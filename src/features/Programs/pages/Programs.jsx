@@ -13,7 +13,14 @@ import MassiveUpdateModal from "../componentes/MassiveUpdateModal"
 import { useGetPrograms } from "../hooks/useGetPrograms"
 
 const columns = [
-  { key: "name", label: "Nombre"},
+  {
+  key: "name",
+  label: "Nombre",
+  render: (item) => (
+    <div className="whitespace-normal break-words max-w-xs">{item.name}</div>
+  ),
+},
+
   { key: "code", label: "Código" },
   {
     key: "fk_level",
@@ -42,11 +49,6 @@ const columns = [
       return modalityMap[item.fk_modality] || item.fk_modality
     },
   },
-  // {
-  //   key: "version",
-  //   label: "Versión",
-  //   render: (item) => item.version || "N/A",
-  // },
   {
     key: "status",
     label: "Estado",
