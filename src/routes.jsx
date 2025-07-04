@@ -18,12 +18,9 @@ import Badges3 from "./features/Badges/pages/Badges3"
 import Ranking from "./features/Ranking/pages/Ranking"
 import Dashboard from "./features/Dashboard/pages/Dashboard"
 import LoginPage from "./features/auth/pages/LoginPage"
-import FilePage from "./features/ScheduledCourses/pages/FilePage"
-import TraineesPage from "./features/ScheduledCourses/pages/TraineesPage"
 import RegistrarRolPage from "./features/Role/pages/RegisterRolePage"
 import RolesPage from "./features/Role/pages/RolesPage"
 import EditarRolPage from "./features/Role/pages/EditarRolePage"
-import ProgressView from "./features/ScheduledCourses/pages/ProgressView"
 import CourseProgrammingPage from "./features/CourseProgramming/pages/course-programming-page"
 import CourseProgramming from "./features/CourseProgramming/components/course-programming"
 import CourseProgrammingDetail from "./features/CourseProgramming/components/course-programming-detail"
@@ -32,6 +29,9 @@ import CreateEvaluationPage from "./features/Evaluations/pages/CreateEvaluationP
 import EditEvaluationPage from "./features/Evaluations/pages/EditEvaluationPage"
 import CreateInstructorPage from "./features/Instructors/pages/CreateInstructorPage"
 import EditInstructorPage from "./features/Instructors/pages/EditInstructorPage"
+import LevelsPageUpdated from "./features/ScheduledCourses/pages/LevelsPage"
+import TraineesPageUpdated from "./features/ScheduledCourses/pages/TraineesPage"
+import ProgressViewWithRealData from "./features/ScheduledCourses/pages/ProgressView"
 
 // Definición de rutas
 const routes = [
@@ -203,26 +203,26 @@ const routes = [
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas",
+    path: "/progreso/cursosProgramados/niveles",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
-        <FilePage />
+        <LevelsPageUpdated />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas/aprendices",
+    path: "/progreso/cursosProgramados/niveles/aprendices",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
-        <TraineesPage />
+        <TraineesPageUpdated />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/progreso/cursosProgramados/fichas/aprendices/progreso/:nombre",
+    path: "/progreso/cursosProgramados/niveles/aprendices/progreso/:nombre",
     element: (
       <ProtectedRoute requiredRoute="/progreso/cursosProgramados">
-        <ProgressView />
+        <ProgressViewWithRealData/>
       </ProtectedRoute>
     ),
   },

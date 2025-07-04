@@ -56,7 +56,6 @@ const prepareApprenticeForSubmit = async (apprenticeData) => {
       contraseña: apprenticeData.contraseña || apprenticeData.documento,
       estado: apprenticeData.estado || "En formación",
       ficha: Array.isArray(apprenticeData.ficha) ? apprenticeData.ficha : [apprenticeData.ficha],
-      nivel: Number(apprenticeData.nivel) || 1,
       programa: programa, // ✅ Programa obtenido automáticamente
       progresoActual: Number(apprenticeData.progresoActual) || 0,
       progresoNiveles: apprenticeData.progresoNiveles || [

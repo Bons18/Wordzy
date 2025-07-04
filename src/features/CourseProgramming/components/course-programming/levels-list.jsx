@@ -64,25 +64,26 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     )
   }
 
-  const addThemeWithTopic = (levelId, topicValue) => {
-    setLevels(
-      levels.map((level) => {
-        if (level.id === levelId) {
-          const newTheme = {
-            id: `theme-${Date.now()}`,
-            name: "",
-            selectedTheme: topicValue, // Esto debería ser el objeto completo {value, label}
-            expanded: true,
-            progress: 0,
-            activities: [],
-            showActivities: false,
-          }
-          return { ...level, themes: [...level.themes, newTheme] }
+  const addThemeWithTopic = (levelId, topicOption) => {
+  setLevels(
+    levels.map((level) => {
+      if (level.id === levelId) {
+        const newTheme = {
+          id: `theme-${Date.now()}`,
+          name: "",
+          selectedTheme: topicOption, // ✅ aquí sí guardas { value, label }
+          expanded: true,
+          progress: 0,
+          activities: [],
+          showActivities: false,
         }
-        return level
-      }),
-    )
-  }
+        return { ...level, themes: [...level.themes, newTheme] }
+      }
+      return level
+    }),
+  )
+}
+
 
   const deleteLevel = (levelId) => {
     setLevels(levels.filter((level) => level.id !== levelId))
@@ -96,8 +97,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   const getExistingTopics = () => {
     return (
       topics?.map((topic) => ({
-        nombre: topic.name,
-        descripcion: topic.description || "",
+        nombre: topic.name
       })) || []
     )
   }
@@ -127,7 +127,6 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
       topics?.map((topic) => ({
         value: topic._id,
         label: topic.name, // Usar topic.name que es el nombre real
-        description: topic.description || "",
       })) || []
     )
   }
@@ -142,7 +141,6 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
         .map((topic) => ({
           value: topic._id,
           label: topic.name, // Usar topic.name que es el nombre real
-          description: topic.description || "",
         })) || []
     )
   }

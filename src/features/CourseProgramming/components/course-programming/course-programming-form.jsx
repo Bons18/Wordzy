@@ -12,13 +12,14 @@ import { usePostCourseProgramming } from "../../hooks/usePostCoursePrograming"
 import { usePutCourseProgramming } from "../../hooks/usePutCoursePrograming"
 import { useGetCourseProgrammingById } from "../../hooks/useGetCourseProgrammingById"
 import { useGetCourseProgrammings } from "../../hooks/useGetCoursePrograming"
-
+import { useGetTopics } from "../../../Topics/hooks/useGetTopics"
 
 export default function CourseProgrammingForm() {
   const navigate = useNavigate()
   const { id } = useParams()
   const { programming } = useGetCourseProgrammingById(id)
   const { programs } = useGetPrograms()
+  const { topics } = useGetTopics() // ✅ Agregar hook para obtener topics
   const { postCourseProgramming, loading: postLoading, error: postError } = usePostCourseProgramming()
   const { putCourseProgramming, loading: putLoading, error: putError } = usePutCourseProgramming()
   const { programmings } = useGetCourseProgrammings()
@@ -94,6 +95,36 @@ export default function CourseProgrammingForm() {
     }
   }, [id, programming])
 
+  // ✅ Función mejorada para obtener el nombre del tema
+  const getTopicNameById = (topicId) => {
+    if (!topics || !topicId) return "Sin nombre"
+
+    const topic = topics.find((t) => t._id === topicId)
+    return topic ? topic.name : "Sin nombre"
+  }
+
+  // ✅ Función mejorada para extraer el nombre del tema
+  const getThemeDisplayName = (theme) => {
+    if (!theme.selectedTheme) return "Sin nombre"
+
+    // Si selectedTheme es un objeto con label
+    if (typeof theme.selectedTheme === "object" && theme.selectedTheme.label) {
+      return theme.selectedTheme.label
+    }
+
+    // Si selectedTheme es un string (ID), buscar en topics
+    if (typeof theme.selectedTheme === "string") {
+      return getTopicNameById(theme.selectedTheme)
+    }
+
+    // Si selectedTheme tiene value, buscar por value
+    if (theme.selectedTheme.value) {
+      return getTopicNameById(theme.selectedTheme.value)
+    }
+
+    return "Sin nombre"
+  }
+
   const transformDataForBackend = () => {
     return {
       programId: selectedProgram,
@@ -107,11 +138,23 @@ export default function CourseProgrammingForm() {
           const exams = theme.activities?.filter((a) => a.type === "Exámenes") || []
           const materials = theme.activities?.filter((a) => a.type === "Material") || []
 
+          // ✅ Lógica mejorada para obtener topicId y name
+          let topicId = null
+          let topicName = "Sin nombre"
+
+          if (theme.selectedTheme) {
+            if (typeof theme.selectedTheme === "object" && theme.selectedTheme.value) {
+              topicId = theme.selectedTheme.value
+              topicName = theme.selectedTheme.label || getTopicNameById(theme.selectedTheme.value)
+            } else if (typeof theme.selectedTheme === "string") {
+              topicId = theme.selectedTheme
+              topicName = getTopicNameById(theme.selectedTheme)
+            }
+          }
+
           return {
-            topicId:
-              typeof theme.selectedTheme === "object" && theme.selectedTheme?.value
-                ? theme.selectedTheme.value
-                : theme.selectedTheme, // esto evita que se mande un objeto entero
+            topicId: topicId,
+            name: topicName, // ✅ Ahora se obtiene correctamente el nombre
             value: theme.progress || 0,
             activities: activities.map((a) => ({
               evaluationId: a.evaluationData._id,

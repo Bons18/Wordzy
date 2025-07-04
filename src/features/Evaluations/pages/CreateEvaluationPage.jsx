@@ -59,7 +59,7 @@ const CreateEvaluationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="max-h-screen">
       {/* Header */}
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">

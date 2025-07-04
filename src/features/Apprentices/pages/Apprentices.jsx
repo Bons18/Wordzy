@@ -17,7 +17,6 @@ const columns = [
   { key: "tipoDocumento", label: "Tipo Documento" },
   { key: "documento", label: "Documento" },
   { key: "ficha", label: "Ficha", render: (item) => (Array.isArray(item.ficha) ? item.ficha.join(", ") : item.ficha) },
-  { key: "nivel", label: "Nivel Actual" },
   {
     key: "estado",
     label: "Estado",

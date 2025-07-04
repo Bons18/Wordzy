@@ -34,34 +34,6 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
     }
   }, [isOpen, onClose])
 
-  // Función para calcular progreso por niveles basado en el progreso actual del aprendiz
-  const getProgressByLevels = (currentProgress, currentLevel) => {
-    const levels = ["Nivel 1", "Nivel 2", "Nivel 3"]
-    const progressData = []
-
-    levels.forEach((level, index) => {
-      let progress = 0
-
-      if (currentLevel === level) {
-        // Si es el nivel actual, usar el progreso actual
-        progress = currentProgress || 0
-      } else if (levels.indexOf(currentLevel) > index) {
-        // Si ya pasó este nivel, mostrar 100%
-        progress = 100
-      } else {
-        // Si aún no llega a este nivel, mostrar 0%
-        progress = 0
-      }
-
-      progressData.push({
-        level: level,
-        progress: progress,
-      })
-    })
-
-    return progressData
-  }
-
   if (!isOpen) return null
 
   return (
@@ -133,10 +105,6 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                     >
                       {apprenticeData.estado}
                     </span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm">Nivel Actual:</p>
-                    <p className="text-gray-600 text-sm">{apprenticeData.nivel}</p>
                   </div>
                   <div>
                     <p className="font-bold text-sm">Ficha:</p>
