@@ -300,7 +300,7 @@ const Feedback = () => {
           </div>
         )}
 
-        {/* Tabla de resultados - Solo se muestra si se ha realizado una búsqueda */}
+        {/* Tabla de resultados */}
         {hasSearched && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -331,23 +331,6 @@ const Feedback = () => {
                 <p className="text-gray-500">No se encontraron resultados con los filtros aplicados</p>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Mensaje inicial - Solo se muestra si NO se ha realizado una búsqueda */}
-        {!hasSearched && (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center border border-gray-200">
-            <div className="max-w-md mx-auto">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Bienvenido al módulo de Retroalimentación</h3>
-              <p className="text-gray-500 text-base mb-4">
-                Selecciona los filtros y haz clic en "Buscar" para ver los resultados de retroalimentación
-              </p>
-              <div className="text-sm text-gray-400">
-                <p>• Fichas cargadas desde la API: {fichas.length}</p>
-                <p>• Instructores disponibles: {instructors.length}</p>
-                <p>• Niveles configurados: {niveles.length}</p>
-              </div>
-            </div>
           </div>
         )}
       </div>
