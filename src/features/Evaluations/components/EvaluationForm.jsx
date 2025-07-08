@@ -308,11 +308,22 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
   // Función para obtener el estilo y texto del indicador de puntos
   const getPointsIndicator = () => {
     const totalPoints = getTotalPoints()
-    const isValid = totalPoints === 100
-
-    return {
-      color: isValid ? "text-green-600" : "text-red-600",
-      text: `${totalPoints} de 100`,
+    if (totalPoints === 100) {
+      return {
+        color: "text-green-600",
+        text: `¡Puntaje total de ${totalPoints} puntos alcanzado!`,
+      }
+    } else if (totalPoints < 100) {
+      return {
+        color: "text-orange-600",
+        text: `Actualmente hay ${totalPoints} puntos, lo cual es inferior a los 100.`,
+      }
+    } else {
+      // totalPoints > 100
+      return {
+        color: "text-red-600",
+        text: `Actualmente hay ${totalPoints} puntos, lo cual supera los 100.`,
+      }
     }
   }
 
@@ -320,10 +331,7 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     e.preventDefault()
 
     if (!isPuntajeValid()) {
-      const alertElement = document.getElementById("puntaje-alert")
-      if (alertElement) {
-        alertElement.scrollIntoView({ behavior: "smooth" })
-      }
+      // La validación se maneja en el botón ahora, no se necesita un alert aquí
       return
     }
 
@@ -402,6 +410,8 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
       }))
     }
   }
+
+  const isSaveDisabled = (formData.preguntas.length > 0 && !isPuntajeValid()) || currentQuestionType !== null
 
   return (
     <div className="bg-white rounded-lg p-6 w-full max-w-7xl mx-auto">
@@ -1088,27 +1098,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
             )}
           </div>
 
-          {formData.preguntas.length > 0 && !isPuntajeValid() && (
-            <div className="flex items-center mt-6 border-t border-gray-200 pt-4" id="puntaje-alert">
-              <div className="flex items-center p-2 w-full">
-                <div className="text-red-500 mr-3">
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 0L40 40H0L20 0Z" fill="#f44144" />
-                    <text x="20" y="30" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">
-                      !
-                    </text>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-[16px] font-bold">Total puntos de las Preguntas</p>
-                  <p className="text-[14px] text-gray-500">
-                    El total de puntos es {getSavedQuestionsPoints()}. Debe sumar 100 para poder guardar el examen
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="flex justify-center space-x-4 mt-8">
             <button
               type="button"
@@ -1119,8 +1108,17 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
             </button>
             <button
               type="submit"
-              className={`px-8 py-2 ${isPuntajeValid() ? "bg-[#46ae69] hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"} text-white rounded-md text-[14px] transition-colors`}
-              disabled={!isPuntajeValid() && formData.preguntas.length > 0}
+              className={`px-8 py-2 ${
+                isSaveDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-[#46ae69] hover:bg-green-600"
+              } text-white rounded-md text-[14px] transition-colors`}
+              disabled={isSaveDisabled}
+              title={
+                currentQuestionType !== null
+                  ? "Debe guardar o cancelar la pregunta actual para poder guardar la evaluación."
+                  : !isPuntajeValid() && formData.preguntas.length > 0
+                    ? "El puntaje total debe ser 100 para poder guardar."
+                    : "Guardar Evaluación"
+              }
             >
               {evaluation ? "Guardar Cambios" : "Guardar"}
             </button>
