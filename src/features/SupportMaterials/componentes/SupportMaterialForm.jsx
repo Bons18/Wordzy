@@ -39,6 +39,11 @@ const SupportMaterialForm = ({
     estado: "Activo",
     contenido: "<div>Material de Apoyo...</div>",
   })
+  const today = new Date();
+  const year = today.getFullYear();
+
+  const minDate = new Date(year - 2, 0, 1).toISOString().split("T")[0]; // 1 de enero hace 2 años
+  const maxDate = new Date(year + 2, 11, 31).toISOString().split("T")[0]; // 31 de diciembre dentro de 2 años
 
   const [uploadingFile, setUploadingFile] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -49,141 +54,135 @@ const SupportMaterialForm = ({
 
   // Función para hacer elementos del editor eliminables
   const makeContentEditable = (editorRef) => {
-    if (!editorRef.current) return
+  if (!editorRef.current) return;
 
-    // Agregar event listeners a imágenes, documentos y audios
-    const images = editorRef.current.querySelectorAll("img")
-    const documents = editorRef.current.querySelectorAll(".document-link")
-    const audios = editorRef.current.querySelectorAll(".audio-container")
+  // Eliminar botones anteriores para evitar duplicados
+  const oldButtons = editorRef.current.querySelectorAll(".delete-btn");
+  oldButtons.forEach((btn) => btn.remove());
 
-    // Hacer imágenes eliminables
-    images.forEach((img) => {
-      img.style.cursor = "pointer"
-      img.style.transition = "all 0.2s ease"
-      img.title = "Haz clic para eliminar esta imagen"
+  // === IMÁGENES ===
+  const imageContainers = editorRef.current.querySelectorAll("img");
+  imageContainers.forEach((img) => {
+    const parent = img.closest("div");
 
-      // Remover listeners anteriores si existen
-      img.removeEventListener("click", img._clickHandler)
-      img.removeEventListener("mouseenter", img._mouseEnterHandler)
-      img.removeEventListener("mouseleave", img._mouseLeaveHandler)
+    if (parent && !parent.querySelector(".delete-btn")) {
+      parent.style.position = "relative";
 
-      // Crear nuevos handlers
-      img._clickHandler = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.innerHTML = "✕";
+      deleteBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10;
+      `;
+
+      deleteBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (confirm("¿Deseas eliminar esta imagen?")) {
-          // Eliminar el contenedor div si existe
-          const parent = img.closest("div")
-          if (parent && parent.style.textAlign === "center") {
-            parent.remove()
-          } else {
-            img.remove()
-          }
+          parent.remove();
         }
-      }
+      });
 
-      img._mouseEnterHandler = () => {
-        img.style.border = "3px solid #ff4444"
-        img.style.opacity = "0.8"
-      }
+      parent.appendChild(deleteBtn);
+    }
+  });
 
-      img._mouseLeaveHandler = () => {
-        img.style.border = "1px solid #ddd"
-        img.style.opacity = "1"
-      }
+  // === DOCUMENTOS ===
+  const documents = editorRef.current.querySelectorAll(".document-link");
+  documents.forEach((doc) => {
+  doc.style.position = "relative"
+  doc.title = "Haz clic en la X para eliminar este documento"
 
-      // Agregar los nuevos listeners
-      img.addEventListener("click", img._clickHandler)
-      img.addEventListener("mouseenter", img._mouseEnterHandler)
-      img.addEventListener("mouseleave", img._mouseLeaveHandler)
-    })
+  // Crear botón de eliminar
+  const deleteBtn = document.createElement("button")
+  deleteBtn.innerHTML = "✕"
+  deleteBtn.className = "delete-btn"
+  deleteBtn.style.cssText = `
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 10;
+  `
 
-    // Hacer documentos eliminables
-    documents.forEach((doc) => {
-      doc.style.cursor = "pointer"
-      doc.style.position = "relative"
-      doc.title = "Haz clic para eliminar este documento"
-
-      // Agregar botón de eliminar
-      const deleteBtn = document.createElement("button")
-      deleteBtn.innerHTML = "✕"
-      deleteBtn.style.cssText = `
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        cursor: pointer;
-        display: none;
-      `
-
-      doc.appendChild(deleteBtn)
-
-      doc.addEventListener("mouseenter", () => {
-        deleteBtn.style.display = "block"
-      })
-
-      doc.addEventListener("mouseleave", () => {
-        deleteBtn.style.display = "none"
-      })
-
-      deleteBtn.addEventListener("click", (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (confirm("¿Deseas eliminar este documento?")) {
-          doc.remove()
-        }
-      })
-    })
-
-    // Hacer audios eliminables
-    audios.forEach((audio) => {
-      audio.style.cursor = "pointer"
-      audio.style.position = "relative"
-      audio.title = "Haz clic para eliminar este audio"
-
-      // Agregar botón de eliminar
-      const deleteBtn = document.createElement("button")
-      deleteBtn.innerHTML = "✕"
-      deleteBtn.style.cssText = `
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        cursor: pointer;
-        display: none;
-      `
-
-      audio.appendChild(deleteBtn)
-
-      audio.addEventListener("mouseenter", () => {
-        deleteBtn.style.display = "block"
-      })
-
-      audio.addEventListener("mouseleave", () => {
-        deleteBtn.style.display = "none"
-      })
-
-      deleteBtn.addEventListener("click", (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (confirm("¿Deseas eliminar este audio?")) {
-          audio.remove()
-        }
-      })
-    })
+  // Agregar botón solo si no existe ya
+  if (!doc.querySelector(".delete-btn")) {
+    doc.appendChild(deleteBtn)
   }
+
+  // Mostrar el botón solo al pasar el mouse por el documento
+  doc.addEventListener("mouseenter", () => {
+    deleteBtn.style.display = "block"
+  })
+
+  doc.addEventListener("mouseleave", () => {
+    deleteBtn.style.display = "none"
+  })
+
+  deleteBtn.addEventListener("click", (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (confirm("¿Deseas eliminar este documento?")) {
+      doc.remove()
+    }
+  })
+});
+
+  // === AUDIOS ===
+  const audios = editorRef.current.querySelectorAll(".audio-container");
+  audios.forEach((audio) => {
+    audio.style.position = "relative";
+
+    if (!audio.querySelector(".delete-btn")) {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.innerHTML = "✕";
+      deleteBtn.style.cssText = `
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10;
+      `;
+
+      deleteBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirm("¿Deseas eliminar este audio?")) {
+          audio.remove();
+        }
+      });
+
+      audio.appendChild(deleteBtn);
+    }
+  });
+};
+
 
   // Función para limpiar todo el contenido
   const clearAllContent = (editorRef) => {
@@ -251,6 +250,33 @@ const SupportMaterialForm = ({
     }))
   }
 
+  // Manejo de fechas en rango real
+  const handleInputChange1 = (e) => {
+  const { name, value } = e.target;
+
+  if (name === "fecha_creacion") {
+    const selectedDate = new Date(value);
+    const minDate = new Date("2020-01-01");
+    const maxDate = new Date("2030-12-31");
+
+    if (isNaN(selectedDate.getTime())) {
+      alert("Por favor selecciona una fecha válida.");
+      return;
+    }
+
+    if (selectedDate < minDate || selectedDate > maxDate) {
+      alert("La fecha debe estar entre 01/01/2020 y 31/12/2030.");
+      return;
+    }
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+
   // Función para subir archivos
   const uploadFile = async (file) => {
     const formData = new FormData()
@@ -311,7 +337,24 @@ const SupportMaterialForm = ({
       img.onload = () => {
         console.log("✅ Imagen cargada correctamente:", fullUrl)
         // Crear imagen con tamaño fijo y responsive
-        const imageHtml = `<div style="margin: 10px 0; text-align: center;"><img src="${fullUrl}" alt="${file.name}" style="max-width: 100%; height: auto; width: 400px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" /></div>`
+        const imageHtml = `
+  <div class="image-container" style="position: relative; margin: 10px 0; text-align: center;">
+    <img src="${fullUrl}" alt="${file.name}" style="max-width: 100%; height: auto; width: 400px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+    <button class="delete-btn" style="
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 10;
+    ">✕</button>
+  </div>`
 
         // Insertar en el editor
         if (editorRef.current) {
@@ -364,25 +407,54 @@ const SupportMaterialForm = ({
 
   // Manejar subida de documentos
   const handleDocumentUpload = async () => {
-    const file = documentInputRef.current?.files[0]
-    if (!file) return
+  const file = documentInputRef.current?.files[0];
+  if (!file) return;
 
-    const fileUrl = await uploadFile(file)
-    if (fileUrl) {
-      const fullUrl = fileUrl.startsWith("http") ? fileUrl : `http://localhost:3000${fileUrl}`
-      console.log("URL completa del archivo:", fullUrl)
-      const linkHtml = `<div class="document-link" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9fa;"><a href="${fullUrl}" target="_blank" download="${file.name}" style="color: #007bff; text-decoration: none; font-weight: 500;">📄 ${file.name}</a><br><small style="color: #6c757d;">Haz clic para descargar</small></div>`
-      editorRef.current.focus()
-      document.execCommand("insertHTML", false, linkHtml)
-      // Aplicar funcionalidad de eliminación al nuevo contenido
-      setTimeout(() => makeContentEditable(editorRef), 100)
-    }
+  const fileUrl = await uploadFile(file);
+  if (fileUrl) {
+    const fullUrl = fileUrl.startsWith("http") ? fileUrl : `http://localhost:3000${fileUrl}`;
+    const docHtml = `
+      <div class="document-link" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9fa; position: relative;">
+        <a href="${fullUrl}" target="_blank" download="${file.name}" style="color: #007bff; text-decoration: none; font-weight: 500;">
+          📄 ${file.name}
+        </a>
+        <br>
+        <small style="color: #6c757d;">Haz clic para descargar</small>
+      </div>
+    `;
 
-    // Limpiar el input
-    if (documentInputRef.current) {
-      documentInputRef.current.value = ""
+    if (editorRef.current) {
+      editorRef.current.focus();
+
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = docHtml;
+
+        while (tempDiv.firstChild) {
+          range.insertNode(tempDiv.firstChild);
+        }
+
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        editorRef.current.innerHTML += docHtml;
+      }
+
+      // Aplicar botón de eliminar
+      setTimeout(() => makeContentEditable(editorRef), 100);
     }
   }
+
+  if (documentInputRef.current) {
+    documentInputRef.current.value = "";
+  }
+};
+
 
   // Manejar subida de audio
   const handleAudioUpload = async () => {
@@ -509,39 +581,41 @@ const SupportMaterialForm = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha:</label>
-            <input
-              type="date"
-              name="fecha_creacion"
-              value={formData.fecha_creacion}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
-            />  
-          </div>
-          <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">Estado:</label>
-  <button
-    type="button"
-    onClick={() =>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Fecha:
+  </label>
+  <input
+    type="date"
+    name="fecha_creacion"
+    value={formData.fecha_creacion}
+    onChange={(e) => {
+      const { name, value } = e.target;
+      const selectedDate = new Date(value);
+      const min = new Date(minDate);
+      const max = new Date(maxDate);
+
+      if (isNaN(selectedDate.getTime())) {
+        alert("Por favor selecciona una fecha válida.");
+        return;
+      }
+
+      if (selectedDate < min || selectedDate > max) {
+        alert(`La fecha debe estar entre ${min.toLocaleDateString()} y ${max.toLocaleDateString()}.`);
+        return;
+      }
+
       setFormData((prev) => ({
         ...prev,
-        estado: prev.estado === "activo" ? "inactivo" : "activo",
-      }))
-    }
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-      formData.estado === "activo" ? "bg-green-600" : "bg-gray-300"
-    }`}
-  >
-    <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-        formData.estado === "activo" ? "translate-x-6" : "translate-x-1"
-      }`}
-    />
-  </button>
-  <span className="ml-2 text-sm text-[#000000] capitalize">
-    {formData.estado}
-  </span>
+        [name]: value,
+      }));
+    }}
+    min={minDate}
+    max={maxDate}
+    className="w-full px-3 py-2 border border-[#d9d9d9] rounded"
+  />
 </div>
+
+
 
         </div>
 

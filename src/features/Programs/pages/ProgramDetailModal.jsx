@@ -338,20 +338,20 @@ const ProgramDetailModal = ({ program, isOpen, onClose }) => {
       width: "30%",
       render: (item) => <span className="font-semibold">{item.apprentices_count || 0}</span>,
     },
-    {
-      key: "actions",
-      label: "ACCIONES",
-      width: "30%",
-      render: (item) => (
-        <button
-          onClick={() => handleViewFicha(item)}
-          className="bg-[#1f384c] text-white p-2 rounded-full hover:bg-[#2d4a5c] transition-colors"
-          title="Ver aprendices de la ficha"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
-      ),
-    },
+    // {
+    //   key: "actions",
+    //   label: "ACCIONES",
+    //   width: "30%",
+    //   render: (item) => (
+    //     <button
+    //       onClick={() => handleViewFicha(item)}
+    //       className="bg-[#1f384c] text-white p-2 rounded-full hover:bg-[#2d4a5c] transition-colors"
+    //       title="Ver aprendices de la ficha"
+    //     >
+    //       <Eye className="w-4 h-4" />
+    //     </button>
+    //   ),
+    // },
   ]
 
   // Configuración de columnas para la tabla de aprendices
