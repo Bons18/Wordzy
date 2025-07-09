@@ -125,15 +125,19 @@ const useGetApprentices = () => {
         ],
       }))
 
-      setApprentices(normalizedData)
-      console.log(`✅ ${normalizedData.length} aprendices cargados exitosamente`)
+      // ✅ FILTRAR SOLO APRENDICES "EN FORMACIÓN"
+      const apprenticesEnFormacion = normalizedData.filter((apprentice) => apprentice.estado === "En formación")
+
+      setApprentices(apprenticesEnFormacion)
+      console.log(`✅ ${apprenticesEnFormacion.length} aprendices "En formación" cargados exitosamente`)
     } catch (err) {
       console.error("❌ Error al obtener aprendices:", err)
       setError(err.message)
 
-      // Usar datos de fallback en caso de error
+      // Usar datos de fallback filtrados en caso de error
       console.log("🔄 Usando datos de ejemplo como fallback")
-      setApprentices(fallbackData)
+      const fallbackEnFormacion = fallbackData.filter((apprentice) => apprentice.estado === "En formación")
+      setApprentices(fallbackEnFormacion)
     } finally {
       setLoading(false)
     }
