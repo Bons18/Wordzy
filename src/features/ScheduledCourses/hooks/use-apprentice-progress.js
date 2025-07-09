@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 
 export function useApprenticeProgress(apprenticeId, level) {
   const [progress, setProgress] = useState([])
+  const [apprenticeInfo, setApprenticeInfo] = useState(null)
   const [statistics, setStatistics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -34,8 +35,16 @@ export function useApprenticeProgress(apprenticeId, level) {
 
       const data = await response.json()
       if (data.success) {
-        setProgress(data.data.attempts || [])
+        // Usar la nueva estructura de datos
+        setApprenticeInfo(data.data.apprentice)
+        setProgress(data.data.evaluations || [])
         setStatistics(data.data.statistics || null)
+
+        console.log("✅ Datos estructurados recibidos:", {
+          apprentice: data.data.apprentice?.nombre,
+          evaluations: data.data.evaluations?.length || 0,
+          statistics: data.data.statistics,
+        })
       } else {
         throw new Error(data.message || "Error al obtener el progreso")
       }
@@ -43,6 +52,7 @@ export function useApprenticeProgress(apprenticeId, level) {
       console.error("❌ Error al obtener progreso del aprendiz:", err)
       setError(err.message)
       setProgress([])
+      setApprenticeInfo(null)
       setStatistics(null)
     } finally {
       setLoading(false)
@@ -59,6 +69,7 @@ export function useApprenticeProgress(apprenticeId, level) {
 
   return {
     progress,
+    apprenticeInfo, // Nueva propiedad
     statistics,
     loading,
     error,
@@ -140,8 +151,6 @@ export function useFichaProgress(courseId) {
 
       const data = await response.json()
       if (data.success) {
-        // Los datos vienen con la estructura de agregación de MongoDB
-        // Necesitamos transformarlos para que sean más fáciles de usar
         const transformedProgress = data.data.map((item) => ({
           apprenticeId: item.apprenticeId,
           level: item.level,

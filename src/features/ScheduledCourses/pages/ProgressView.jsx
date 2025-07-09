@@ -1,35 +1,36 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useRef } from "react"
-import GenericTable from "../../../shared/components/Table"
-import { ChevronDown, RefreshCw } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
-import { useParams, useNavigate } from "react-router-dom"
-import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-import { useApprenticeProgress } from "../hooks/use-apprentice-progress"
-import { useGetProgrammingByProgramName } from "../hooks/use-get-programming-by-program-name"
-import { formatDate } from "../../../shared/utils/dateFormatter"
-import CustomSelect from "../../CourseProgramming/components/course-programming/ui/custom-select"
+import { useEffect, useState, useRef } from "react";
+import GenericTable from "../../../shared/components/Table";
+import { ChevronDown, RefreshCw } from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { useParams, useNavigate } from "react-router-dom";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { useApprenticeProgress } from "../hooks/use-apprentice-progress";
+import { useGetProgrammingByProgramName } from "../hooks/use-get-programming-by-program-name";
+import { formatDate } from "../../../shared/utils/dateFormatter";
+import CustomSelect from "../../CourseProgramming/components/course-programming/ui/custom-select";
 
-const ProgressViewWithTopicsFinal = () => {
-  const { nombre } = useParams()
-  const navigate = useNavigate()
-  const [learnerData, setLearnerData] = useState(null)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [fichaNombre, setFichaNombre] = useState("")
-  const [nivelNombre, setNivelNombre] = useState("")
-  const [nivelNumber, setNivelNumber] = useState(1)
-  const [apprenticeId, setApprenticeId] = useState(null)
-  const [fichaPrograma, setFichaPrograma] = useState("")
+const ProgressViewFinal = () => {
+  const { nombre } = useParams();
+  const navigate = useNavigate();
+  const [learnerData, setLearnerData] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [fichaNombre, setFichaNombre] = useState("");
+  const [nivelNombre, setNivelNombre] = useState("");
+  const [nivelNumber, setNivelNumber] = useState(1);
+  const [apprenticeId, setApprenticeId] = useState(null);
+  const [fichaPrograma, setFichaPrograma] = useState("");
 
   // Estados para el filtro por temas
-  const [availableTopics, setAvailableTopics] = useState([])
-  const [selectedTopic, setSelectedTopic] = useState("all")
-  const [filteredProgress, setFilteredProgress] = useState([])
+  const [availableTopics, setAvailableTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState("all");
+  const [filteredProgress, setFilteredProgress] = useState([]);
+  const [enrichedProgress, setEnrichedProgress] = useState([]);
 
-  const { logout } = useAuth()
-  const dropdownRef = useRef(null)
+  const { logout } = useAuth();
+  const dropdownRef = useRef(null);
 
   // Hook para obtener progreso del aprendiz
   const {
@@ -38,20 +39,22 @@ const ProgressViewWithTopicsFinal = () => {
     loading: progressLoading,
     error: progressError,
     refetch,
-  } = useApprenticeProgress(apprenticeId, nivelNumber)
+  } = useApprenticeProgress(apprenticeId, nivelNumber);
 
   // Hook para obtener la programación del curso
-  const { programming } = useGetProgrammingByProgramName(fichaPrograma)
+  const { programming, loading: programmingLoading } =
+    useGetProgrammingByProgramName(fichaPrograma);
 
   // Función para extraer evaluaciones de un nivel con información de temas
   const getEvaluationsFromLevel = (level) => {
-    const evaluations = []
+    const evaluations = [];
+
     if (level.topics && level.topics.length > 0) {
       level.topics.forEach((topic) => {
-        // Usar directamente los datos de la programación que ya incluyen name
-        const topicId = topic.topicId
-        const topicName = topic.name || "Tema no identificado"
+        const topicId = topic.topicId;
+        const topicName = topic.name || `Tema ${topicId}`;
 
+        // Agregar actividades
         if (topic.activities && topic.activities.length > 0) {
           topic.activities.forEach((activity) => {
             evaluations.push({
@@ -60,9 +63,11 @@ const ProgressViewWithTopicsFinal = () => {
               value: activity.value,
               topicId: topicId,
               topicName: topicName,
-            })
-          })
+            });
+          });
         }
+
+        // Agregar exámenes
         if (topic.exams && topic.exams.length > 0) {
           topic.exams.forEach((exam) => {
             evaluations.push({
@@ -71,225 +76,222 @@ const ProgressViewWithTopicsFinal = () => {
               value: exam.value,
               topicId: topicId,
               topicName: topicName,
-            })
-          })
+            });
+          });
         }
-      })
+      });
     }
-    return evaluations
-  }
+
+    return evaluations;
+  };
 
   // Calcular estadísticas basadas en evaluaciones aprobadas
-  const [calculatedStats, setCalculatedStats] = useState(null)
+  const [calculatedStats, setCalculatedStats] = useState(null);
 
+  // EFECTO PRINCIPAL: Enriquecer progreso con información de temas
   useEffect(() => {
-    if (programming && nivelNumber) {
-      // Obtener el nivel actual de la programación
-      const currentLevel = programming.levels?.[nivelNumber - 1]
+    if (programming && nivelNumber && progress.length >= 0) {
+      console.log("🔄 Enriqueciendo progreso con información de temas...");
+
+      const currentLevel = programming.levels?.[nivelNumber - 1];
       if (!currentLevel) {
-        setCalculatedStats(null)
-        return
+        console.log("❌ No se encontró el nivel actual en la programación");
+        setEnrichedProgress([]);
+        setAvailableTopics([]);
+        return;
       }
 
-      // Obtener evaluaciones programadas para este nivel (TODAS, sin filtrar)
-      const evaluacionesProgramadasTotales = getEvaluationsFromLevel(currentLevel)
+      // Obtener evaluaciones programadas para este nivel
+      const evaluacionesProgramadas = getEvaluationsFromLevel(currentLevel);
+      console.log(
+        "📚 Evaluaciones programadas encontradas:",
+        evaluacionesProgramadas.length
+      );
 
-      // Filtrar evaluaciones programadas por tema SOLO para el conteo filtrado
-      let evaluacionesProgramadasFiltradas = evaluacionesProgramadasTotales
-      if (selectedTopic !== "all") {
-        evaluacionesProgramadasFiltradas = evaluacionesProgramadasTotales.filter(
-          (evalProgramada) => evalProgramada.topicId === selectedTopic,
-        )
-      }
+      // Extraer temas únicos de las evaluaciones programadas
+      const uniqueTopics = [];
+      const topicMap = new Map();
 
-      // Filtrar progreso por tema si hay un tema seleccionado
-      let progressFiltrado = progress
-      if (selectedTopic !== "all") {
-        progressFiltrado = progress.filter((attempt) => {
-          const evaluationProgramada = evaluacionesProgramadasTotales.find(
-            (evalItem) =>
-              evalItem.evaluationId === attempt.evaluationId ||
-              evalItem.evaluationId === attempt.evaluationId?._id ||
-              evalItem.evaluationId?.toString() === attempt.evaluationId?.toString(),
-          )
-          return evaluationProgramada?.topicId === selectedTopic
-        })
-      }
-
-      // === ESTADÍSTICAS TOTALES DEL NIVEL (NO CAMBIAN CON EL FILTRO) ===
-      // Filtrar solo evaluaciones aprobadas de TODO el progreso del nivel
-      const evaluacionesAprobadasTotales = progress.filter((p) => p.passed === true)
-
-      // Calcular puntos totales de evaluaciones aprobadas de TODO el nivel
-      const puntosTotalesAprobadas = evaluacionesAprobadasTotales.reduce((sum, p) => sum + (p.score || 0), 0)
-
-      // Contar evaluaciones aprobadas vs programadas de TODO el nivel
-      let evaluacionesAprobadasProgramadasTotales = 0
-      evaluacionesProgramadasTotales.forEach((evalProgramada) => {
-        const evalId = evalProgramada.evaluationId
-        const evalAprobada = evaluacionesAprobadasTotales.find(
-          (er) =>
-            er.evaluationId === evalId ||
-            er.evaluationId?._id === evalId ||
-            er.evaluationId?.toString() === evalId?.toString(),
-        )
-        if (evalAprobada) {
-          evaluacionesAprobadasProgramadasTotales++
+      evaluacionesProgramadas.forEach((evaluation) => {
+        if (!topicMap.has(evaluation.topicId)) {
+          topicMap.set(evaluation.topicId, {
+            id: evaluation.topicId,
+            name: evaluation.topicName,
+          });
+          uniqueTopics.push({
+            id: evaluation.topicId,
+            name: evaluation.topicName,
+          });
         }
-      })
+      });
+
+      console.log("🏷️ Temas únicos encontrados:", uniqueTopics);
+      setAvailableTopics(uniqueTopics);
+
+      // Enriquecer el progreso con información de temas
+      const progressWithTopics = progress.map((attempt) => {
+        const attemptEvalId = attempt.evaluationId?._id || attempt.evaluationId;
+
+        // Buscar la evaluación programada correspondiente
+        const matchingEvaluation = evaluacionesProgramadas.find(
+          (evalProgramada) => {
+            const programmedEvalId = evalProgramada.evaluationId;
+            return (
+              attemptEvalId === programmedEvalId ||
+              attemptEvalId?.toString() === programmedEvalId?.toString()
+            );
+          }
+        );
+
+        if (matchingEvaluation) {
+          console.log(
+            `✅ Match encontrado para evaluación ${attemptEvalId}: ${matchingEvaluation.topicName}`
+          );
+          return {
+            ...attempt,
+            topicId: matchingEvaluation.topicId,
+            topicName: matchingEvaluation.topicName,
+            evaluationType: matchingEvaluation.type,
+          };
+        } else {
+          console.log(
+            `❌ No se encontró match para evaluación ${attemptEvalId}`
+          );
+          return {
+            ...attempt,
+            topicId: null,
+            topicName: "Tema no identificado",
+            evaluationType: "unknown",
+          };
+        }
+      });
+
+      // NUEVO: Filtrar para mostrar solo el último intento de cada evaluación
+      const ultimosIntentosPorEvaluacion = new Map();
+
+      progressWithTopics.forEach((attempt) => {
+        const evalId = attempt.evaluationId?._id || attempt.evaluationId;
+        const evalKey = evalId.toString();
+
+        // Si no existe la evaluación o este intento es más reciente, actualizar
+        if (
+          !ultimosIntentosPorEvaluacion.has(evalKey) ||
+          new Date(attempt.createdAt) >
+            new Date(ultimosIntentosPorEvaluacion.get(evalKey).createdAt)
+        ) {
+          ultimosIntentosPorEvaluacion.set(evalKey, attempt);
+        }
+      });
+
+      // Convertir el Map a array - estos son los únicos intentos que se mostrarán
+      const ultimosIntentosArray = Array.from(
+        ultimosIntentosPorEvaluacion.values()
+      );
+
+      console.log(
+        "📊 Progreso con últimos intentos únicamente:",
+        ultimosIntentosArray.length,
+        "elementos"
+      );
+      setEnrichedProgress(ultimosIntentosArray);
+
+      // Calcular estadísticas basadas en los MISMOS últimos intentos que se muestran en la tabla
+      const ultimosIntentosAprobados = ultimosIntentosArray.filter(
+        (attempt) => attempt.passed === true
+      );
+      const puntosTotalesAprobadas = ultimosIntentosAprobados.reduce(
+        (sum, p) => sum + (p.score || 0),
+        0
+      );
+
+      // Contar evaluaciones únicas aprobadas en la programación (basado en últimos intentos)
+      let evaluacionesAprobadasProgramadasTotales = 0;
+      evaluacionesProgramadas.forEach((evalProgramada) => {
+        const evalEnUltimosIntentos = ultimosIntentosArray.find((attempt) => {
+          const attemptEvalId =
+            attempt.evaluationId?._id || attempt.evaluationId;
+          const programmedEvalId = evalProgramada.evaluationId;
+          return (
+            attemptEvalId === programmedEvalId ||
+            attemptEvalId?.toString() === programmedEvalId?.toString()
+          );
+        });
+
+        // Solo contar si existe en últimos intentos Y está aprobada
+        if (evalEnUltimosIntentos && evalEnUltimosIntentos.passed) {
+          evaluacionesAprobadasProgramadasTotales++;
+        }
+      });
 
       setCalculatedStats({
-        // Estadísticas que NO cambian con el filtro (totales del nivel)
         evaluacionesAprobadas: evaluacionesAprobadasProgramadasTotales,
-        evaluacionesProgramadas: evaluacionesProgramadasTotales.length,
+        evaluacionesProgramadas: evaluacionesProgramadas.length,
         puntosAprobadas: puntosTotalesAprobadas,
+        totalEvaluacionesRealizadas: progressWithTopics.length, // Total de todos los intentos
+        evaluacionesUnicasRealizadas: ultimosIntentosArray.length, // Solo últimos intentos
+        ultimosIntentosAprobados: ultimosIntentosAprobados.length,
+      });
+    }
+  }, [programming, nivelNumber, progress]);
 
-        // Estadísticas que SÍ cambian con el filtro (para mostrar en la tabla)
-        totalEvaluacionesRealizadas: progressFiltrado.length,
-        temaSeleccionado:
-          selectedTopic === "all"
-            ? "Todos los temas"
-            : availableTopics.find((t) => t.id === selectedTopic)?.name || "Tema seleccionado",
-      })
+  // EFECTO PARA FILTRAR POR TEMA SELECCIONADO
+  useEffect(() => {
+    const topicValue =
+      typeof selectedTopic === "object" ? selectedTopic.value : selectedTopic;
+
+    console.log("🔍 Aplicando filtro por tema:", topicValue);
+
+    if (topicValue === "all") {
+      console.log(
+        "📋 Mostrando todas las evaluaciones:",
+        enrichedProgress.length
+      );
+      setFilteredProgress(enrichedProgress);
     } else {
-      setCalculatedStats(null)
-    }
-  }, [progress, programming, nivelNumber, selectedTopic, availableTopics])
-
-  // Efecto para obtener temas disponibles y enriquecer los datos de progreso
-  useEffect(() => {
-    const loadTopicsAndEnrichProgress = () => {
-      if (programming && nivelNumber) {
-        // Obtener el nivel actual de la programación
-        const currentLevel = programming.levels?.[nivelNumber - 1]
-
-        if (!currentLevel || !currentLevel.topics) {
-          setAvailableTopics([])
-          setFilteredProgress(progress)
-          return
+      const filtered = enrichedProgress.filter((attempt) => {
+        const match = attempt.topicId === topicValue;
+        if (match) {
+          console.log(
+            `✅ Evaluación incluida en filtro: ${attempt.evaluationId} - ${attempt.topicName}`
+          );
         }
+        return match;
+      });
 
-        // Extraer información de temas directamente de la programación
-        const topicsInfo = currentLevel.topics.map((topic, index) => {
-          return {
-            id: topic.topicId,
-            name: topic.name || `Tema ${topic.topicId}`,
-            description: topic.description || "",
-          }
-        })
-
-        setAvailableTopics(topicsInfo.filter((topic) => topic.name && topic.id))
-
-        // Enriquecer el progreso con información de temas
-        const evaluacionesProgramadas = getEvaluationsFromLevel(currentLevel)
-
-        const enrichedProgress = progress.map((attempt) => {
-          // Buscar la evaluación programada correspondiente
-          const evaluationProgramada = evaluacionesProgramadas.find(
-            (evalItem) =>
-              evalItem.evaluationId === attempt.evaluationId ||
-              evalItem.evaluationId === attempt.evaluationId?._id ||
-              evalItem.evaluationId?.toString() === attempt.evaluationId?.toString(),
-          )
-
-          return {
-            ...attempt,
-            topicId: evaluationProgramada?.topicId || null,
-            topicName: evaluationProgramada?.topicName || "Tema no identificado",
-          }
-        })
-        setFilteredProgress(enrichedProgress)
-      } else {
-        setFilteredProgress(progress)
-      }
+      console.log(
+        `📋 Evaluaciones filtradas para tema ${topicValue}:`,
+        filtered.length
+      );
+      setFilteredProgress(filtered);
     }
+  }, [selectedTopic, enrichedProgress]);
 
-    loadTopicsAndEnrichProgress()
-  }, [programming, nivelNumber, progress])
+  // Función para manejar el cambio de tema
+  const handleTopicChange = (value) => {
+    console.log("🔄 Cambiando tema seleccionado:", value);
+    setSelectedTopic(value);
+  };
 
-  // Efecto para filtrar progreso por tema seleccionado
+  // Resto de efectos y funciones (sin cambios)
   useEffect(() => {
-    if (selectedTopic === "all") {
-      // Mostrar todas las evaluaciones con nombres de temas
-      const enrichedProgress = progress.map((attempt) => {
-        if (programming && nivelNumber) {
-          const currentLevel = programming.levels?.[nivelNumber - 1]
-          if (currentLevel) {
-            const evaluacionesProgramadas = getEvaluationsFromLevel(currentLevel)
-            const evaluationProgramada = evaluacionesProgramadas.find(
-              (evalItem) =>
-                evalItem.evaluationId === attempt.evaluationId ||
-                evalItem.evaluationId === attempt.evaluationId?._id ||
-                evalItem.evaluationId?.toString() === attempt.evaluationId?.toString(),
-            )
+    const selectedFichaNombre = sessionStorage.getItem("selectedFichaNombre");
+    const selectedNivelNombre = sessionStorage.getItem("selectedNivelNombre");
+    const selectedNivelNumber = sessionStorage.getItem("selectedNivelNumber");
+    const selectedTraineeData = sessionStorage.getItem("selectedTraineeData");
+    const selectedFichaPrograma = sessionStorage.getItem(
+      "selectedFichaPrograma"
+    );
 
-            if (evaluationProgramada) {
-              return {
-                ...attempt,
-                topicId: evaluationProgramada.topicId,
-                topicName: evaluationProgramada.topicName,
-              }
-            }
-          }
-        }
+    if (selectedFichaNombre) setFichaNombre(selectedFichaNombre);
+    if (selectedNivelNombre) setNivelNombre(selectedNivelNombre);
+    if (selectedNivelNumber)
+      setNivelNumber(Number.parseInt(selectedNivelNumber));
+    if (selectedFichaPrograma) setFichaPrograma(selectedFichaPrograma);
 
-        return {
-          ...attempt,
-          topicName: "Tema no identificado",
-        }
-      })
-
-      setFilteredProgress(enrichedProgress)
-    } else {
-      // Filtrar por tema específico
-      const filtered = progress
-        .filter((attempt) => {
-          if (programming && nivelNumber) {
-            const currentLevel = programming.levels?.[nivelNumber - 1]
-            if (currentLevel) {
-              const evaluacionesProgramadas = getEvaluationsFromLevel(currentLevel)
-              const evaluationProgramada = evaluacionesProgramadas.find(
-                (evalItem) =>
-                  evalItem.evaluationId === attempt.evaluationId ||
-                  evalItem.evaluationId === attempt.evaluationId?._id ||
-                  evalItem.evaluationId?.toString() === attempt.evaluationId?.toString(),
-              )
-
-              return evaluationProgramada?.topicId === selectedTopic
-            }
-          }
-          return false
-        })
-        .map((attempt) => {
-          // Enriquecer con información del tema seleccionado
-          const topicInfo = availableTopics.find((topic) => topic.id === selectedTopic)
-          return {
-            ...attempt,
-            topicId: selectedTopic,
-            topicName: topicInfo?.name || "Tema seleccionado",
-          }
-        })
-      setFilteredProgress(filtered)
-    }
-  }, [selectedTopic, progress, programming, nivelNumber, availableTopics])
-
-  useEffect(() => {
-    const selectedFichaNombre = sessionStorage.getItem("selectedFichaNombre")
-    const selectedNivelNombre = sessionStorage.getItem("selectedNivelNombre")
-    const selectedNivelNumber = sessionStorage.getItem("selectedNivelNumber")
-    const selectedTraineeData = sessionStorage.getItem("selectedTraineeData")
-    const selectedFichaPrograma = sessionStorage.getItem("selectedFichaPrograma")
-
-    if (selectedFichaNombre) setFichaNombre(selectedFichaNombre)
-    if (selectedNivelNombre) setNivelNombre(selectedNivelNombre)
-    if (selectedNivelNumber) setNivelNumber(Number.parseInt(selectedNivelNumber))
-    if (selectedFichaPrograma) setFichaPrograma(selectedFichaPrograma)
-
-    // Cargar datos del aprendiz desde sessionStorage
     if (selectedTraineeData) {
       try {
-        const traineeData = JSON.parse(selectedTraineeData)
-        setApprenticeId(traineeData._id || traineeData.id)
+        const traineeData = JSON.parse(selectedTraineeData);
+        setApprenticeId(traineeData._id || traineeData.id);
 
         setLearnerData({
           nombre: `${traineeData.nombre} ${traineeData.apellido}`,
@@ -300,47 +302,61 @@ const ProgressViewWithTopicsFinal = () => {
           estado: traineeData.estado,
           documento: traineeData.documento,
           tipoDocumento: traineeData.tipoDocumento,
-        })
+        });
       } catch (error) {
-        navigate("/progreso/cursosProgramados/niveles/aprendices")
+        navigate("/progreso/cursosProgramados/niveles/aprendices");
       }
     } else {
-      navigate("/progreso/cursosProgramados/niveles/aprendices")
+      navigate("/progreso/cursosProgramados/niveles/aprendices");
     }
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [navigate, nombre])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [navigate, nombre]);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+    logout();
+    navigate("/login");
+  };
+
+  const handleBack = () => {
+    navigate("/progreso/cursosProgramados/niveles/aprendices");
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   if (!learnerData) {
     return (
       <div className="min-h-screen">
         <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+            <h1 className="text-2xl font-bold text-[#1f384c]">
+              Cursos Programados
+            </h1>
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
               >
                 <span>Administrador</span>
-                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {isDropdownOpen && (
@@ -361,7 +377,7 @@ const ProgressViewWithTopicsFinal = () => {
           <span className="ml-2">Cargando...</span>
         </div>
       </div>
-    )
+    );
   }
 
   // Formatear datos del aprendiz
@@ -370,7 +386,11 @@ const ProgressViewWithTopicsFinal = () => {
     { id: 2, atributo: "Nivel Actual", valor: learnerData.nivelActual },
     { id: 3, atributo: "Ficha", valor: learnerData.ficha },
     { id: 4, atributo: "Estado", valor: learnerData.estado },
-    { id: 5, atributo: "Documento", valor: `${learnerData.tipoDocumento} ${learnerData.documento}` },
+    {
+      id: 5,
+      atributo: "Documento",
+      valor: `${learnerData.tipoDocumento} ${learnerData.documento}`,
+    },
     { id: 6, atributo: "Correo", valor: learnerData.correo },
     { id: 7, atributo: "Teléfono", valor: learnerData.telefono },
     {
@@ -385,9 +405,9 @@ const ProgressViewWithTopicsFinal = () => {
       atributo: "Puntos Totales Obtenidos",
       valor: calculatedStats?.puntosAprobadas || 0,
     },
-  ]
+  ];
 
-  // Formatear progreso para la tabla
+  // Formatear progreso para la tabla - AHORA SOLO MUESTRA ÚLTIMOS INTENTOS
   const formattedProgress = filteredProgress.map((attempt) => {
     return {
       id: attempt._id,
@@ -397,30 +417,55 @@ const ProgressViewWithTopicsFinal = () => {
         minute: "2-digit",
         hour12: true,
       }),
-      tipo: attempt.evaluationId?.tipoEvaluacion || "Evaluación",
-      nombreEvaluacion: attempt.evaluationId?.nombre || `Evaluación ${attempt.attemptNumber}`,
+      tipo:
+        attempt.evaluationId?.tipoEvaluacion ||
+        attempt.evaluationType ||
+        "Evaluación",
+      nombreEvaluacion:
+        attempt.evaluationId?.nombre || `Evaluación ${attempt.attemptNumber}`,
+      tema: attempt.topicName || "Tema no identificado",
       puntajeObtenido: `${attempt.score}/${attempt.maxScore}`,
       porcentaje: `${attempt.percentage}%`,
       estado: attempt.passed ? "Aprobado" : "No Aprobado",
       duracion: `${attempt.timeSpent || 0} min`,
-      intentos: attempt.attemptNumber,
+      intentos: attempt.attemptNumber, // Muestra el número de intento que es
       rawData: attempt,
-    }
-  })
+    };
+  });
 
+  // Columnas de la tabla
   const progressColumns = [
-    { key: "fecha", label: "Fecha", width: "15%" },
-    { key: "hora", label: "Hora", width: "15%" },
-    { key: "tipo", label: "Tipo", width: "15%" },
-    { key: "nombreEvaluacion", label: "Nombre Evaluación", width: "30%" },
-    { key: "puntajeObtenido", label: "Puntaje", width: "15%" },
+    { key: "fecha", label: "Fecha", width: "13%" },
+    { key: "hora", label: "Hora", width: "12%" },
+    { key: "tipo", label: "Tipo", width: "12%" },
+    {
+      key: "tema",
+      label: "Tema",
+      render: (item) => (
+        <div className="whitespace-normal break-words max-w-md">
+          {item.tema}
+        </div>
+      ),
+      width: "18%",
+    },
+    {
+      key: "nombreEvaluacion",
+      label: "Evaluación",
+      render: (item) => (
+        <div className="whitespace-normal break-words max-w-md">
+          {item.nombreEvaluacion}
+        </div>
+      ),
+      width: "23%",
+    },
+    { key: "puntajeObtenido", label: "Puntaje", width: "12%" },
     {
       key: "estado",
       label: "Estado",
-      width: "20%",
+      width: "15%",
       render: (item) => (
         <div
-          className={`px-2 py-1 rounded-full text-xs text-white text-center w-24 ${
+          className={`px-2 py-1 rounded-full text-xs text-white text-center w-25 ${
             item.estado === "Aprobado" ? "bg-green-500" : "bg-red-500"
           }`}
         >
@@ -428,16 +473,8 @@ const ProgressViewWithTopicsFinal = () => {
         </div>
       ),
     },
-    { key: "intentos", label: "Intentos", width: "12%" },
-  ]
-
-  const handleBack = () => {
-    navigate("/progreso/cursosProgramados/niveles/aprendices")
-  }
-
-  const handleRefresh = () => {
-    refetch()
-  }
+    { key: "intentos", label: "Intento", width: "10%" },
+  ];
 
   // Preparar opciones para el CustomSelect
   const topicSelectOptions = [
@@ -446,20 +483,30 @@ const ProgressViewWithTopicsFinal = () => {
       value: topic.id,
       label: topic.name,
     })),
-  ]
+  ];
+
+  // Obtener el valor actual para mostrar en el select
+  const currentTopicValue =
+    typeof selectedTopic === "object" ? selectedTopic.value : selectedTopic;
 
   return (
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">
+            Cursos Programados
+          </h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               <span>Administrador</span>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-5 h-5 transition-transform ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {isDropdownOpen && (
@@ -497,15 +544,24 @@ const ProgressViewWithTopicsFinal = () => {
 
           {/* Información del aprendiz */}
           <div className="mb-6 flex flex-col items-center">
-            <h2 className="text-lg font-bold text-[#1F384C] mb-4 text-center">PROGRESO DEL APRENDIZ</h2>
+            <h2 className="text-lg font-bold text-[#1F384C] mb-4 text-center">
+              PROGRESO DEL APRENDIZ
+            </h2>
             <div className="border border-gray-200 rounded-lg overflow-hidden max-w-4xl w-full">
               <table className="w-full text-sm">
                 <tbody>
                   {formattedLearnerData.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-200 last:border-b-0">
-                      <td className="py-2 px-4 font-semibold text-[#1F384C]  bg-gray-50 w-[30%]">{item.atributo}</td>
+                    <tr
+                      key={item.id}
+                      className="border-b border-gray-200 last:border-b-0"
+                    >
+                      <td className="py-2 px-4 font-semibold text-[#1F384C] bg-gray-50 w-[30%]">
+                        {item.atributo}
+                      </td>
                       <td className="py-2 px-4 w-[70%]">
-                        {typeof item.valor === "object" ? item.valor : item.valor || "0"}
+                        {typeof item.valor === "object"
+                          ? item.valor
+                          : item.valor || "0"}
                       </td>
                     </tr>
                   ))}
@@ -514,14 +570,69 @@ const ProgressViewWithTopicsFinal = () => {
             </div>
           </div>
 
-          {/* Filtro por temas con CustomSelect */}
-          <div className="p-4 bg-gray-50 rounded-[10px]">
+          {/* Información de debug mejorada */}
+          {/* <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold text-blue-800 mb-2">🔍 Estado del Sistema:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="font-medium">Temas disponibles:</span> {availableTopics.length}
+              </div>
+              <div>
+                <span className="font-medium">Evaluaciones únicas:</span> {enrichedProgress.length}
+              </div>
+              <div>
+                <span className="font-medium">Mostrando:</span> {filteredProgress.length}
+              </div>
+              <div>
+                <span className="font-medium">Tema seleccionado:</span>{" "}
+                {currentTopicValue === "all"
+                  ? "Todos"
+                  : availableTopics.find((t) => t.id === currentTopicValue)?.name || "Desconocido"}
+              </div>
+            </div>
+
+            {calculatedStats && (
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <h5 className="font-medium text-blue-700 mb-1">📊 Estadísticas:</h5>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <span className="font-medium">Total intentos realizados:</span>{" "}
+                    {calculatedStats.totalEvaluacionesRealizadas}
+                  </div>
+                  <div>
+                    <span className="font-medium">Evaluaciones únicas:</span>{" "}
+                    {calculatedStats.evaluacionesUnicasRealizadas}
+                  </div>
+                  <div>
+                    <span className="font-medium">Puntos (últimos aprobados):</span> {calculatedStats.puntosAprobadas}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div> */}
+
+          {/* Filtro por temas */}
+          <div className="p-4 bg-gray-50 rounded-[10px] mb-6">
             <div className="flex items-center gap-4">
               <div className="flex-1 max-w-xs">
-                <label htmlFor="topic-select" className="text-base font-semibold text-gray-700 mb-2 block">
+                <label
+                  htmlFor="topic-select"
+                  className="text-base font-semibold text-gray-700 mb-2 block"
+                >
                   Filtrar por Tema:
                 </label>
-                <CustomSelect options={topicSelectOptions} value={selectedTopic} onChange={setSelectedTopic} />
+                <CustomSelect
+                  options={topicSelectOptions}
+                  value={currentTopicValue}
+                  onChange={handleTopicChange}
+                />
+              </div>
+              <div className="text-sm text-gray-600">
+                {availableTopics.length === 0 && (
+                  <div className="text-orange-600 font-medium">
+                    ⚠️ No se encontraron temas para este nivel
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -531,28 +642,30 @@ const ProgressViewWithTopicsFinal = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-[#1F384C]">
                 TABLA DE PROGRESO
-                {selectedTopic !== "all" && (
+                {currentTopicValue !== "all" && (
                   <span className="text-sm font-medium text-gray-600 ml-2">
-                    - {availableTopics.find((t) => t.id === selectedTopic)?.name || "Tema seleccionado"}
+                    -{" "}
+                    {availableTopics.find((t) => t.id === currentTopicValue)
+                      ?.name || "Tema seleccionado"}
                   </span>
                 )}
               </h2>
-              {calculatedStats && (
-                <div className="text-sm text-gray-600 flex gap-4">
-                  <span>Filtradas: {formattedProgress.length}</span>
-                  <span>Total: {calculatedStats.totalEvaluacionesRealizadas}</span>
-                </div>
-              )}
+              <div className="text-sm text-gray-600 flex gap-4">
+                <span>Mostrando: {formattedProgress.length}</span>
+                <span>Evaluaciones: {enrichedProgress.length}</span>
+              </div>
             </div>
 
-            {progressLoading ? (
+            {progressLoading || programmingLoading ? (
               <div className="flex justify-center my-8">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
                 <span className="ml-2">Cargando...</span>
               </div>
             ) : progressError ? (
               <div className="text-red-500 text-center py-4 bg-red-50 rounded-lg">
-                <p className="font-semibold">Error al cargar las evaluaciones</p>
+                <p className="font-semibold">
+                  Error al cargar las evaluaciones
+                </p>
                 <p className="text-sm">{progressError}</p>
                 <button
                   onClick={handleRefresh}
@@ -565,56 +678,22 @@ const ProgressViewWithTopicsFinal = () => {
               <GenericTable
                 data={formattedProgress}
                 columns={progressColumns}
-                showActions={{ show: true, edit: false, delete: false, add: false }}
+                showActions={{
+                  show: true,
+                  edit: false,
+                  delete: false,
+                  add: false,
+                }}
                 defaultItemsPerPage={10}
                 tooltipText="Ver Retroalimentación"
                 emptyMessage={
-                  selectedTopic === "all"
+                  currentTopicValue === "all"
                     ? "No hay evaluaciones registradas para este nivel"
-                    : "No hay evaluaciones para el tema seleccionado"
+                    : `No hay evaluaciones para el tema: ${
+                        availableTopics.find((t) => t.id === currentTopicValue)
+                          ?.name || "seleccionado"
+                      }`
                 }
-                exportToExcel={{
-                  enabled: true,
-                  filename: `progreso_${learnerData.nombre.replace(/\s+/g, "_")}_${nivelNombre}_${fichaNombre}${selectedTopic !== "all" ? `_${availableTopics.find((t) => t.id === selectedTopic)?.name?.replace(/\s+/g, "_") || "tema"}` : ""}`,
-                  exportFunction: (data) => {
-                    let table = '<table border="1">'
-                    table += "<tr>"
-                    progressColumns.forEach((column) => {
-                      table += `<th>${column.label}</th>`
-                    })
-                    table += "</tr>"
-
-                    data.forEach((item) => {
-                      table += "<tr>"
-                      progressColumns.forEach((column) => {
-                        if (column.key === "estado") {
-                          table += `<td>${item.estado}</td>`
-                        } else {
-                          table += `<td>${item[column.key] || ""}</td>`
-                        }
-                      })
-                      table += "</tr>"
-                    })
-
-                    table += "</table>"
-
-                    const blob = new Blob(["\ufeff", table], {
-                      type: "application/vnd.ms-excel;charset=utf-8",
-                    })
-                    const url = URL.createObjectURL(blob)
-
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = `progreso_${learnerData.nombre.replace(/\s+/g, "_")}_${nivelNombre}_${fichaNombre}${selectedTopic !== "all" ? `_${availableTopics.find((t) => t.id === selectedTopic)?.name?.replace(/\s+/g, "_") || "tema"}` : ""}.xls`
-                    document.body.appendChild(a)
-                    a.click()
-
-                    setTimeout(() => {
-                      document.body.removeChild(a)
-                      URL.revokeObjectURL(url)
-                    }, 0)
-                  },
-                }}
               />
             )}
 
@@ -630,7 +709,7 @@ const ProgressViewWithTopicsFinal = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProgressViewWithTopicsFinal
+export default ProgressViewFinal;

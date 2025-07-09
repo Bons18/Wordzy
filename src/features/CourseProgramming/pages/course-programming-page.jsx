@@ -12,7 +12,11 @@ const columns = [
   {
     key: "programId",
     label: "Programa",
-    render: (item) => item.programId?.name || "Sin nombre",
+    render: (item) => (
+      <div className="whitespace-normal break-words max-w-md">
+        {item.programId?.name}
+      </div>
+    ),
     width: "40%",
   },
   { key: "startDate", label: "Fecha Inicio" },

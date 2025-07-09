@@ -12,7 +12,16 @@ import { usePutTopic } from "../hooks/usePutTopic";
 import { useDeleteTopic } from "../hooks/useDeleteTopic";
 
 const columns = [
-  { key: "name", label: "Nombre" },
+  {
+    key: "name",
+    label: "Nombre",
+    render: (item) => (
+      <div className="whitespace-normal break-words max-w-md">
+        {item.name}
+      </div>
+    ),
+    width: "30%",
+  },
   {
     key: "description",
     label: "Descripción",

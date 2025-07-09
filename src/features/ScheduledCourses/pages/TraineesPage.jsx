@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { ChevronDown } from "lucide-react"
-import { useAuth } from "../../auth/hooks/useAuth"
-import { useNavigate } from "react-router-dom"
-import GenericTable from "../../../shared/components/Table"
-import ConfirmationModal from "../../../shared/components/ConfirmationModal"
-import { useApprenticesWithProgress } from "../hooks/use-apprentices-with-progress"
-import ProgrammingDebugInfo from "./programming-debug-info"
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronDown } from "lucide-react";
+import { useAuth } from "../../auth/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import GenericTable from "../../../shared/components/Table";
+import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import { useApprenticesWithProgress } from "../hooks/use-apprentices-with-progress";
+import ProgrammingDebugInfo from "./programming-debug-info";
 
 const columns = [
   {
     key: "nombre",
     label: "Nombre",
-    render: (item) => `${item.nombre} ${item.apellido}`,
-    width: "40%",
+    render: (item) => (
+      <div className="whitespace-normal break-words max-w-md">
+        {item.nombre} {item.apellido}
+      </div>
+    ),
+    width: "25%",
   },
-  { key: "telefono", label: "Teléfono" },
+  { key: "telefono", label: "Teléfono", width: "15%" },
   {
     key: "puntos",
     label: "Puntos Totales",
     width: "15%",
     render: (item) => {
-      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
-      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-      const totalPoints = levelProgress?.puntosObtenidos || 0
-
-      return <span>{totalPoints}</span>
+      return <span>{item.consistentStats?.puntos || 0}</span>;
     },
   },
   {
@@ -34,16 +34,14 @@ const columns = [
     label: "Evaluaciones",
     width: "15%",
     render: (item) => {
-      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
-      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-      const aprobadas = levelProgress?.evaluacionesAprobadas || 0
-      const programadas = levelProgress?.evaluacionesProgramadas || 0
+      const aprobadas = item.consistentStats?.evaluacionesAprobadas || 0;
+      const programadas = item.consistentStats?.evaluacionesProgramadas || 0;
 
       return (
         <span>
           {aprobadas}/{programadas}
         </span>
-      )
+      );
     },
   },
   {
@@ -51,113 +49,240 @@ const columns = [
     label: "Progreso",
     width: "25%",
     render: (item) => {
-      const nivelNumber = Number.parseInt(sessionStorage.getItem("selectedNivelNumber")) || 1
-      const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-      const progressPercentage = levelProgress?.porcentaje || 0
+      const aprobadas = item.consistentStats?.evaluacionesAprobadas || 0;
+      const programadas = item.consistentStats?.evaluacionesProgramadas || 0;
+      const progressPercentage =
+        programadas > 0 ? Math.round((aprobadas / programadas) * 100) : 0;
 
       return (
         <div className="flex items-center gap-2 w-full">
           <div className="flex-1 min-w-[100px]">
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+              <div
+                className="bg-green-500 h-2 rounded-full"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
             </div>
           </div>
-          <span className="text-sm text-gray-600 w-13 text-right">{progressPercentage}%</span>
+          <span className="text-sm text-gray-600 w-13 text-right">
+            {progressPercentage}%
+          </span>
         </div>
-      )
+      );
     },
   },
-]
+];
 
 const TraineesPageUpdated = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showDebug, setShowDebug] = useState(false)
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-  const [filteredTrainees, setFilteredTrainees] = useState([])
-  const [fichaNombre, setFichaNombre] = useState("")
-  const [fichaPrograma, setFichaPrograma] = useState("")
-  const [nivelNombre, setNivelNombre] = useState("")
-  const [nivelNumber, setNivelNumber] = useState(null)
-  const dropdownRef = useRef(null)
-  const [fichaId, setFichaId] = useState(null)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const [filteredTrainees, setFilteredTrainees] = useState([]);
+  const [fichaNombre, setFichaNombre] = useState("");
+  const [fichaPrograma, setFichaPrograma] = useState("");
+  const [nivelNombre, setNivelNombre] = useState("");
+  const [nivelNumber, setNivelNumber] = useState(null);
+  const dropdownRef = useRef(null);
+  const [fichaId, setFichaId] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   // Usar el hook corregido
-  const { apprentices, loading, error } = useApprenticesWithProgress(fichaNombre, fichaId)
+  const { apprentices, loading, error } = useApprenticesWithProgress(
+    fichaNombre,
+    fichaId
+  );
 
   useEffect(() => {
     // Recuperar información del nivel y ficha seleccionados
-    const selectedNivelNombre = sessionStorage.getItem("selectedNivelNombre")
-    const selectedFichaNombre = sessionStorage.getItem("selectedFichaNombre")
-    const selectedFichaPrograma = sessionStorage.getItem("selectedFichaPrograma")
-    const selectedNivelNumber = sessionStorage.getItem("selectedNivelNumber")
-    const selectedFichaId = sessionStorage.getItem("selectedFichaId")
+    const selectedNivelNombre = sessionStorage.getItem("selectedNivelNombre");
+    const selectedFichaNombre = sessionStorage.getItem("selectedFichaNombre");
+    const selectedFichaPrograma = sessionStorage.getItem(
+      "selectedFichaPrograma"
+    );
+    const selectedNivelNumber = sessionStorage.getItem("selectedNivelNumber");
+    const selectedFichaId = sessionStorage.getItem("selectedFichaId");
 
     if (selectedNivelNombre && selectedFichaNombre && selectedFichaId) {
-      setNivelNombre(selectedNivelNombre)
-      setFichaNombre(selectedFichaNombre)
-      setFichaPrograma(selectedFichaPrograma || "")
-      setNivelNumber(Number.parseInt(selectedNivelNumber) || 1)
-      setFichaId(selectedFichaId)
+      setNivelNombre(selectedNivelNombre);
+      setFichaNombre(selectedFichaNombre);
+      setFichaPrograma(selectedFichaPrograma || "");
+      setNivelNumber(Number.parseInt(selectedNivelNumber) || 1);
+      setFichaId(selectedFichaId);
     } else {
-      navigate("/progreso/cursosProgramados")
+      navigate("/progreso/cursosProgramados");
     }
-  }, [navigate])
+  }, [navigate]);
 
-  useEffect(() => {
-    // Filtrar aprendices que están en el nivel actual
-    if (apprentices.length > 0) {
-      setFilteredTrainees(apprentices)
+  // Función para obtener estadísticas de un aprendiz usando la misma API que ProgressView
+  const fetchApprenticeStats = useCallback(async (apprenticeId, level) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/apprentice-progress/apprentice/${apprenticeId}/level/${level}`,
+        {
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          `Error fetching stats for apprentice ${apprenticeId}:`,
+          response.status
+        );
+        return {
+          puntos: 0,
+          evaluacionesAprobadas: 0,
+          evaluacionesProgramadas: 0,
+        };
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data.statistics) {
+        console.log(
+          `✅ Stats for apprentice ${apprenticeId}:`,
+          data.data.statistics
+        );
+        return {
+          puntos: data.data.statistics.puntosAprobadas || 0,
+          evaluacionesAprobadas:
+            data.data.statistics.evaluacionesAprobadas || 0,
+          evaluacionesProgramadas:
+            data.data.statistics.evaluacionesProgramadas || 0,
+        };
+      }
+
+      return {
+        puntos: 0,
+        evaluacionesAprobadas: 0,
+        evaluacionesProgramadas: 0,
+      };
+    } catch (error) {
+      console.error(
+        `❌ Error fetching stats for apprentice ${apprenticeId}:`,
+        error
+      );
+      return {
+        puntos: 0,
+        evaluacionesAprobadas: 0,
+        evaluacionesProgramadas: 0,
+      };
     }
-  }, [apprentices, nivelNumber])
+  }, []);
+
+  // Efecto para calcular estadísticas cuando cambien los aprendices
+  useEffect(() => {
+    const calculateStatsForAllApprentices = async () => {
+      if (apprentices.length > 0 && nivelNumber) {
+        console.log(
+          `🔄 Calculando estadísticas para ${apprentices.length} aprendices en nivel ${nivelNumber}`
+        );
+        setStatsLoading(true);
+
+        try {
+          const apprenticesWithStats = await Promise.all(
+            apprentices.map(async (apprentice) => {
+              const apprenticeId = apprentice._id || apprentice.id;
+              const stats = await fetchApprenticeStats(
+                apprenticeId,
+                nivelNumber
+              );
+
+              console.log(
+                `📊 Aprendiz ${apprentice.nombre}: ${stats.puntos} puntos, ${stats.evaluacionesAprobadas}/${stats.evaluacionesProgramadas} evaluaciones`
+              );
+
+              return {
+                ...apprentice,
+                consistentStats: stats,
+              };
+            })
+          );
+
+          console.log(
+            "✅ Todas las estadísticas calculadas:",
+            apprenticesWithStats
+          );
+          setFilteredTrainees(apprenticesWithStats);
+        } catch (error) {
+          console.error("❌ Error calculando estadísticas:", error);
+          setFilteredTrainees(
+            apprentices.map((apprentice) => ({
+              ...apprentice,
+              consistentStats: {
+                puntos: 0,
+                evaluacionesAprobadas: 0,
+                evaluacionesProgramadas: 0,
+              },
+            }))
+          );
+        } finally {
+          setStatsLoading(false);
+        }
+      }
+    };
+
+    calculateStatsForAllApprentices();
+  }, [apprentices, nivelNumber, fetchApprenticeStats]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false)
+        setIsDropdownOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogoutClick = () => {
-    setIsDropdownOpen(false)
-    setShowLogoutConfirm(true)
-  }
+    setIsDropdownOpen(false);
+    setShowLogoutConfirm(true);
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+    logout();
+    navigate("/login");
+  };
 
   const handleShowProgress = (trainee) => {
-    sessionStorage.setItem("selectedTraineeId", trainee.id || trainee._id)
-    sessionStorage.setItem("selectedTraineeData", JSON.stringify(trainee))
+    sessionStorage.setItem("selectedTraineeId", trainee.id || trainee._id);
+    sessionStorage.setItem("selectedTraineeData", JSON.stringify(trainee));
     navigate(
-      `/progreso/cursosProgramados/niveles/aprendices/progreso/${encodeURIComponent(`${trainee.nombre} ${trainee.apellido}`)}`,
-    )
-  }
+      `/progreso/cursosProgramados/niveles/aprendices/progreso/${encodeURIComponent(
+        `${trainee.nombre} ${trainee.apellido}`
+      )}`
+    );
+  };
 
   const handleBack = () => {
-    navigate("/progreso/cursosProgramados/niveles")
-  }
+    navigate("/progreso/cursosProgramados/niveles");
+  };
 
-  if (loading) {
+  if (loading || statsLoading) {
     return (
       <div className="min-h-screen">
         <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+            <h1 className="text-2xl font-bold text-[#1f384c]">
+              Cursos Programados
+            </h1>
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
               >
                 <span>Administrador</span>
-                <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {isDropdownOpen && (
@@ -175,10 +300,12 @@ const TraineesPageUpdated = () => {
         </header>
         <div className="flex justify-center my-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-          <span className="ml-2">Cargando...</span>
+          <span className="ml-2">
+            {statsLoading ? "Calculando estadísticas..." : "Cargando..."}
+          </span>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -194,21 +321,27 @@ const TraineesPageUpdated = () => {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen">
       <header className="bg-white py-4 px-6 border-b border-[#d6dade] mb-6">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1f384c]">Cursos Programados</h1>
+          <h1 className="text-2xl font-bold text-[#1f384c]">
+            Cursos Programados
+          </h1>
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 text-[#1f384c] font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
             >
               <span>Administrador</span>
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-5 h-5 transition-transform ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {isDropdownOpen && (
@@ -233,12 +366,12 @@ const TraineesPageUpdated = () => {
           >
             ← Volver a Niveles
           </button>
-          <button
+          {/* <button
             onClick={() => setShowDebug(!showDebug)}
             className="flex items-center gap-1 bg-blue-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-blue-600 transition-colors"
           >
             {showDebug ? "🔍 Ocultar Debug" : "🔍 Mostrar Debug"}
-          </button>
+          </button> */}
         </div>
 
         {/* Información de debug de la programación */}
@@ -249,7 +382,8 @@ const TraineesPageUpdated = () => {
           <h4 className="font-semibold">📊 Estado Actual:</h4>
           <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
             <div>
-              <span className="font-medium">Nivel:</span> {nivelNombre} (#{nivelNumber})
+              <span className="font-medium">Nivel:</span> {nivelNombre} (#
+              {nivelNumber})
             </div>
             <div>
               <span className="font-medium">Ficha:</span> {fichaNombre}
@@ -258,9 +392,53 @@ const TraineesPageUpdated = () => {
               <span className="font-medium">Programa:</span> {fichaPrograma}
             </div>
             <div>
-              <span className="font-medium">Aprendices:</span> {filteredTrainees.length}
+              <span className="font-medium">Aprendices:</span>{" "}
+              {filteredTrainees.length}
             </div>
           </div>
+
+          {showDebug && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <h5 className="font-medium text-gray-700 mb-2">
+                🔍 Estadísticas Consistentes (mismo endpoint que ProgressView):
+              </h5>
+              <div className="text-xs text-gray-600 mb-2">
+                <p>
+                  • Endpoint:
+                  /api/apprentice-progress/apprentice/[id]/level/[level]
+                </p>
+                <p>• Puntos: statistics.puntosAprobadas</p>
+                <p>
+                  • Evaluaciones: statistics.evaluacionesAprobadas /
+                  statistics.evaluacionesProgramadas
+                </p>
+              </div>
+
+              {filteredTrainees.length > 0 && (
+                <div className="mt-2">
+                  <h6 className="font-medium text-gray-600 mb-1">
+                    Estadísticas por aprendiz:
+                  </h6>
+                  <div className="text-xs max-h-40 overflow-y-auto">
+                    {filteredTrainees.map((trainee) => (
+                      <div
+                        key={trainee._id || trainee.id}
+                        className="mb-1 p-1 bg-white rounded"
+                      >
+                        <span className="font-medium">
+                          {trainee.nombre} {trainee.apellido}:
+                        </span>{" "}
+                        {trainee.consistentStats?.puntos || 0} puntos,{" "}
+                        {trainee.consistentStats?.evaluacionesAprobadas || 0}/
+                        {trainee.consistentStats?.evaluacionesProgramadas || 0}{" "}
+                        evaluaciones
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <GenericTable
@@ -273,53 +451,60 @@ const TraineesPageUpdated = () => {
             enabled: true,
             filename: `aprendices_${nivelNombre}_ficha_${fichaNombre}`,
             exportFunction: (data) => {
-              let table = '<table border="1">'
-              table += "<tr>"
+              let table = '<table border="1">';
+              table += "<tr>";
               columns.forEach((column) => {
-                table += `<th>${column.label}</th>`
-              })
-              table += "</tr>"
+                table += `<th>${column.label}</th>`;
+              });
+              table += "</tr>";
 
               data.forEach((item) => {
-                table += "<tr>"
+                table += "<tr>";
                 columns.forEach((column) => {
                   if (column.key === "nombre") {
-                    table += `<td>${item.nombre} ${item.apellido}</td>`
+                    table += `<td>${item.nombre} ${item.apellido}</td>`;
                   } else if (column.key === "progreso") {
-                    const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-                    table += `<td>${levelProgress?.porcentaje || 0}%</td>`
+                    const aprobadas =
+                      item.consistentStats?.evaluacionesAprobadas || 0;
+                    const programadas =
+                      item.consistentStats?.evaluacionesProgramadas || 0;
+                    const progressPercentage =
+                      programadas > 0
+                        ? Math.round((aprobadas / programadas) * 100)
+                        : 0;
+                    table += `<td>${progressPercentage}%</td>`;
                   } else if (column.key === "puntos") {
-                    const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-                    table += `<td>${levelProgress?.puntosObtenidos || 0}</td>`
+                    table += `<td>${item.consistentStats?.puntos || 0}</td>`;
                   } else if (column.key === "evaluaciones") {
-                    const levelProgress = item.progresoNiveles?.find((p) => p.nivel === nivelNumber)
-                    const aprobadas = levelProgress?.evaluacionesAprobadas || 0
-                    const programadas = levelProgress?.evaluacionesProgramadas || 0
-                    table += `<td>${aprobadas}/${programadas}</td>`
+                    const aprobadas =
+                      item.consistentStats?.evaluacionesAprobadas || 0;
+                    const programadas =
+                      item.consistentStats?.evaluacionesProgramadas || 0;
+                    table += `<td>${aprobadas}/${programadas}</td>`;
                   } else {
-                    table += `<td>${item[column.key] || ""}</td>`
+                    table += `<td>${item[column.key] || ""}</td>`;
                   }
-                })
-                table += "</tr>"
-              })
+                });
+                table += "</tr>";
+              });
 
-              table += "</table>"
+              table += "</table>";
 
               const blob = new Blob(["\ufeff", table], {
                 type: "application/vnd.ms-excel;charset=utf-8",
-              })
-              const url = URL.createObjectURL(blob)
+              });
+              const url = URL.createObjectURL(blob);
 
-              const a = document.createElement("a")
-              a.href = url
-              a.download = `aprendices_${nivelNombre}_ficha_${fichaNombre}.xls`
-              document.body.appendChild(a)
-              a.click()
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `aprendices_${nivelNombre}_ficha_${fichaNombre}.xls`;
+              document.body.appendChild(a);
+              a.click();
 
               setTimeout(() => {
-                document.body.removeChild(a)
-                URL.revokeObjectURL(url)
-              }, 0)
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }, 0);
             },
           }}
         />
@@ -334,7 +519,7 @@ const TraineesPageUpdated = () => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TraineesPageUpdated
+export default TraineesPageUpdated;
