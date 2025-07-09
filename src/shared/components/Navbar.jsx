@@ -202,11 +202,6 @@ const Navbar = () => {
                 onClick={() => handleNavigation("/programacion/asignacionNiveles")}
               />
               <NavSubItem
-                icon={<Star size={16} />}
-                text="Escala de valoración"
-                onClick={() => handleNavigation("/programacion/escala")}
-              />
-              <NavSubItem
                 icon={<Award size={16} />}
                 text="Insignias"
                 onClick={() => handleNavigation("/programacion/insigneas2")}

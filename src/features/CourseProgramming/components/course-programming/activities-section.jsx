@@ -5,10 +5,9 @@ import { Check, CircleAlert, Eye, Trash } from "lucide-react"
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi"
 import Tooltip from "../../../../shared/components/Tooltip"
 import CustomSelect from "./ui/custom-select"
-
-import SupportMaterialModal from "../../../SupportMaterials/pages/support-material-modal"
-import MaterialDetail from "../../../SupportMaterials/pages/MaterialDetail"
+import CreateSupportMaterialModal from "../../../SupportMaterials/componentes/CreateSupportMaterialModal"
 import useSupportMaterials from "../../../SupportMaterials/hooks/useSupportMaterials"
+import SupportMaterialDetailModal from "../../../SupportMaterials/componentes/SupportMaterialDetailModal"
 
 import useGetEvaluations from "../../../Evaluations/hooks/useGetEvaluations"
 import usePostEvaluation from "../../../Evaluations/hooks/usePostEvaluation"
@@ -17,8 +16,26 @@ import EvaluationDetailModal from "../../../Evaluations/components/EvaluationDet
 import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
 
 export default function ActivitiesSection({ levelId, themeId, localActiveTab, setLocalActiveTab, levels, setLevels }) {
-  const [selectedActivity, setSelectedActivity] = useState("")
-  const [activityValue, setActivityValue] = useState("")
+  const { createMaterial, materials, refetch: refetchMaterials } = useSupportMaterials()
+
+  const [selectedActivities, setSelectedActivities] = useState({
+    Actividades: "",
+    Exámenes: "",
+    Material: "",
+  })
+
+  const [activityValues, setActivityValues] = useState({
+    Actividades: "",
+    Exámenes: "",
+    Material: "",
+  })
+
+  const [validationErrors, setValidationErrors] = useState({
+    Actividades: "",
+    Exámenes: "",
+    Material: "",
+  })
+
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
   const [showEvaluationModal, setShowEvaluationModal] = useState(false)
@@ -28,20 +45,48 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
   const [showSupportMaterialModal, setShowSupportMaterialModal] = useState(false)
   const [showMaterialDetailModal, setShowMaterialDetailModal] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
-  const [validationError, setValidationError] = useState("")
 
-  // Estados para mensajes de éxito
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const { evaluations, refetch } = useGetEvaluations()
+  const { evaluations, refetch: refetchEvaluations } = useGetEvaluations()
   const { createEvaluation } = usePostEvaluation()
-  const { materials } = useSupportMaterials()
 
   const currentLevel = levels.find((level) => level.id === levelId)
   const currentTheme = currentLevel?.themes.find((theme) => theme.id === themeId)
 
-  // Funciones para obtener elementos ya utilizados en la programación
+  const getCurrentSelectedActivity = () => {
+    const selected = selectedActivities[localActiveTab] || ""
+    // ✅ Si es un objeto, devolver el valor, si no, devolver tal como está
+    if (typeof selected === "object" && selected.value) {
+      return selected.value
+    }
+    return selected
+  }
+  const getCurrentActivityValue = () => activityValues[localActiveTab] || ""
+  const getCurrentValidationError = () => validationErrors[localActiveTab] || ""
+
+  const setCurrentSelectedActivity = (value) => {
+    setSelectedActivities((prev) => ({
+      ...prev,
+      [localActiveTab]: value,
+    }))
+  }
+
+  const setCurrentActivityValue = (value) => {
+    setActivityValues((prev) => ({
+      ...prev,
+      [localActiveTab]: value,
+    }))
+  }
+
+  const setCurrentValidationError = (error) => {
+    setValidationErrors((prev) => ({
+      ...prev,
+      [localActiveTab]: error,
+    }))
+  }
+
   const getUsedEvaluationIds = (type) => {
     const usedIds = new Set()
 
@@ -74,7 +119,6 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     return usedIds
   }
 
-  // Filtrar opciones para excluir elementos ya utilizados
   const getAvailableOptions = (type, currentActivityId = null) => {
     let baseOptions = []
     let usedIds = new Set()
@@ -83,7 +127,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       case "Actividades":
         baseOptions =
           evaluations
-            ?.filter((e) => e.tipoEvaluacion === "Actividad")
+            ?.filter((e) => e.tipoEvaluacion === "Actividad" && e.estado === "Activo")
             .map((e) => ({
               value: e._id,
               label: e.nombre,
@@ -95,7 +139,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       case "Exámenes":
         baseOptions =
           evaluations
-            ?.filter((e) => e.tipoEvaluacion === "Examen")
+            ?.filter((e) => e.tipoEvaluacion === "Examen" && e.estado === "Activo")
             .map((e) => ({
               value: e._id,
               label: e.nombre,
@@ -106,11 +150,13 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
 
       case "Material":
         baseOptions =
-          materials?.map((m) => ({
-            value: m._id,
-            label: m.titulo,
-            customData: m,
-          })) || []
+          materials
+            ?.filter((m) => m.estado === "activo")
+            .map((m) => ({
+              value: m._id,
+              label: m.titulo,
+              customData: m,
+            })) || []
         usedIds = getUsedMaterialIds()
         break
 
@@ -119,58 +165,61 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     }
 
     return baseOptions.filter((option) => {
-      // Permitir la opción actual (para no deshabilitarla cuando está seleccionada)
       const isCurrentSelection = currentActivityId === option.value
       return isCurrentSelection || !usedIds.has(option.value)
     })
   }
 
-  // Obtener actividades y exámenes del backend (ahora filtradas)
   const activityOptions = getAvailableOptions("Actividades")
   const examOptions = getAvailableOptions("Exámenes")
   const materialOptions = getAvailableOptions("Material")
 
   const addNewActivity = () => {
-    // Limpiar errores previos
-    setValidationError("")
+    const currentValue = getCurrentActivityValue()
+    const currentSelected = getCurrentSelectedActivity()
 
-    // Validación para total que supere 100%
+    setCurrentValidationError("")
+
     if (localActiveTab !== "Material" && wouldExceed100) {
-      setValidationError(`El valor ingresado haría que el total sea ${totalValue}%, superando el límite de 100%`)
+      setCurrentValidationError(`El valor ingresado haría que el total sea ${totalValue}%, superando el límite de 100%`)
       return
     }
 
-    // Validación para valor vacío o cero
-    if (localActiveTab !== "Material" && (!activityValue || activityValue.trim() === "")) {
-      setValidationError("Este campo es requerido")
+    if (localActiveTab !== "Material" && (!currentValue || currentValue.trim() === "")) {
+      setCurrentValidationError("Este campo es requerido")
       return
     }
 
-    // Validación para valores mayores a 100
-    if (localActiveTab !== "Material" && Number(activityValue) > 100) {
-      setValidationError("El valor no puede ser mayor a 100%")
+    if (localActiveTab !== "Material" && Number(currentValue) > 100) {
+      setCurrentValidationError("El valor no puede ser mayor a 100%")
       return
     }
 
-    // Validación para valores menores o iguales a 0
-    if (localActiveTab !== "Material" && Number(activityValue) <= 0) {
-      setValidationError("El valor debe ser mayor a 0")
+    if (localActiveTab !== "Material" && Number(currentValue) <= 0) {
+      setCurrentValidationError("El valor debe ser mayor a 0")
       return
     }
 
-    if (localActiveTab !== "Material" && (!selectedActivity || !activityValue || Number(activityValue) <= 0)) return
-    if (localActiveTab === "Material" && !selectedActivity) return
+    if (localActiveTab !== "Material" && (!currentSelected || !currentValue || Number(currentValue) <= 0)) return
+    if (localActiveTab === "Material" && !currentSelected) return
 
     const options = getOptionsForActiveTab()
-    const selectedOption = options.find((opt) => opt.value === selectedActivity)
+
+    // ✅ Manejar tanto objetos {value, label} como strings
+    let selectedOptionValue = currentSelected
+    if (typeof currentSelected === "object" && currentSelected.value) {
+      selectedOptionValue = currentSelected.value
+    }
+
+    const selectedOption = options.find((opt) => opt.value === selectedOptionValue)
 
     const newActivity = {
       id: `activity-${Date.now()}`,
-      evaluationId: selectedOption.value,
-      name: selectedOption.label,
-      value: localActiveTab === "Material" ? "N/A" : `${activityValue}%`,
+      evaluationId: selectedOptionValue, // ✅ Usar selectedOptionValue en lugar de selectedOption.value
+      name: selectedOption ? selectedOption.label : "Sin nombre",
+      value: localActiveTab === "Material" ? "N/A" : `${currentValue}%`,
       type: localActiveTab,
-      evaluationData: selectedOption.customData,
+      evaluationData: selectedOption ? selectedOption.customData : null,
     }
 
     setLevels(
@@ -178,7 +227,10 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         if (level.id === levelId) {
           const updatedThemes = level.themes.map((theme) => {
             if (theme.id === themeId) {
-              return { ...theme, activities: [...(theme.activities || []), newActivity] }
+              return {
+                ...theme,
+                activities: [...(theme.activities || []), newActivity],
+              }
             }
             return theme
           })
@@ -188,9 +240,9 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       }),
     )
 
-    setSelectedActivity("")
+    setCurrentSelectedActivity("")
     if (localActiveTab !== "Material") {
-      setActivityValue("")
+      setCurrentActivityValue("")
     }
   }
 
@@ -241,20 +293,17 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       return isNaN(value) ? total : total + value
     }, 0)
 
-    // Agregar el valor que se está escribiendo
-    const inputValue = Number(activityValue) || 0
+    const inputValue = Number(getCurrentActivityValue()) || 0
     return currentTotal + inputValue
   }
 
   const checkThemeExceeds100 = () => {
-    // Verificar actividades
     const activities = (currentTheme?.activities || []).filter((a) => a.type === "Actividades")
     const actSum = activities.reduce((sum, a) => {
       const value = Number.parseInt(a.value?.replace("%", "") || 0)
       return sum + value
     }, 0)
 
-    // Verificar exámenes
     const exams = (currentTheme?.activities || []).filter((a) => a.type === "Exámenes")
     const examSum = exams.reduce((sum, e) => {
       const value = Number.parseInt(e.value?.replace("%", "") || 0)
@@ -268,7 +317,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
 
   const totalValue = useMemo(() => {
     return calculateTotalValue()
-  }, [levels, levelId, themeId, localActiveTab, activityValue])
+  }, [levels, levelId, themeId, localActiveTab, getCurrentActivityValue()])
 
   const isValueValid = localActiveTab === "Material" || totalValue === 100
   const wouldExceed100 = localActiveTab !== "Material" && totalValue > 100
@@ -281,31 +330,28 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     setCurrentPage(pageNumber)
   }
 
+  // ✅ MEJORA: Función para crear evaluaciones con tipo específico
   const handleCreateEvaluation = (type) => {
     if (type === "Material") {
       setShowSupportMaterialModal(true)
       return
     }
 
-    setEvaluationType(type)
+    // ✅ Establecer el tipo específico (Actividad o Examen)
+    setEvaluationType(type === "Actividades" ? "Actividad" : "Examen")
     setShowEvaluationModal(true)
   }
 
   const handleEvaluationSubmit = async (formData) => {
     try {
-      // Crear la evaluación usando el hook
       await createEvaluation(formData)
-
-      // Actualizar la lista de evaluaciones
-      await refetch()
-
-      // Cerrar el modal
+      await refetchEvaluations()
       setShowEvaluationModal(false)
 
-      // Mostrar mensaje de éxito
-      setSuccessMessage(
-        `${evaluationType} "${formData.get ? formData.get("nombre") : "Evaluación"}" creada exitosamente`,
-      )
+      // ✅ Mensaje de éxito más específico
+      const typeName = evaluationType === "Actividad" ? "Actividad" : "Examen"
+      const evaluationName = formData.get("nombre") || typeName
+      setSuccessMessage(`${typeName} "${evaluationName}" creada exitosamente`)
       setShowSuccessModal(true)
     } catch (error) {
       console.error("Error al crear la evaluación:", error)
@@ -314,36 +360,18 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
     }
   }
 
-  const handleSupportMaterialSubmit = (materialData) => {
-    const newMaterial = {
-      ...materialData,
-      _id: `mat-${Date.now()}`,
+  const handleSaveNewMaterial = async (materialData) => {
+    try {
+      await createMaterial(materialData)
+      await refetchMaterials()
+      setShowSupportMaterialModal(false)
+      setSuccessMessage("Material de Apoyo creado exitosamente")
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error("Error al añadir el material:", error)
+      setSuccessMessage(error.message || "Ocurrió un error al crear el material de apoyo")
+      setShowSuccessModal(true)
     }
-
-    const newActivity = {
-      id: newMaterial._id,
-      name: newMaterial.nombre,
-      value: "N/A",
-      type: "Material",
-      evaluationData: newMaterial,
-    }
-
-    setLevels(
-      levels.map((level) => {
-        if (level.id === levelId) {
-          const updatedThemes = level.themes.map((theme) => {
-            if (theme.id === themeId) {
-              return { ...theme, activities: [...(theme.activities || []), newActivity] }
-            }
-            return theme
-          })
-          return { ...level, themes: updatedThemes }
-        }
-        return level
-      }),
-    )
-
-    setShowSupportMaterialModal(false)
   }
 
   const handleViewDetail = (activity) => {
@@ -358,20 +386,21 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
 
   if (!currentTheme) return null
 
-  // Obtener opciones disponibles para mostrar advertencias
   const availableOptions = getOptionsForActiveTab()
+  const currentValue = getCurrentActivityValue()
+  const currentSelected = getCurrentSelectedActivity()
+  const currentError = getCurrentValidationError()
 
   const handleValueChange = (e) => {
     const value = e.target.value
-    setActivityValue(value)
+    setCurrentActivityValue(value)
 
-    // Validar en tiempo real
     if (value && Number(value) > 100) {
-      setValidationError("El valor no puede ser mayor a 100%")
+      setCurrentValidationError("El valor no puede ser mayor a 100%")
     } else if (value && Number(value) <= 0) {
-      setValidationError("El valor debe ser mayor a 0")
+      setCurrentValidationError("El valor debe ser mayor a 0")
     } else {
-      setValidationError("")
+      setCurrentValidationError("")
     }
   }
 
@@ -380,22 +409,25 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
       <div className="border rounded-md">
         <div className="flex border-b">
           <button
-            className={`px-6 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-              }`}
+            className={`px-6 py-2 block text-sm font-medium text-gray-700 ${
+              localActiveTab === "Actividades" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+            }`}
             onClick={() => setLocalActiveTab("Actividades")}
           >
             Actividades
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-              }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
+              localActiveTab === "Exámenes" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+            }`}
             onClick={() => setLocalActiveTab("Exámenes")}
           >
             Exámenes
           </button>
           <button
-            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
-              }`}
+            className={`px-4 py-2 block text-sm font-medium text-gray-700 ${
+              localActiveTab === "Material" ? "bg-blue-50 border-b-2 border-blue-500" : ""
+            }`}
             onClick={() => setLocalActiveTab("Material")}
           >
             Material de Apoyo
@@ -416,7 +448,6 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
               </div>
             )}
 
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className={localActiveTab === "Material" ? "col-span-3" : "col-span-2"}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -424,15 +455,17 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                   <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
-                  placeholder={`Seleccionar ${localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
-                    }`}
+                  placeholder={`Seleccionar ${
+                    localActiveTab === "Material" ? "material" : localActiveTab === "Exámenes" ? "examen" : "actividad"
+                  }`}
                   options={availableOptions}
-                  value={selectedActivity}
-                  onChange={setSelectedActivity}
+                  value={currentSelected}
+                  onChange={setCurrentSelectedActivity}
                 />
                 {availableOptions.length === 0 && (
                   <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ Todos los {localActiveTab.toLowerCase()} disponibles ya han sido utilizados en esta programación
+                    ⚠️ Todos los {localActiveTab.toLowerCase()} activos disponibles ya han sido utilizados en esta
+                    programación
                   </p>
                 )}
               </div>
@@ -446,14 +479,15 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                       type="number"
                       min="1"
                       max="100"
-                      className={`w-full rounded-l-md border px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${validationError ? "border-red-300" : "border-gray-300"
-                        }`}
-                      value={activityValue}
+                      className={`w-full rounded-l-md border px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                        currentError ? "border-red-300" : "border-gray-300"
+                      }`}
+                      value={currentValue}
                       onChange={handleValueChange}
                     />
                     <span className="bg-gray-100 border border-l-0 border-gray-300 px-2 py-1.5 rounded-r-md">%</span>
                   </div>
-                  {validationError && <p className="text-xs text-red-600 mt-1">{validationError}</p>}
+                  {currentError && <p className="text-xs text-red-600 mt-1">{currentError}</p>}
                 </div>
               )}
             </div>
@@ -461,11 +495,7 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
             <div className="flex space-x-2 mb-4">
               <button
                 className="px-3 py-2 bg-green-500 hover:bg-green-600 text-sm text-white rounded-md flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
-                onClick={() =>
-                  handleCreateEvaluation(
-                    localActiveTab === "Material" ? "Material" : localActiveTab === "Exámenes" ? "Examen" : "Actividad",
-                  )
-                }
+                onClick={() => handleCreateEvaluation(localActiveTab)}
                 disabled={localActiveTab === "Material" && themeExceeds100}
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -479,9 +509,9 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
                 onClick={addNewActivity}
                 disabled={
                   availableOptions.length === 0 ||
-                  !selectedActivity ||
+                  !currentSelected ||
                   (localActiveTab === "Material" && themeExceeds100) ||
-                  (localActiveTab !== "Material" && (wouldExceed100 || !activityValue || Number(activityValue) <= 0))
+                  (localActiveTab !== "Material" && (wouldExceed100 || !currentValue || Number(currentValue) <= 0))
                 }
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -586,11 +616,13 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         </div>
       </div>
 
+      {/* ✅ MEJORA: Pasar el tipo de evaluación al modal */}
       <EvaluationModal
         isOpen={showEvaluationModal}
         onClose={() => setShowEvaluationModal(false)}
         onSubmit={handleEvaluationSubmit}
-        evaluation={evaluationType === "Examen" ? { tipoEvaluacion: "Examen" } : { tipoEvaluacion: "Actividad" }}
+        evaluation={null}
+        evaluationType={evaluationType} // ✅ Pasar el tipo específico
       />
 
       <EvaluationDetailModal
@@ -599,24 +631,18 @@ export default function ActivitiesSection({ levelId, themeId, localActiveTab, se
         evaluation={selectedDetail}
       />
 
-      <SupportMaterialModal
+      <CreateSupportMaterialModal
         isOpen={showSupportMaterialModal}
         onClose={() => setShowSupportMaterialModal(false)}
-        onSubmit={handleSupportMaterialSubmit}
+        onSubmit={handleSaveNewMaterial}
       />
 
-      {/* Modal de detalle del material */}
-      {showMaterialDetailModal && selectedMaterial && (
-        <MaterialDetail
-          material={selectedMaterial}
-          onClose={() => {
-            setShowMaterialDetailModal(false)
-            setSelectedMaterial(null)
-          }}
-        />
-      )}
+      <SupportMaterialDetailModal
+        isOpen={showMaterialDetailModal}
+        onClose={() => setShowMaterialDetailModal(false)}
+        material={selectedMaterial}
+      />
 
-      {/* Modal de confirmación de éxito */}
       <ConfirmationModal
         isOpen={showSuccessModal}
         onConfirm={() => setShowSuccessModal(false)}

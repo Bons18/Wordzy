@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { format, parseISO } from "date-fns"
 import ConfirmationModal from "../../../../shared/components/ConfirmationModal"
 import LevelsList from "./levels-list"
 import CustomSelect from "./ui/custom-select"
@@ -19,7 +18,7 @@ export default function CourseProgrammingForm() {
   const { id } = useParams()
   const { programming } = useGetCourseProgrammingById(id)
   const { programs } = useGetPrograms()
-  const { topics } = useGetTopics() // ✅ Agregar hook para obtener topics
+  const { topics } = useGetTopics()
   const { postCourseProgramming, loading: postLoading, error: postError } = usePostCourseProgramming()
   const { putCourseProgramming, loading: putLoading, error: putError } = usePutCourseProgramming()
   const { programmings } = useGetCourseProgrammings()
@@ -27,7 +26,13 @@ export default function CourseProgrammingForm() {
   const [selectedProgram, setSelectedProgram] = useState("")
   const [levels, setLevels] = useState([])
   const [activeStatus, setActiveStatus] = useState(true)
-  const [startDate, setStartDate] = useState("")
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, "0")
+    const day = String(today.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+  })
   const [endDate, setEndDate] = useState("")
   const [isFormDirty, setIsFormDirty] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
@@ -42,9 +47,26 @@ export default function CourseProgrammingForm() {
   useEffect(() => {
     if (id && programming) {
       setIsEditMode(true)
-      setSelectedProgram(programming.programId._id)
-      setStartDate(format(parseISO(programming.startDate), "yyyy-MM-dd"))
-      setEndDate(programming.endDate ? format(parseISO(programming.endDate), "yyyy-MM-dd") : "")
+
+      setSelectedProgram({
+        value: programming.programId._id,
+        label: programming.programId.name,
+      })
+
+      // ✅ Formatear fechas correctamente desde la base de datos
+      const formatDateFromDB = (dateString) => {
+        if (!dateString) return ""
+
+        // Crear fecha desde el string de la BD y extraer solo la parte de fecha
+        const date = new Date(dateString)
+        const year = date.getUTCFullYear()
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0")
+        const day = String(date.getUTCDate()).padStart(2, "0")
+        return `${year}-${month}-${day}`
+      }
+
+      setStartDate(formatDateFromDB(programming.startDate))
+      setEndDate(formatDateFromDB(programming.endDate))
       setActiveStatus(programming.status)
 
       const transformedLevels = (programming.levels || []).map((level) => ({
@@ -53,7 +75,13 @@ export default function CourseProgrammingForm() {
         name: level.name,
         expanded: false,
         themes: (level.topics || []).map((topic) => {
-          const selectedOption = topic.topicId ? { value: topic.topicId._id, label: topic.topicId.name } : null
+          let selectedOption = null
+          if (topic.topicId) {
+            selectedOption = {
+              value: topic.topicId,
+              label: topic.name,
+            }
+          }
 
           return {
             _id: topic._id,
@@ -95,41 +123,39 @@ export default function CourseProgrammingForm() {
     }
   }, [id, programming])
 
-  // ✅ Función mejorada para obtener el nombre del tema
   const getTopicNameById = (topicId) => {
     if (!topics || !topicId) return "Sin nombre"
-
     const topic = topics.find((t) => t._id === topicId)
     return topic ? topic.name : "Sin nombre"
   }
 
-  // ✅ Función mejorada para extraer el nombre del tema
-  const getThemeDisplayName = (theme) => {
-    if (!theme.selectedTheme) return "Sin nombre"
-
-    // Si selectedTheme es un objeto con label
-    if (typeof theme.selectedTheme === "object" && theme.selectedTheme.label) {
-      return theme.selectedTheme.label
+  const getSelectedProgramValue = () => {
+    if (!selectedProgram) return null
+    if (typeof selectedProgram === "object" && selectedProgram.value) {
+      return selectedProgram.value
     }
-
-    // Si selectedTheme es un string (ID), buscar en topics
-    if (typeof theme.selectedTheme === "string") {
-      return getTopicNameById(theme.selectedTheme)
+    if (typeof selectedProgram === "string") {
+      return selectedProgram
     }
-
-    // Si selectedTheme tiene value, buscar por value
-    if (theme.selectedTheme.value) {
-      return getTopicNameById(theme.selectedTheme.value)
-    }
-
-    return "Sin nombre"
+    return null
   }
 
   const transformDataForBackend = () => {
-    return {
-      programId: selectedProgram,
-      startDate: new Date(startDate).toISOString(),
-      endDate: endDate ? new Date(endDate).toISOString() : null,
+    // ✅ Nueva función para manejar fechas correctamente
+    const formatDateForBackend = (dateString) => {
+      if (!dateString) return null
+
+      // Parsear la fecha como YYYY-MM-DD y crear una fecha en UTC a las 12:00 PM
+      // Esto evita problemas de zona horaria
+      const [year, month, day] = dateString.split("-")
+      const date = new Date(Date.UTC(Number.parseInt(year), Number.parseInt(month) - 1, Number.parseInt(day), 12, 0, 0))
+      return date.toISOString()
+    }
+
+    const data = {
+      programId: getSelectedProgramValue(),
+      startDate: formatDateForBackend(startDate),
+      endDate: formatDateForBackend(endDate),
       status: activeStatus,
       levels: levels.map((level, index) => ({
         name: level.name && level.name.trim() !== "" ? level.name : `Nivel ${index + 1}`,
@@ -138,7 +164,6 @@ export default function CourseProgrammingForm() {
           const exams = theme.activities?.filter((a) => a.type === "Exámenes") || []
           const materials = theme.activities?.filter((a) => a.type === "Material") || []
 
-          // ✅ Lógica mejorada para obtener topicId y name
           let topicId = null
           let topicName = "Sin nombre"
 
@@ -154,7 +179,7 @@ export default function CourseProgrammingForm() {
 
           return {
             topicId: topicId,
-            name: topicName, // ✅ Ahora se obtiene correctamente el nombre
+            name: topicName,
             value: theme.progress || 0,
             activities: activities.map((a) => ({
               evaluationId: a.evaluationData._id,
@@ -171,26 +196,27 @@ export default function CourseProgrammingForm() {
         }),
       })),
     }
+
+    console.log("🟢 Fechas enviadas al backend:")
+    console.log("startDate:", data.startDate)
+    console.log("endDate:", data.endDate)
+
+    return data
   }
 
   const getAvailableProgramsForSelect = () => {
     if (!programs || !programmings) return []
 
-    // Obtener IDs de programas que ya tienen programación activa
     const programsWithActiveProgramming = new Set(
-      programmings
-        .filter((prog) => prog.status === true) // Solo programaciones activas
-        .map((prog) => prog.programId._id || prog.programId),
+      programmings.filter((prog) => prog.status === true).map((prog) => prog.programId._id || prog.programId),
     )
 
-    // Filtrar programas disponibles
     return programs
       .filter((program) => {
-        // En modo edición, permitir el programa actual aunque tenga programación activa
+        const selectedProgramId = getSelectedProgramValue()
         if (isEditMode && programming && program._id === programming.programId._id) {
           return true
         }
-        // Para nuevas programaciones, excluir programas con programación activa
         return !programsWithActiveProgramming.has(program._id)
       })
       .map((program) => ({
@@ -201,43 +227,38 @@ export default function CourseProgrammingForm() {
 
   const validateForm = () => {
     const errors = []
-
-    // Validaciones básicas
-    if (!selectedProgram) {
+    const selectedProgramId = getSelectedProgramValue()
+    if (!selectedProgramId) {
       errors.push("Debe seleccionar un programa")
     }
-
     if (!startDate) {
       errors.push("Debe ingresar una fecha de inicio")
     }
-
-    // Validar que existan al menos 3 niveles
     if (levels.length < 3) {
       errors.push("Debe añadir al menos tres niveles")
     }
 
-    // Validar solo el primer nivel
+    if (levels.length > 6) {
+      errors.push("No se pueden crear más de 6 niveles")
+    }
+
     if (levels.length > 0) {
       const firstLevel = levels[0]
       const firstLevelName = firstLevel.name || "Nivel 1"
 
-      // 1. Validar que tenga al menos un tema
       if (!firstLevel.themes || firstLevel.themes.length === 0) {
         errors.push(`${firstLevelName} debe tener al menos un tema`)
       } else {
-        // 2. Validar que la suma de valores de los temas sea 100%
         const themeSum = firstLevel.themes.reduce((sum, theme) => sum + (theme.progress || 0), 0)
         if (themeSum !== 100) {
           errors.push(`La suma de valores de los temas en ${firstLevelName} debe ser 100% (actual: ${themeSum}%)`)
         }
 
-        // 3. Validar actividades, exámenes y materiales por tema
         firstLevel.themes.forEach((theme, themeIndex) => {
           const activities = (theme.activities || []).filter((a) => a.type === "Actividades")
           const exams = (theme.activities || []).filter((a) => a.type === "Exámenes")
           const materials = (theme.activities || []).filter((a) => a.type === "Material")
 
-          // Actividades
           if (activities.length === 0) {
             errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos una actividad`)
           } else {
@@ -250,22 +271,8 @@ export default function CourseProgrammingForm() {
                 `Las actividades del tema ${themeIndex + 1} (${firstLevelName}) suman ${actSum}% (deben sumar 100%)`,
               )
             }
-
-            activities.forEach((a, i) => {
-              if (!a.evaluationId) {
-                errors.push(
-                  `La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`,
-                )
-              }
-              if (a.value == null || a.value === "") {
-                errors.push(
-                  `La actividad ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`,
-                )
-              }
-            })
           }
 
-          // Exámenes
           if (exams.length === 0) {
             errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos un examen`)
           } else {
@@ -278,20 +285,8 @@ export default function CourseProgrammingForm() {
                 `Los exámenes del tema ${themeIndex + 1} (${firstLevelName}) suman ${examSum}% (deben sumar 100%)`,
               )
             }
-
-            exams.forEach((e, i) => {
-              if (!e.evaluationId) {
-                errors.push(`El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un ID válido`)
-              }
-              if (e.value == null || e.value === "") {
-                errors.push(
-                  `El examen ${i + 1} del tema ${themeIndex + 1} (${firstLevelName}) no tiene un valor asignado`,
-                )
-              }
-            })
           }
 
-          // Materiales de apoyo
           if (materials.length === 0) {
             errors.push(`El tema ${themeIndex + 1} del ${firstLevelName} necesita al menos un material de apoyo`)
           }
@@ -334,6 +329,10 @@ export default function CourseProgrammingForm() {
   }
 
   const addLevel = () => {
+    if (levels.length >= 6) {
+      return // No permitir más de 6 niveles
+    }
+
     const newLevel = {
       id: `level-${Date.now()}`,
       name: "",
@@ -360,11 +359,16 @@ export default function CourseProgrammingForm() {
     navigate("/programacion/programacionCursos")
   }
 
+  const handleProgramChange = (option) => {
+    setSelectedProgram(option)
+    setIsFormDirty(true)
+  }
+
   return (
     <div className="max-w-10xl mx-auto p-7 bg-white rounded-lg shadow">
       <header className="mb-6">
         <h1 className="text-xl font-bold text-[#1f384c] mb-4">
-          {isEditMode ? "EDITAR PROGRAMACIÓN" : "Añadir Programción"}
+          {isEditMode ? "EDITAR PROGRAMACIÓN" : "Añadir Programación"}
         </h1>
       </header>
 
@@ -377,7 +381,7 @@ export default function CourseProgrammingForm() {
             placeholder="Selecciona un Programa"
             options={getAvailableProgramsForSelect()}
             value={selectedProgram}
-            onChange={setSelectedProgram}
+            onChange={handleProgramChange}
           />
           {getAvailableProgramsForSelect().length === 0 && !isEditMode && (
             <p className="text-xs text-amber-600 mt-1">
@@ -395,7 +399,11 @@ export default function CourseProgrammingForm() {
               type="date"
               className="w-full px-2 py-1 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                console.log("📅 Fecha seleccionada:", e.target.value)
+                setStartDate(e.target.value)
+                setIsFormDirty(true)
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -404,13 +412,23 @@ export default function CourseProgrammingForm() {
               type="date"
               className="w-full px-2 py-1 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                console.log("📅 Fecha fin seleccionada:", e.target.value)
+                setEndDate(e.target.value)
+                setIsFormDirty(true)
+              }}
             />
           </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
             <div className="flex items-center pt-2">
-              <ToggleSwitch checked={activeStatus} onChange={setActiveStatus} />
+              <ToggleSwitch
+                checked={activeStatus}
+                onChange={(checked) => {
+                  setActiveStatus(checked)
+                  setIsFormDirty(true)
+                }}
+              />
             </div>
           </div>
         </div>
@@ -419,17 +437,28 @@ export default function CourseProgrammingForm() {
           <button
             onClick={addLevel}
             className="flex items-center px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md"
-            disabled={postLoading || putLoading}
+            disabled={postLoading || putLoading || levels.length >= 6}
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             Añadir Nivel
           </button>
-          <div className="text-sm text-gray-500">{levels.length} de 3 niveles mínimos requeridos</div>
+          <div className="text-sm text-gray-500">
+            {levels.length} de 6 niveles máximos (
+            {levels.length < 3 ? `faltan ${3 - levels.length} mínimos` : "mínimo cumplido"})
+          </div>
         </div>
 
-        <LevelsList levels={levels} setLevels={setLevels} activeTabs={activeTabs} setActiveTabs={setActiveTabs} />
+        <LevelsList
+          levels={levels}
+          setLevels={(newLevels) => {
+            setLevels(newLevels)
+            setIsFormDirty(true)
+          }}
+          activeTabs={activeTabs}
+          setActiveTabs={setActiveTabs}
+        />
 
         <div className="bg-white py-4 mt-8 flex justify-between">
           <button

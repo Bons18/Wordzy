@@ -65,25 +65,24 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   }
 
   const addThemeWithTopic = (levelId, topicOption) => {
-  setLevels(
-    levels.map((level) => {
-      if (level.id === levelId) {
-        const newTheme = {
-          id: `theme-${Date.now()}`,
-          name: "",
-          selectedTheme: topicOption, // ✅ aquí sí guardas { value, label }
-          expanded: true,
-          progress: 0,
-          activities: [],
-          showActivities: false,
+    setLevels(
+      levels.map((level) => {
+        if (level.id === levelId) {
+          const newTheme = {
+            id: `theme-${Date.now()}`,
+            name: "",
+            selectedTheme: topicOption, // ✅ aquí sí guardas { value, label }
+            expanded: true,
+            progress: 0,
+            activities: [],
+            showActivities: false,
+          }
+          return { ...level, themes: [...level.themes, newTheme] }
         }
-        return { ...level, themes: [...level.themes, newTheme] }
-      }
-      return level
-    }),
-  )
-}
-
+        return level
+      }),
+    )
+  }
 
   const deleteLevel = (levelId) => {
     setLevels(levels.filter((level) => level.id !== levelId))
@@ -97,7 +96,7 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
   const getExistingTopics = () => {
     return (
       topics?.map((topic) => ({
-        nombre: topic.name
+        nombre: topic.name,
       })) || []
     )
   }
@@ -121,13 +120,15 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
     return usedIds
   }
 
-  // Función para obtener TODOS los temas (no filtrados) - necesarios para el display
+  // Función para obtener TODOS los temas activos (no filtrados) - necesarios para el display
   const getAllTopicsForDisplay = () => {
     return (
-      topics?.map((topic) => ({
-        value: topic._id,
-        label: topic.name, // Usar topic.name que es el nombre real
-      })) || []
+      topics
+        ?.filter((topic) => topic.status === true) // ✅ Filtrar solo temas activos
+        .map((topic) => ({
+          value: topic._id,
+          label: topic.name,
+        })) || []
     )
   }
 
@@ -137,10 +138,10 @@ export default function LevelsList({ levels, setLevels, activeTabs, setActiveTab
 
     return (
       topics
-        ?.filter((topic) => !usedIds.has(topic._id))
+        ?.filter((topic) => topic.status === true && !usedIds.has(topic._id)) // ✅ Filtrar solo temas activos
         .map((topic) => ({
           value: topic._id,
-          label: topic.name, // Usar topic.name que es el nombre real
+          label: topic.name,
         })) || []
     )
   }

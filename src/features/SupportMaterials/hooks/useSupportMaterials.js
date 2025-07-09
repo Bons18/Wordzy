@@ -1,89 +1,82 @@
-
-import { useState, useEffect } from "react"
-import  supportMaterialService  from "../services/supportMaterialService"
+import { useState, useEffect } from "react";
+import supportMaterialService from "../services/supportMaterialService";
 
 const useSupportMaterials = () => {
-  const [materials, setMaterials] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [materials, setMaterials] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchMaterials = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await supportMaterialService.getAllMaterials();
+      if (data && data.materials) {
+        setMaterials(data.materials);
+      } else if (Array.isArray(data)) {
+        setMaterials(data);
+      } else {
+        setMaterials([]);
+      }
+    } catch (error) {
+      console.error("Error fetching materials:", error);
+      setError(error.message || "Failed to fetch materials");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMaterials = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await supportMaterialService.getAllMaterials()
-        // Si la respuesta tiene estructura con materials y pagination
-        if (data && data.materials) {
-          setMaterials(data.materials)
-        } else if (Array.isArray(data)) {
-          setMaterials(data)
-        } else {
-          setMaterials([])
-        }
-      } catch (error) {
-        console.error("Error fetching materials:", error)
-        setError(error.message || "Failed to fetch materials")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMaterials()
-  }, [])
+    fetchMaterials();
+  }, []);
 
   const createMaterial = async (materialData) => {
     try {
-      setLoading(true)
-      setError(null)
-      const newMaterial = await supportMaterialService.createMaterial(materialData)
-      setMaterials((prevMaterials) => [...prevMaterials, newMaterial])
-      return newMaterial // Return the newly created material
+      setLoading(true);
+      setError(null);
+      const newMaterial = await supportMaterialService.createMaterial(materialData);
+      setMaterials((prevMaterials) => [...prevMaterials, newMaterial]);
+      return newMaterial;
     } catch (error) {
-      console.error("Error creating material:", error)
-      setError(error.message || "Failed to create material")
-      throw error // Re-throw the error to be handled by the component
+      console.error("Error creating material:", error);
+      setError(error.message || "Failed to create material");
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateMaterial = async (id, materialData) => {
     try {
-      setLoading(true)
-      setError(null)
-      const updatedMaterial = await supportMaterialService.updateMaterial(id, materialData)
+      setLoading(true);
+      setError(null);
+      const updatedMaterial = await supportMaterialService.updateMaterial(id, materialData);
       setMaterials((prevMaterials) =>
         prevMaterials.map((material) => (material._id === id ? updatedMaterial : material)),
-      )
+      );
     } catch (error) {
-      console.error("Error updating material:", error)
-      setError(error.message || "Failed to update material")
+      console.error("Error updating material:", error);
+      setError(error.message || "Failed to update material");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const deleteMaterial = async (id) => {
     try {
-      setLoading(true)
-      setError(null)
-
-      // Llamar al servicio para eliminar de la base de datos
-      await supportMaterialService.deleteMaterial(id)
-
-      // Actualizar el estado local removiendo el material eliminado
-      setMaterials((prevMaterials) => prevMaterials.filter((material) => material._id !== id))
-
-      console.log("Material eliminado exitosamente de la base de datos")
+      setLoading(true);
+      setError(null);
+      await supportMaterialService.deleteMaterial(id);
+      setMaterials((prevMaterials) => prevMaterials.filter((material) => material._id !== id));
+      console.log("Material eliminado exitosamente de la base de datos");
     } catch (error) {
-      console.error("Error al eliminar material:", error)
-      setError(error.message || "Error al eliminar el material")
-      throw error
+      console.error("Error al eliminar material:", error);
+      setError(error.message || "Error al eliminar el material");
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return {
     materials,
@@ -92,9 +85,10 @@ const useSupportMaterials = () => {
     createMaterial,
     updateMaterial,
     deleteMaterial,
-    setMaterials, // Expose setMaterials for potential external updates
+    refetch: fetchMaterials, 
+    setMaterials,
     setError,
-  }
-}
+  };
+};
 
-export default useSupportMaterials
+export default useSupportMaterials;

@@ -11,7 +11,6 @@ import Feedback from "./features/Feedback/pages/Feedback"
 import FeedbackDetails from "./features/Feedback/pages/FeedbackDetails"
 import StudentDetails from "./features/Feedback/pages/StudentDetails"
 import ScheduledCoursesPage from "./features/ScheduledCourses/pages/ScheduledCoursesPage"
-import Scale from "./features/Scale/pages/Scale"
 import Badges from "./features/Badges/pages/Badges"
 import Badges2 from "./features/Badges/pages/Badges2"
 import Badges3 from "./features/Badges/pages/Badges3"
@@ -161,14 +160,6 @@ const routes = [
     path: "/programacion/asignacionNiveles",
     element: <LevelAssignmentPage />
   }, 
-  {
-    path: "/programacion/escala",
-    element: (
-      <ProtectedRoute requiredRoute="/programacion/escala">
-        <Scale />
-      </ProtectedRoute>
-    ),
-  },
   {
     path: "/programacion/insigneas",
     element: (
