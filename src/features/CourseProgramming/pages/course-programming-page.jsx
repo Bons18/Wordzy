@@ -12,7 +12,8 @@ const columns = [
   {
     key: "programId",
     label: "Programa",
-    render: (item) => item.programId?.name || "Sin nombre"
+    render: (item) => item.programId?.name || "Sin nombre",
+    width: "40%",
   },
   { key: "startDate", label: "Fecha Inicio" },
   {

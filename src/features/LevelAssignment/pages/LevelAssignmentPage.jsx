@@ -6,17 +6,14 @@ import { useAuth } from "../../auth/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
-// Hooks personalizados
-import { useFichaSearch } from "../hooks/useFichaSearch"
+// Hooks actualizados con API
+import { useFichaSearchAPI } from "../hooks/useFichaSearchAPI"
 import { useRecentFichas } from "../hooks/useRecentFichas"
-import { useLevelManagement } from "../hooks/useLevelManagement"
+import { useLevelManagementAPI } from "../hooks/useLevelManagementAPI"
 
 // Componentes
 import SearchView from "../components/SearchView"
 import LevelsView from "../components/LevelsView"
-
-// Mock data
-import { MOCK_FICHAS } from "../utils/mockData"
 
 const LevelAssignmentPage = () => {
   const navigate = useNavigate()
@@ -36,16 +33,17 @@ const LevelAssignmentPage = () => {
   const [successMessage, setSuccessMessage] = useState("")
   const [pendingFichaChange, setPendingFichaChange] = useState(null)
 
-  // Hooks personalizados
+  // Hooks personalizados actualizados
   const {
     searchTerm,
     searchResults,
     showSearchResults,
     isLoading: isSearchLoading,
+    error: searchError,
     handleSearchInputChange,
     clearSearch,
     setShowSearchResults,
-  } = useFichaSearch()
+  } = useFichaSearchAPI()
 
   const { recentFichas, addRecentFicha, clearRecentFichas } = useRecentFichas()
 
@@ -54,11 +52,14 @@ const LevelAssignmentPage = () => {
     tempLevelStates,
     hasChanges,
     isSaving,
+    isLoading: isLevelsLoading,
+    error: levelsError,
+    fichaInfo,
     handleLevelToggle,
     handleQuickAction,
     saveLevels,
     resetChanges,
-  } = useLevelManagement(selectedFicha)
+  } = useLevelManagementAPI(selectedFicha)
 
   // Effect para cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -95,16 +96,10 @@ const LevelAssignmentPage = () => {
   }
 
   const proceedWithFichaChange = (ficha) => {
-    // Si la ficha viene de recientes, buscar los datos completos
-    let fullFicha = ficha
-    if (!ficha.programa || !ficha.instructor) {
-      fullFicha = MOCK_FICHAS.find((f) => f.id === ficha.id) || ficha
-    }
-
-    setSelectedFicha(fullFicha)
+    setSelectedFicha(ficha)
     setCurrentView("levels")
     clearSearch()
-    addRecentFicha(fullFicha)
+    addRecentFicha(ficha)
   }
 
   const handleSaveChanges = () => {
@@ -177,6 +172,15 @@ const LevelAssignmentPage = () => {
     <>
       {renderHeader()}
 
+      {/* Mostrar errores de búsqueda */}
+      {searchError && (
+        <div className="max-w-6xl mx-auto mb-4 px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600 text-sm">Error en búsqueda: {searchError}</p>
+          </div>
+        </div>
+      )}
+
       {currentView === "search" && (
         <SearchView
           searchTerm={searchTerm}
@@ -192,17 +196,40 @@ const LevelAssignmentPage = () => {
       )}
 
       {currentView === "levels" && selectedFicha && (
-        <LevelsView
-          selectedFicha={selectedFicha}
-          currentLevelStates={currentLevelStates}
-          tempLevelStates={tempLevelStates}
-          hasChanges={hasChanges}
-          onLevelToggle={handleLevelToggle}
-          onQuickAction={handleQuickAction}
-          onSaveChanges={handleSaveChanges}
-          onChangeFicha={handleChangeFicha}
-          isSaving={isSaving}
-        />
+        <>
+          {/* Mostrar errores de niveles */}
+          {levelsError && (
+            <div className="max-w-6xl mx-auto mb-4 px-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-600 text-sm">Error en niveles: {levelsError}</p>
+              </div>
+            </div>
+          )}
+
+          {isLevelsLoading ? (
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
+                  <p className="text-gray-600">Cargando niveles...</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <LevelsView
+              selectedFicha={selectedFicha}
+              currentLevelStates={currentLevelStates}
+              tempLevelStates={tempLevelStates}
+              hasChanges={hasChanges}
+              onLevelToggle={handleLevelToggle}
+              onQuickAction={handleQuickAction}
+              onSaveChanges={handleSaveChanges}
+              onChangeFicha={handleChangeFicha}
+              isSaving={isSaving}
+              fichaInfo={fichaInfo}
+            />
+          )}
+        </>
       )}
 
       {/* Modales */}

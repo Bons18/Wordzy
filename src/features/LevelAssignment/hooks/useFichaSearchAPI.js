@@ -1,16 +1,17 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { MOCK_FICHAS } from "../utils/mockData"
+import { fichaLevelAssignmentService } from "../services/fichaLevelAssignmentService"
 
-export const useFichaSearch = () => {
+export const useFichaSearchAPI = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
   const searchTimeoutRef = useRef(null)
 
-  const executeSearch = useCallback((value) => {
+  const executeSearch = useCallback(async (value) => {
     if (!value.trim()) {
       setSearchResults([])
       setShowSearchResults(false)
@@ -18,20 +19,20 @@ export const useFichaSearch = () => {
     }
 
     setIsLoading(true)
+    setError(null)
 
-    // Simular delay de búsqueda
-    setTimeout(() => {
-      const filtered = MOCK_FICHAS.filter(
-        (ficha) =>
-          ficha.codigo.toLowerCase().includes(value.toLowerCase()) ||
-          ficha.numero.includes(value) ||
-          ficha.instructor.toLowerCase().includes(value.toLowerCase()) ||
-          ficha.programa.toLowerCase().includes(value.toLowerCase()),
-      )
-      setSearchResults(filtered)
+    try {
+      const results = await fichaLevelAssignmentService.searchFichas(value)
+      setSearchResults(results || [])
       setShowSearchResults(true)
+    } catch (error) {
+      console.error("Error searching fichas:", error)
+      setError(error.message)
+      setSearchResults([])
+      setShowSearchResults(true)
+    } finally {
       setIsLoading(false)
-    }, 300)
+    }
   }, [])
 
   const handleSearchInputChange = useCallback(
@@ -48,6 +49,7 @@ export const useFichaSearch = () => {
         setSearchResults([])
         setShowSearchResults(false)
         setIsLoading(false)
+        setError(null)
         return
       }
 
@@ -64,6 +66,7 @@ export const useFichaSearch = () => {
     setSearchResults([])
     setShowSearchResults(false)
     setIsLoading(false)
+    setError(null)
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
@@ -74,6 +77,7 @@ export const useFichaSearch = () => {
     searchResults,
     showSearchResults,
     isLoading,
+    error,
     handleSearchInputChange,
     clearSearch,
     setShowSearchResults,
