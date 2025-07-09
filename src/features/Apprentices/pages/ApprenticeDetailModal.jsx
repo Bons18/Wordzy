@@ -1,21 +1,40 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { getApprenticeById } from "../services/apprenticeService"
 
-const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) => {
+const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
   const [apprenticeData, setApprenticeData] = useState(null)
   const [loading, setLoading] = useState(true)
   const modalRef = useRef(null)
 
   useEffect(() => {
-    if (apprentice) {
-      // Cargar datos del aprendiz
-      setApprenticeData(apprentice)
-      setLoading(false)
-    } else if (isOpen) {
-      // Si el modal está abierto pero no hay aprendiz, establecer loading en false
-      setLoading(false)
+    const fetchDetails = async () => {
+      if (apprentice?._id && isOpen) {
+        try {
+          setLoading(true)
+          console.log("🔍 Cargando detalles del aprendiz:", apprentice._id)
+
+          // CAMBIO: Se obtiene la información detallada, incluyendo el progreso calculado dinámicamente
+          const detailedApprentice = await getApprenticeById(apprentice._id)
+          setApprenticeData(detailedApprentice)
+
+          console.log("✅ Detalles cargados:", detailedApprentice)
+        } catch (error) {
+          console.error("❌ Error fetching apprentice details:", error)
+          // En caso de error, mostrar los datos básicos que ya tenemos
+          setApprenticeData(apprentice)
+        } finally {
+          setLoading(false)
+        }
+      } else if (apprentice && isOpen) {
+        // Si no hay _id, usar los datos básicos disponibles
+        setApprenticeData(apprentice)
+        setLoading(false)
+      }
     }
+
+    fetchDetails()
   }, [apprentice, isOpen])
 
   useEffect(() => {
@@ -24,14 +43,8 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
         onClose()
       }
     }
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -39,23 +52,17 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div ref={modalRef} className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
-        {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {apprenticeData ? `${apprenticeData.nombre} ${apprenticeData.apellido}` : "Aprendiz"}
+            {apprenticeData ? `${apprenticeData.nombre} ${apprenticeData.apellido}` : "Cargando..."}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Cerrar modal"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar modal">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -114,10 +121,6 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
                     <p className="font-bold text-sm">Programa:</p>
                     <p className="text-gray-600 text-sm">{apprenticeData.programa || "No asignado"}</p>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">Progreso Actual:</p>
-                    <p className="text-gray-600 text-sm">{apprenticeData.progresoActual || 0}%</p>
-                  </div>
                   {apprenticeData.puntos !== undefined && (
                     <div>
                       <p className="font-bold text-sm">Puntos:</p>
@@ -129,10 +132,10 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose, onShowProgress }) 
 
               <div>
                 <h4 className="text-sm font-semibold mb-3">Progreso por Niveles</h4>
-                {apprenticeData && apprenticeData.progresoNiveles ? (
+                {apprenticeData.progresoNiveles && apprenticeData.progresoNiveles.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {apprenticeData.progresoNiveles.map((nivelData, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-3">
+                    {apprenticeData.progresoNiveles.map((nivelData) => (
+                      <div key={nivelData.nivel} className="bg-gray-50 rounded-lg p-3">
                         <div className="text-center mb-2">
                           <h5 className="font-bold text-sm text-gray-800">Nivel {nivelData.nivel}</h5>
                         </div>
