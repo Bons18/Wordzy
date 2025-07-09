@@ -107,16 +107,16 @@ const CourseDetailModal = ({ course, isOpen, onClose }) => {
   }
 
   const mapearEstado = (estado) => {
-    if (!estado) return "Activo"
+    if (!estado) return "En formacion"
 
     // Mapear estados de la base de datos a estados simples para la UI
-    const estadosActivos = ["En formación", "Condicionado", "Graduado", "Activo"]
+    const estadosActivos = ["En formación", "Condicionado", "Graduado",]
     const estadosInactivos = ["Retirado", "Inactivo", "Suspendido"]
 
-    if (estadosActivos.includes(estado)) return "Activo"
-    if (estadosInactivos.includes(estado)) return "Inactivo"
+    if (estadosActivos.includes(estado)) return "En formación"
+    if (estadosInactivos.includes(estado)) return "Retirado"
 
-    return "Activo" // Por defecto
+    return "En formación" // Por defecto
   }
 
   useEffect(() => {
@@ -185,7 +185,7 @@ const CourseDetailModal = ({ course, isOpen, onClose }) => {
       render: (item) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            item.estado === "En formación" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
           }`}
         >
           {item.estado}
