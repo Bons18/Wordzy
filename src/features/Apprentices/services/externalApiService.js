@@ -228,7 +228,7 @@ const transformExternalStudent = async (externalStudent, roleId, coursesCache) =
     ficha: [fichaNumber], // Array con el número de ficha
     programa: programa, // PROGRAMA OBTENIDO AUTOMÁTICAMENTE
     progresoActual: 0,
-    puntos: 200, // Puntos iniciales para todos los aprendices
+    puntos: 0, // Puntos iniciales para todos los aprendices
     progresoNiveles: [
       { nivel: 1, porcentaje: 0 },
       { nivel: 2, porcentaje: 0 },

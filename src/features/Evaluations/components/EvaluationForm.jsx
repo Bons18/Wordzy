@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { FiUpload, FiChevronDown, FiPlus } from "react-icons/fi"
 import { Trash, Pencil } from "lucide-react"
+import ConfirmationModal from "../../../shared/components/ConfirmationModal"
+import { isEvaluationInUse } from "../services/courseProgrammingService"
 
 const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = false }) => {
-  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: "",
     tematica: "",
@@ -35,10 +36,10 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
   })
   const [editingQuestionIndex, setEditingQuestionIndex] = useState(null)
   const [validationError, setValidationError] = useState("")
+  const [isInUseModalOpen, setIsInUseModalOpen] = useState(false) // Estado para la alerta
 
   useEffect(() => {
     if (evaluation) {
-      // Extraer nombres de archivo de las rutas
       const extractFileName = (filePath) => {
         if (!filePath) return ""
         if (typeof filePath === "string") {
@@ -76,7 +77,14 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     }))
   }
 
-  const handleToggleEstado = () => {
+  const handleToggleEstado = async () => {
+    if (formData.estado === "Activo" && evaluation && evaluation.id) {
+      const inUse = await isEvaluationInUse(evaluation.id)
+      if (inUse) {
+        setIsInUseModalOpen(true)
+        return
+      }
+    }
     setFormData((prev) => ({
       ...prev,
       estado: prev.estado === "Activo" ? "Inactivo" : "Activo",
@@ -137,7 +145,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
   }
 
   const addQuestion = () => {
-    // Validaciones...
     if (
       (currentQuestionType !== "completar" && (!questionData.texto || questionData.texto.trim() === "")) ||
       (currentQuestionType === "completar" &&
@@ -206,7 +213,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
       }))
     }
 
-    // Reset question form
     setQuestionData({
       tipo: "",
       texto: "",
@@ -283,19 +289,16 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     setShowQuestionTypes(false)
   }
 
-  // Función para calcular el total de puntos incluyendo la pregunta actual
   const getTotalPoints = () => {
     const existingPoints = formData.preguntas
-      .filter((_, index) => index !== editingQuestionIndex) // Excluir la pregunta que se está editando
+      .filter((_, index) => index !== editingQuestionIndex)
       .reduce((total, pregunta) => total + Number(pregunta.puntaje), 0)
 
-    // Si estamos creando/editando una pregunta, incluir sus puntos
     const currentQuestionPoints = currentQuestionType ? Number(questionData.puntaje) : 0
 
     return existingPoints + currentQuestionPoints
   }
 
-  // Función para calcular puntos solo de preguntas guardadas
   const getSavedQuestionsPoints = () => {
     return formData.preguntas.reduce((total, pregunta) => total + Number(pregunta.puntaje), 0)
   }
@@ -305,7 +308,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     return total === 100
   }
 
-  // Función para obtener el estilo y texto del indicador de puntos
   const getPointsIndicator = () => {
     const totalPoints = getTotalPoints()
     if (totalPoints === 100) {
@@ -319,7 +321,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
         text: `Actualmente hay ${totalPoints} puntos, lo cual es inferior a los 100.`,
       }
     } else {
-      // totalPoints > 100
       return {
         color: "text-red-600",
         text: `Actualmente hay ${totalPoints} puntos, lo cual supera los 100.`,
@@ -331,7 +332,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
     e.preventDefault()
 
     if (!isPuntajeValid()) {
-      // La validación se maneja en el botón ahora, no se necesita un alert aquí
       return
     }
 
@@ -536,7 +536,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
             <div className="mb-4">
               <label className="block text-[14px] font-medium mb-4">Preguntas</label>
 
-              {/* Lista de preguntas agregadas */}
               {formData.preguntas.length > 0 && (
                 <div className="mb-4">
                   <h3 className="text-[14px] font-medium mb-2">Preguntas agregadas:</h3>
@@ -591,7 +590,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
                 </div>
               )}
 
-              {/* Botón para agregar nueva pregunta - ahora debajo de la lista */}
               <div className="relative">
                 <button
                   type="button"
@@ -645,7 +643,6 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
               </div>
             </div>
 
-            {/* Formularios de preguntas */}
             {currentQuestionType === "imagen" && (
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center mb-2">
@@ -1125,6 +1122,17 @@ const EvaluationForm = ({ evaluation = null, onSubmit, onCancel, isCreating = fa
           </div>
         </div>
       </form>
+
+      <ConfirmationModal
+        isOpen={isInUseModalOpen}
+        onClose={() => setIsInUseModalOpen(false)}
+        onConfirm={() => setIsInUseModalOpen(false)}
+        title="Acción no permitida"
+        message="No se puede desactivar esta evaluación pues se encuentra asociada a una programación."
+        confirmText="Cerrar"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+        showButtonCancel={false}
+      />
     </div>
   )
 }

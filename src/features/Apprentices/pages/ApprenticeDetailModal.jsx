@@ -1,40 +1,111 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { getApprenticeById } from "../services/apprenticeService"
+import { getApprenticeById, getApprenticeStatsByLevel } from "../services/apprenticeService"
+import { getAllCourses, getAllPrograms, getAllCourseProgrammings } from "../services/programDataService"
 
 const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
   const [apprenticeData, setApprenticeData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [progressData, setProgressData] = useState({ levels: [], totalPoints: 0 })
+  const [isProgressLoading, setIsProgressLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState("")
   const modalRef = useRef(null)
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (apprentice?._id && isOpen) {
-        try {
-          setLoading(true)
-          console.log("🔍 Cargando detalles del aprendiz:", apprentice._id)
+    const fetchAllData = async () => {
+      if (!apprentice?._id || !isOpen) return
 
-          // CAMBIO: Se obtiene la información detallada, incluyendo el progreso calculado dinámicamente
-          const detailedApprentice = await getApprenticeById(apprentice._id)
-          setApprenticeData(detailedApprentice)
+      // Reset states
+      setLoading(true)
+      setIsProgressLoading(true)
+      setApprenticeData(null)
+      setProgressData({ levels: [], totalPoints: 0 })
+      setErrorMessage("")
 
-          console.log("✅ Detalles cargados:", detailedApprentice)
-        } catch (error) {
-          console.error("❌ Error fetching apprentice details:", error)
-          // En caso de error, mostrar los datos básicos que ya tenemos
-          setApprenticeData(apprentice)
-        } finally {
-          setLoading(false)
-        }
-      } else if (apprentice && isOpen) {
-        // Si no hay _id, usar los datos básicos disponibles
-        setApprenticeData(apprentice)
+      try {
+        // Step 1: Fetch basic apprentice data
+        console.log("🔍 Cargando detalles del aprendiz:", apprentice._id)
+        const detailedApprentice = await getApprenticeById(apprentice._id)
+        setApprenticeData(detailedApprentice)
         setLoading(false)
+        console.log("✅ Detalles básicos cargados:", detailedApprentice)
+
+        // Step 2: Chain requests to get program levels
+        if (!detailedApprentice.ficha || detailedApprentice.ficha.length === 0) {
+          throw new Error("El aprendiz no tiene una ficha asignada.")
+        }
+        const fichaCode = detailedApprentice.ficha[0]
+        console.log(`🔍 Buscando ficha con código: ${fichaCode}`)
+
+        const allCourses = await getAllCourses()
+        const course = allCourses.find((c) => c.code == fichaCode)
+        if (!course) throw new Error(`No se encontró la ficha con el código ${fichaCode}.`)
+        const programName = course.fk_programs
+        console.log(`🔍 Buscando programa con nombre: ${programName}`)
+
+        const allPrograms = await getAllPrograms()
+        const program = allPrograms.find((p) => p.name === programName)
+        if (!program) throw new Error(`No se encontró el programa "${programName}".`)
+        const programId = program._id
+        console.log(`🔍 Buscando programación para el programa con ID: ${programId}`)
+
+        const allProgrammings = await getAllCourseProgrammings()
+        const programming = allProgrammings.find((cp) => cp.programId?._id === programId)
+        if (!programming || !programming.levels) {
+          throw new Error(`No se encontró una programación de curso para el programa "${programName}".`)
+        }
+
+        const fetchedLevels = programming.levels
+        console.log(`✅ Niveles encontrados: ${fetchedLevels.length}`, fetchedLevels)
+
+        // Step 3: Fetch progress for each dynamic level
+        console.log("🔄 Calculando progreso y puntos para los niveles encontrados...")
+        let accumulatedPoints = 0
+        const progressPromises = fetchedLevels.map((level, index) =>
+          getApprenticeStatsByLevel(apprentice._id, index + 1),
+        )
+
+        const results = await Promise.all(progressPromises)
+        const newLevelProgressData = []
+
+        results.forEach((stats, index) => {
+          const levelInfo = fetchedLevels[index]
+          const levelNumber = index + 1
+          let percentage = 0
+          if (stats) {
+            accumulatedPoints += stats.puntos
+            percentage =
+              stats.evaluacionesProgramadas > 0
+                ? Math.round((stats.evaluacionesAprobadas / stats.evaluacionesProgramadas) * 100)
+                : 0
+          }
+          newLevelProgressData.push({
+            nivel: levelNumber,
+            nombre: levelInfo.name || `Nivel ${levelNumber}`, // Fallback name
+            porcentaje: percentage,
+          })
+        })
+
+        setProgressData({
+          levels: newLevelProgressData,
+          totalPoints: accumulatedPoints,
+        })
+        console.log("✅ Progreso y puntos calculados:", {
+          levels: newLevelProgressData,
+          totalPoints: accumulatedPoints,
+        })
+      } catch (error) {
+        console.error("❌ Error al obtener los datos de progreso del aprendiz:", error)
+        setErrorMessage(error.message || "Ocurrió un error al cargar los datos del progreso.")
+        setApprenticeData(apprentice) // Fallback to basic data
+        setLoading(false)
+      } finally {
+        setIsProgressLoading(false)
       }
     }
 
-    fetchDetails()
+    fetchAllData()
   }, [apprentice, isOpen])
 
   useEffect(() => {
@@ -73,6 +144,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-3">Información General</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* General Info Fields */}
                   <div>
                     <p className="font-bold text-sm">Nombre:</p>
                     <p className="text-gray-600 text-sm">{apprenticeData.nombre}</p>
@@ -121,10 +193,14 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
                     <p className="font-bold text-sm">Programa:</p>
                     <p className="text-gray-600 text-sm">{apprenticeData.programa || "No asignado"}</p>
                   </div>
-                  {apprenticeData.puntos !== undefined && (
+                  {apprenticeData && (
                     <div>
                       <p className="font-bold text-sm">Puntos:</p>
-                      <p className="text-gray-600 text-sm">{apprenticeData.puntos}</p>
+                      {isProgressLoading ? (
+                        <p className="text-gray-600 text-sm">Calculando...</p>
+                      ) : (
+                        <p className="text-gray-600 text-sm">{progressData.totalPoints}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -132,12 +208,22 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
 
               <div>
                 <h4 className="text-sm font-semibold mb-3">Progreso por Niveles</h4>
-                {apprenticeData.progresoNiveles && apprenticeData.progresoNiveles.length > 0 ? (
+                {isProgressLoading ? (
+                  <div className="flex justify-center items-center h-24">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1f384c]"></div>
+                    <span className="ml-2 text-gray-600">Calculando progreso...</span>
+                  </div>
+                ) : errorMessage ? (
+                  <div className="text-center py-4 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-red-700 text-sm font-semibold">Error al cargar el progreso</p>
+                    <p className="text-red-600 text-xs mt-1">{errorMessage}</p>
+                  </div>
+                ) : progressData.levels.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {apprenticeData.progresoNiveles.map((nivelData) => (
+                    {progressData.levels.map((nivelData) => (
                       <div key={nivelData.nivel} className="bg-gray-50 rounded-lg p-3">
                         <div className="text-center mb-2">
-                          <h5 className="font-bold text-sm text-gray-800">Nivel {nivelData.nivel}</h5>
+                          <h5 className="font-bold text-sm text-gray-800 capitalize">{nivelData.nombre}</h5>
                         </div>
                         <div className="flex flex-col items-center">
                           <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
@@ -161,7 +247,7 @@ const ApprenticeDetailModal = ({ apprentice, isOpen, onClose }) => {
                   </div>
                 ) : (
                   <div className="text-center py-4 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500 text-sm">No hay información de progreso disponible</p>
+                    <p className="text-gray-500 text-sm">No hay niveles programados para este aprendiz.</p>
                   </div>
                 )}
               </div>

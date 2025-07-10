@@ -22,10 +22,10 @@ const EditEvaluationPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showErrorAlert, setShowErrorAlert] = useState(false) // Declared setShowErrorAlert
   const dropdownRef = useRef(null)
 
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
-  const [showErrorAlert, setShowErrorAlert] = useState(false)
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
 
   // Buscar la evaluación por ID
@@ -46,7 +46,7 @@ const EditEvaluationPage = () => {
       await updateEvaluation(id, formData)
 
       // Mostrar modal de éxito
-      setShowSuccessAlert(true)
+      setIsSuccessModalOpen(true)
     } catch (error) {
       console.error("Error al actualizar evaluación:", error)
       setAlertMessage(`Error al actualizar evaluación: ${error.message}`)
@@ -70,8 +70,8 @@ const EditEvaluationPage = () => {
     navigate("/login")
   }
 
-  const handleSuccessClose = () => {
-    setShowSuccessAlert(false)
+  const handleCloseSuccessModal = () => {
+    setIsSuccessModalOpen(false)
     navigate("/programacion/evaluaciones")
   }
 
@@ -252,23 +252,19 @@ const EditEvaluationPage = () => {
       />
 
       {/* Modal de éxito */}
-      <CustomAlert
-        isOpen={showSuccessAlert}
-        onClose={handleSuccessClose}
-        title="¡Evaluación editada con éxito!"
-        confirmText="Cerrar"
-        type="success"
+      <ConfirmationModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleCloseSuccessModal}
+        onConfirm={handleCloseSuccessModal}
+        title="Éxito"
+        message="Evaluación actualizada con éxito."
+        confirmText="Aceptar"
+        confirmColor="bg-[#46ae69] hover:bg-green-600"
+        showButtonCancel={false}
       />
 
-      {/* Modal de error */}
-      <CustomAlert
-        isOpen={showErrorAlert}
-        onClose={() => setShowErrorAlert(false)}
-        title="Error"
-        message={alertMessage}
-        confirmText="Cerrar"
-        type="error"
-      />
+      {/* Custom Alert for Error */}
+      {showErrorAlert && <CustomAlert message={alertMessage} onClose={() => setShowErrorAlert(false)} />}
     </div>
   )
 }

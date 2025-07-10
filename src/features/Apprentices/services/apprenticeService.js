@@ -218,3 +218,37 @@ export const massUpdateApprentices = async (userIds, updateData) => {
     throw error
   }
 }
+
+// Nueva función para obtener estadísticas de progreso por nivel
+export const getApprenticeStatsByLevel = async (apprenticeId, level) => {
+  try {
+    const response = await fetch(`${API_URL}/apprentice-progress/apprentice/${apprenticeId}/level/${level}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
+    })
+
+    if (!response.ok) {
+      console.error(`Error fetching stats for level ${level}: ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+
+    if (data.success && data.data.statistics) {
+      return {
+        puntos: data.data.statistics.puntosAprobadas || 0,
+        evaluacionesAprobadas: data.data.statistics.evaluacionesAprobadas || 0,
+        evaluacionesProgramadas: data.data.statistics.evaluacionesProgramadas || 0,
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error(`❌ Error obteniendo estadísticas para el nivel ${level}:`, error)
+    return null
+  }
+}

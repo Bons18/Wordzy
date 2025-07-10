@@ -8,10 +8,11 @@ import { useAuth } from "../../auth/hooks/useAuth"
 import EvaluationDetailModal from "../components/EvaluationDetailModal"
 import ConfirmationModal from "../../../shared/components/ConfirmationModal"
 
-// Importar los hooks
+// Importar los hooks y el nuevo servicio
 import useGetEvaluations from "../hooks/useGetEvaluations"
 import useDeleteEvaluation from "../hooks/useDeleteEvaluation"
 import { normalizeEvaluations } from "../services/evaluationService"
+import { isEvaluationInUse } from "../services/courseProgrammingService"
 
 const columns = [
   { key: "nombre", label: "Nombre" },
@@ -43,11 +44,9 @@ const columns = [
 const Evaluations = () => {
   const navigate = useNavigate()
 
-  // Usar los hooks personalizados
   const { evaluations: rawEvaluations, loading: fetchLoading, error: fetchError, refetch } = useGetEvaluations()
   const { deleteEvaluation, loading: deleteLoading, error: deleteError } = useDeleteEvaluation()
 
-  // Normalizar las evaluaciones para la UI (asegurar que tengan id)
   const evaluationsData = normalizeEvaluations(rawEvaluations)
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -55,24 +54,22 @@ const Evaluations = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isInUseModalOpen, setIsInUseModalOpen] = useState(false) // Nuevo estado para la alerta
   const [successMessage, setSuccessMessage] = useState("")
   const [successTitle, setSuccessTitle] = useState("")
   const [currentEvaluation, setCurrentEvaluation] = useState(null)
   const [evaluationToDelete, setEvaluationToDelete] = useState(null)
 
-  // Estado para controlar carga y errores en la UI
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
 
   const { logout } = useAuth()
   const dropdownRef = useRef(null)
 
-  // Actualizar el estado de carga y error cuando cambien los hooks
   useEffect(() => {
     setIsLoading(fetchLoading || deleteLoading)
   }, [fetchLoading, deleteLoading])
 
-  // Consolidar errores de los diferentes hooks
   useEffect(() => {
     const error = fetchError || deleteError
     setErrorMessage(error ? `Error: ${error}` : "")
@@ -97,10 +94,18 @@ const Evaluations = () => {
     navigate(`/programacion/evaluaciones/editar/${evaluation.id}`)
   }
 
-  const handleDeleteEvaluation = (id) => {
-    const evaluation = evaluationsData.find((e) => e.id === id)
-    setEvaluationToDelete(evaluation)
-    setIsDeleteModalOpen(true)
+  const handleDeleteEvaluation = async (id) => {
+    setIsLoading(true)
+    const inUse = await isEvaluationInUse(id)
+    setIsLoading(false)
+
+    if (inUse) {
+      setIsInUseModalOpen(true)
+    } else {
+      const evaluation = evaluationsData.find((e) => e.id === id)
+      setEvaluationToDelete(evaluation)
+      setIsDeleteModalOpen(true)
+    }
   }
 
   const handleShowEvaluation = (evaluation) => {
@@ -116,7 +121,6 @@ const Evaluations = () => {
 
         await deleteEvaluation(evaluationToDelete.id)
 
-        // Refrescar la lista
         refetch()
 
         setIsDeleteModalOpen(false)
@@ -172,7 +176,6 @@ const Evaluations = () => {
       </header>
 
       <div className="container mx-auto px-6">
-        {/* Mostrar error si existe */}
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{errorMessage}</div>
         )}
@@ -196,14 +199,12 @@ const Evaluations = () => {
         )}
       </div>
 
-      {/* Modal de detalle para ver evaluación */}
       <EvaluationDetailModal
         evaluation={currentEvaluation}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
       />
 
-      {/* Modal de confirmación para eliminar */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -215,10 +216,9 @@ const Evaluations = () => {
             : "¿Estás seguro de que deseas eliminar esta evaluación?"
         }
         confirmText="Confirmar Eliminación"
-        confirmColor="bg-[#46ae69] hover:bg-green-600"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
       />
 
-      {/* Modal de éxito */}
       <ConfirmationModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
@@ -226,11 +226,10 @@ const Evaluations = () => {
         title={successTitle}
         message={successMessage}
         confirmText="Cerrar"
-        confirmColor="bg-[#f44144] hover:bg-red-600"
+        confirmColor="bg-[#46ae69] hover:bg-green-600"
         showButtonCancel={false}
       />
 
-      {/* Modal de confirmación para cerrar sesión */}
       <ConfirmationModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
@@ -239,6 +238,18 @@ const Evaluations = () => {
         message="¿Está seguro de que desea cerrar la sesión actual?"
         confirmText="Cerrar Sesión"
         confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
+
+      {/* Nuevo modal de alerta */}
+      <ConfirmationModal
+        isOpen={isInUseModalOpen}
+        onClose={() => setIsInUseModalOpen(false)}
+        onConfirm={() => setIsInUseModalOpen(false)}
+        title="Acción no permitida"
+        message="No se puede eliminar esta evaluación pues se encuentra asociada a una programación."
+        confirmText="Cerrar"
+        confirmColor="bg-[#f44144] hover:bg-red-600"
+        showButtonCancel={false}
       />
     </div>
   )

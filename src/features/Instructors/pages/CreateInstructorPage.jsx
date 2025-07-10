@@ -64,6 +64,7 @@ const CreateInstructorPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const dropdownRef = useRef(null)
 
   // --- Lógica de Validación ---
@@ -179,7 +180,7 @@ const CreateInstructorPage = () => {
         tipoUsuario: "instructor",
       }
       await createInstructor(instructorData)
-      navigate("/formacion/instructores")
+      setShowSuccessModal(true)
     } catch (error) {
       console.error("Error al crear instructor:", error)
       setErrors(processServerError(error))
@@ -468,6 +469,15 @@ const CreateInstructorPage = () => {
         message="¿Está seguro de que desea cerrar la sesión actual?"
         confirmText="Cerrar Sesión"
         confirmColor="bg-[#f44144] hover:bg-red-600"
+      />
+      <ConfirmationModal
+        isOpen={showSuccessModal}
+        onClose={() => navigate("/formacion/instructores")}
+        onConfirm={() => navigate("/formacion/instructores")}
+        title="Creación Exitosa"
+        message="El instructor ha sido creado exitosamente."
+        confirmText="Aceptar"
+        showCancelButton={false}
       />
     </div>
   )
