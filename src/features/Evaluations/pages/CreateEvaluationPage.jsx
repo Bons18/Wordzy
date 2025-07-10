@@ -123,7 +123,7 @@ const CreateEvaluationPage = () => {
         isOpen={isSuccessModalOpen}
         onClose={handleCloseSuccessModal}
         onConfirm={handleCloseSuccessModal}
-        title="Éxito"
+        title="Operación Exitosa"
         message="Evaluación creada con éxito."
         confirmText="Aceptar"
         confirmColor="bg-[#46ae69] hover:bg-green-600"
