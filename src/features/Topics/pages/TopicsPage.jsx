@@ -332,7 +332,7 @@ const TopicsPage = () => {
             setShowUsageWarning(false)
             setTopicUsageInfo(null)
           }}
-          title="No se puede eliminar el tema"
+          title="Acción no permitida"
           message={
             <div className="space-y-3">
               <p>
@@ -353,8 +353,8 @@ const TopicsPage = () => {
               </p>
             </div>
           }
-          confirmText="Entendido"
-          confirmColor="bg-green-500 hover:bg-green-600"
+          confirmText="Cerrar"
+          confirmColor="bg-red-500 hover:bg-red-600"
           showButtonCancel={false}
         />
 
