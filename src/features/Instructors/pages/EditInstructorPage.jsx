@@ -510,10 +510,11 @@ const EditInstructorPage = () => {
         isOpen={showSuccessModal}
         onClose={() => navigate("/formacion/instructores")}
         onConfirm={() => navigate("/formacion/instructores")}
-        title="Actualización Exitosa"
-        message="El instructor ha sido actualizado exitosamente."
+        title="Operación Exitosa"
+        message="Instructor actualizado exitosamente."
         confirmText="Aceptar"
-        showCancelButton={false}
+        confirmColor="bg-green-500 hover:bg-green-600"
+        showButtonCancel={false}
       />
     </div>
   )

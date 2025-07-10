@@ -474,10 +474,11 @@ const CreateInstructorPage = () => {
         isOpen={showSuccessModal}
         onClose={() => navigate("/formacion/instructores")}
         onConfirm={() => navigate("/formacion/instructores")}
-        title="Creación Exitosa"
-        message="El instructor ha sido creado exitosamente."
+        title="Operación Exitosa"
+        message="Instructor creado exitosamente."
         confirmText="Aceptar"
-        showCancelButton={false}
+        confirmColor="bg-green-500 hover:bg-green-600"
+        showButtonCancel={false}
       />
     </div>
   )

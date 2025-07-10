@@ -256,10 +256,10 @@ const EditEvaluationPage = () => {
         isOpen={isSuccessModalOpen}
         onClose={handleCloseSuccessModal}
         onConfirm={handleCloseSuccessModal}
-        title="Éxito"
-        message="Evaluación actualizada con éxito."
+        title="Operación Exitosa"
+        message="Evaluación actualizada exitosamente."
         confirmText="Aceptar"
-        confirmColor="bg-[#46ae69] hover:bg-green-600"
+        confirmColor="bg-green-500 hover:bg-green-600"
         showButtonCancel={false}
       />
 

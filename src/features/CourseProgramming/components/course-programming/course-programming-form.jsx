@@ -540,7 +540,7 @@ export default function CourseProgrammingForm() {
             ) : isEditMode ? (
               "Guardar Cambios"
             ) : (
-              "Añadir Programaci��n"
+              "Añadir Programación"
             )}
           </button>
         </div>

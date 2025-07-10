@@ -124,11 +124,11 @@ const TopicsPage = () => {
       await postTopic(newTopic)
       setIsModalOpen(false)
       await refetch() // Refresca la lista de temas
-      setSuccessMessage(`Tema "${newTopic.name}" agregado exitosamente`)
+      setSuccessMessage(`Tema "${newTopic.name}" creado exitosamente`)
       setShowSuccessModal(true)
     } catch (error) {
-      console.error("Error al agregar el tema:", error)
-      setSuccessMessage(error.message || "Ocurrió un error al agregar el tema")
+      console.error("Error al crear el tema:", error)
+      setSuccessMessage(error.message || "Ocurrió un error al crear el tema")
       setShowSuccessModal(true)
     } finally {
       setIsSaving(false)
