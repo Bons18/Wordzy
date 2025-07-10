@@ -1,164 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Eye } from "lucide-react"
+import { ChevronDown, Eye, RefreshCw } from "lucide-react"
 import { useAuth } from "../../auth/hooks/useAuth"
 import { useNavigate } from "react-router-dom"
 import Tooltip from "../../../shared/components/Tooltip"
+import { useDashboardData } from "../hooks/use-dashboard-data"
+import DashboardDebugInfo from "./dashboard-debug-info"
 
-// Datos de niveles que coinciden con ScheduledCoursesPage
-const scheduledCourses = [
-  {
-    id: 1,
-    nivel: "Nivel 1",
-    cantidadFichas: "25",
-    cantidadInstructores: "3",
-    progreso: "25%",
-  },
-  {
-    id: 2,
-    nivel: "Nivel 2",
-    cantidadFichas: "30",
-    cantidadInstructores: "4",
-    progreso: "100%",
-  },
-  {
-    id: 3,
-    nivel: "Nivel 3",
-    cantidadFichas: "29",
-    cantidadInstructores: "1",
-    progreso: "50%",
-  },
-  {
-    id: 4,
-    nivel: "Nivel 4",
-    cantidadFichas: "10",
-    cantidadInstructores: "5",
-    progreso: "10%",
-  },
-  {
-    id: 5,
-    nivel: "Nivel 5",
-    cantidadFichas: "13",
-    cantidadInstructores: "2",
-    progreso: "75%",
-  },
-  {
-    id: 6,
-    nivel: "Nivel 6",
-    cantidadFichas: "8",
-    cantidadInstructores: "3",
-    progreso: "80%",
-  },
-]
-
-// Datos históricos por año
-const historicalData = {
-  2023: [
-    {
-      id: 1,
-      nivel: "Nivel 1",
-      cantidadFichas: "20",
-      cantidadInstructores: "2",
-      progreso: "100%",
-    },
-    {
-      id: 2,
-      nivel: "Nivel 2",
-      cantidadFichas: "22",
-      cantidadInstructores: "3",
-      progreso: "100%",
-    },
-    {
-      id: 3,
-      nivel: "Nivel 3",
-      cantidadFichas: "18",
-      cantidadInstructores: "2",
-      progreso: "100%",
-    },
-    {
-      id: 4,
-      nivel: "Nivel 4",
-      cantidadFichas: "15",
-      cantidadInstructores: "4",
-      progreso: "90%",
-    },
-    {
-      id: 5,
-      nivel: "Nivel 5",
-      cantidadFichas: "10",
-      cantidadInstructores: "2",
-      progreso: "85%",
-    },
-    {
-      id: 6,
-      nivel: "Nivel 6",
-      cantidadFichas: "5",
-      cantidadInstructores: "1",
-      progreso: "70%",
-    },
-  ],
-  2024: [
-    {
-      id: 1,
-      nivel: "Nivel 1",
-      cantidadFichas: "22",
-      cantidadInstructores: "3",
-      progreso: "100%",
-    },
-    {
-      id: 2,
-      nivel: "Nivel 2",
-      cantidadFichas: "25",
-      cantidadInstructores: "4",
-      progreso: "95%",
-    },
-    {
-      id: 3,
-      nivel: "Nivel 3",
-      cantidadFichas: "24",
-      cantidadInstructores: "2",
-      progreso: "80%",
-    },
-    {
-      id: 4,
-      nivel: "Nivel 4",
-      cantidadFichas: "18",
-      cantidadInstructores: "3",
-      progreso: "60%",
-    },
-    {
-      id: 5,
-      nivel: "Nivel 5",
-      cantidadFichas: "15",
-      cantidadInstructores: "2",
-      progreso: "40%",
-    },
-    {
-      id: 6,
-      nivel: "Nivel 6",
-      cantidadFichas: "10",
-      cantidadInstructores: "2",
-      progreso: "20%",
-    },
-  ],
-  2025: scheduledCourses, // Año actual
-}
-
-// Datos para los selects
-const fichasData = [
-  { id: "2889927-801", name: "2889927-801" },
-  { id: "2889927-802", name: "2889927-802" },
-  { id: "2889927-803", name: "2889927-803" },
-  { id: "2889927-804", name: "2889927-804" },
-]
-
-const programasData = [
-  { id: "analisis-software", name: "Análisis y desarrollo de software" },
-  { id: "tecnico-programacion", name: "Técnico en programación" },
-]
-
-// Sample ranking data - now organized by ficha and programa
+// Datos de ranking (mantenemos los datos estáticos para el ranking)
 const rankingDataByFicha = {
   "2889927-801": [
     { id: 1, name: "Rafael Pereira", points: 967 },
@@ -173,20 +23,6 @@ const rankingDataByFicha = {
     { id: 3, name: "Ana Rodríguez", points: 643 },
     { id: 4, name: "Luis Herrera", points: 587 },
     { id: 5, name: "Sofia Martínez", points: 521 },
-  ],
-  "2889927-803": [
-    { id: 1, name: "Andrés Castillo", points: 934 },
-    { id: 2, name: "Valentina López", points: 812 },
-    { id: 3, name: "Santiago Torres", points: 698 },
-    { id: 4, name: "Isabella Vargas", points: 634 },
-    { id: 5, name: "Mateo Jiménez", points: 576 },
-  ],
-  "2889927-804": [
-    { id: 1, name: "Camila Ruiz", points: 876 },
-    { id: 2, name: "Sebastián Morales", points: 743 },
-    { id: 3, name: "Daniela Castro", points: 689 },
-    { id: 4, name: "Alejandro Ramos", points: 612 },
-    { id: 5, name: "Gabriela Sánchez", points: 558 },
   ],
 }
 
@@ -207,7 +43,6 @@ const rankingDataByPrograma = {
   ],
 }
 
-// Default ranking data for Aprendices tab
 const defaultRankingData = [
   { id: 1, name: "Rafael Pereira", points: 967 },
   { id: 2, name: "Brayan Restrepo", points: 724 },
@@ -216,13 +51,24 @@ const defaultRankingData = [
   { id: 5, name: "Diego Alejandro", points: 508 },
 ]
 
-const Dashboard = () => {
+const fichasData = [
+  { id: "2889927-801", name: "2889927-801" },
+  { id: "2889927-802", name: "2889927-802" },
+  { id: "2889927-803", name: "2889927-803" },
+  { id: "2889927-804", name: "2889927-804" },
+]
+
+const programasData = [
+  { id: "analisis-software", name: "Análisis y desarrollo de software" },
+  { id: "tecnico-programacion", name: "Técnico en programación" },
+]
+
+const DashboardUpdated = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [activeRankingTab, setActiveRankingTab] = useState("aprendices")
-  const [selectedYear, setSelectedYear] = useState(2025) // Año actual por defecto
+  const [selectedYear, setSelectedYear] = useState(2025)
   const [showYearDropdown, setShowYearDropdown] = useState(false)
-  const [displayedCourses, setDisplayedCourses] = useState(scheduledCourses)
   const [currentRankingData, setCurrentRankingData] = useState(defaultRankingData)
 
   // Estados para los selects de Ficha y Programa
@@ -237,14 +83,11 @@ const Dashboard = () => {
   const yearDropdownRef = useRef(null)
   const fichaDropdownRef = useRef(null)
   const programaDropdownRef = useRef(null)
-  const [showLevelDropdown, setShowLevelDropdown] = useState(false)
-  const [selectedLevel, setSelectedLevel] = useState(1)
-  const levelDropdownRef = useRef(null)
-  const [showLessonsLevelDropdown, setShowLessonsLevelDropdown] = useState(false)
-  const [selectedLessonsLevel, setSelectedLessonsLevel] = useState(1)
-  const lessonsLevelDropdownRef = useRef(null)
 
-  // Sample data for the dashboard
+  // Hook para obtener datos del dashboard desde el backend
+  const { dashboardData, loading, error, refetch, programmings, courses, apprentices } = useDashboardData()
+
+  // Sample data for the dashboard (mantenemos algunos datos estáticos)
   const competencyData = {
     listening: 85,
     vocabulary: 50,
@@ -256,7 +99,7 @@ const Dashboard = () => {
   const studentPoints = 862
   const completionRate = 20.79
 
-  // Datos de lecciones por nivel
+  // Datos de lecciones por nivel (estático)
   const lessonsStatsByLevel = {
     1: { won: 60, lost: 40 },
     2: { won: 75, lost: 25 },
@@ -266,17 +109,13 @@ const Dashboard = () => {
     6: { won: 65, lost: 35 },
   }
 
-  // Estado para las estadísticas de lecciones actuales
+  const [showLevelDropdown, setShowLevelDropdown] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState(1)
+  const levelDropdownRef = useRef(null)
+  const [showLessonsLevelDropdown, setShowLessonsLevelDropdown] = useState(false)
+  const [selectedLessonsLevel, setSelectedLessonsLevel] = useState(1)
+  const lessonsLevelDropdownRef = useRef(null)
   const [lessonsStats, setLessonsStats] = useState(lessonsStatsByLevel[1])
-
-  useEffect(() => {
-    // Actualizar los cursos mostrados cuando cambia el año seleccionado
-    if (historicalData[selectedYear]) {
-      setDisplayedCourses(historicalData[selectedYear])
-    } else {
-      setDisplayedCourses(scheduledCourses)
-    }
-  }, [selectedYear])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -317,10 +156,10 @@ const Dashboard = () => {
   const handleYearSelect = (year) => {
     setSelectedYear(year)
     setShowYearDropdown(false)
+    // Aquí podrías agregar lógica para filtrar por año si es necesario
   }
 
   const navigateToLevelDetail = (level) => {
-    // Guardar el nivel seleccionado en sessionStorage para usarlo en las siguientes páginas
     sessionStorage.setItem("selectedNivelId", level.id)
     sessionStorage.setItem("selectedNivelNombre", level.nivel)
     navigate("/progreso/cursosProgramados/fichas")
@@ -351,10 +190,16 @@ const Dashboard = () => {
     }
   }
 
-  // Add useEffect to update ranking data when selections change
   useEffect(() => {
     updateRankingData()
   }, [activeRankingTab, selectedFicha, selectedPrograma])
+
+  // Generar años disponibles (2025 en adelante)
+  const currentYear = new Date().getFullYear()
+  const availableYears = []
+  for (let year = Math.max(2025, currentYear); year <= currentYear + 5; year++) {
+    availableYears.push(year)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -416,6 +261,34 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
+        {/* Estadísticas generales */}
+        {/* {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <h3 className="text-sm font-medium text-gray-500">Total Fichas con Programación</h3>
+              <p className="text-2xl font-bold text-blue-600">{dashboardData.totalStats.totalFichas}</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <h3 className="text-sm font-medium text-gray-500">Total Aprendices</h3>
+              <p className="text-2xl font-bold text-green-600">{dashboardData.totalStats.totalApprentices}</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <h3 className="text-sm font-medium text-gray-500">Niveles Disponibles</h3>
+              <p className="text-2xl font-bold text-purple-600">{dashboardData.totalStats.totalLevels}</p>
+            </div>
+          </div>
+        )} */}
+
+        {/* Componente de debug */}
+        {/* {!loading && (
+          <DashboardDebugInfo
+            dashboardData={dashboardData}
+            programmings={programmings}
+            courses={courses}
+            apprentices={apprentices}
+          />
+        )} */}
+
         {/* Two Column Layout for Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Left Column */}
@@ -483,7 +356,6 @@ const Dashboard = () => {
 
                 {/* Ficha Chart */}
                 <div className={`${activeRankingTab === "ficha" ? "block" : "hidden"}`}>
-                  {/* Select para Ficha */}
                   <div className="mb-4">
                     <div className="relative" ref={fichaDropdownRef}>
                       <button
@@ -548,7 +420,6 @@ const Dashboard = () => {
 
                 {/* Programa Chart */}
                 <div className={`${activeRankingTab === "programa" ? "block" : "hidden"}`}>
-                  {/* Select para Programa */}
                   <div className="mb-4">
                     <div className="relative" ref={programaDropdownRef}>
                       <button
@@ -615,7 +486,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Lesson Stats - Implementación con SVG circular chart (más grande) */}
+            {/* Lesson Stats */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold text-[#1f384c]">Promedio de lecciones</h2>
@@ -653,14 +524,9 @@ const Dashboard = () => {
               </div>
 
               <div className="flex flex-col items-center justify-center">
-                {/* Gráfico circular (más grande) */}
                 <div className="relative w-[240px] h-[240px] mb-6">
-                  {/* Círculo base */}
                   <svg className="w-full h-full" viewBox="0 0 200 200">
-                    {/* Círculo de fondo */}
                     <circle cx="100" cy="100" r="70" fill="none" stroke="#e6e6e6" strokeWidth="20" />
-
-                    {/* Segmento verde (ganadas) */}
                     <circle
                       cx="100"
                       cy="100"
@@ -672,8 +538,6 @@ const Dashboard = () => {
                       strokeDashoffset={2 * Math.PI * 70 - (2 * Math.PI * 70 * lessonsStats.won) / 100}
                       transform="rotate(-90 100 100)"
                     />
-
-                    {/* Segmento rojo (perdidas) */}
                     <circle
                       cx="100"
                       cy="100"
@@ -687,11 +551,7 @@ const Dashboard = () => {
                       strokeDashoffset={2 * Math.PI * 70 - (2 * Math.PI * 70 * lessonsStats.won) / 100}
                       transform="rotate(-90 100 100)"
                     />
-
-                    {/* Círculo central blanco */}
                     <circle cx="100" cy="100" r="50" fill="white" />
-
-                    {/* Texto central con la fuente del dashboard */}
                     <text
                       x="100"
                       y="90"
@@ -716,7 +576,6 @@ const Dashboard = () => {
                   </svg>
                 </div>
 
-                {/* Leyenda (ahora horizontal debajo del gráfico) */}
                 <div className="flex items-center justify-center gap-8">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-green-500"></div>
@@ -785,11 +644,8 @@ const Dashboard = () => {
                   <span className="text-sm text-gray-600">Bajo</span>
                 </div>
               </div>
-              <br></br>
 
-              {/* Gráfica con escala porcentual */}
               <div className="relative mt-4">
-                {/* Escala porcentual vertical */}
                 <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between text-xs text-gray-500">
                   <span>100%</span>
                   <span>80%</span>
@@ -799,7 +655,6 @@ const Dashboard = () => {
                   <span>0%</span>
                 </div>
 
-                {/* Líneas horizontales de referencia */}
                 <div className="absolute left-8 right-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
                   <div className="border-t border-gray-200 w-full"></div>
                   <div className="border-t border-gray-200 w-full"></div>
@@ -809,7 +664,6 @@ const Dashboard = () => {
                   <div className="border-t border-gray-200 w-full"></div>
                 </div>
 
-                {/* Barras de competencias */}
                 <div className="grid grid-cols-5 gap-3 ml-8">
                   {Object.entries(competencyData).map(([skill, value]) => (
                     <div key={skill} className="flex flex-col items-center">
@@ -818,7 +672,6 @@ const Dashboard = () => {
                           className={`absolute bottom-0 w-full rounded-md ${getCompetencyColor(value)}`}
                           style={{ height: `${value}%` }}
                         ></div>
-                        {/* Etiqueta de porcentaje sobre cada barra */}
                         <div className="absolute -top-8 left-0 right-0 text-center text-xs font-medium text-blue-600">
                           {value}%
                         </div>
@@ -830,14 +683,25 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Lessons Progress - MODIFICADO */}
+            {/* Progreso de niveles - CONECTADO CON BACKEND */}
             <div className="bg-white rounded-lg shadow-sm p-6 h-[470px] flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-[#1f384c]">Progreso de niveles</h2>
-                <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm font-medium">AÑO</div>
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-sm font-medium">AÑO</div>
+                  {loading && (
+                    <button
+                      onClick={refetch}
+                      disabled={loading}
+                      className="flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                      {loading ? "Cargando..." : "Actualizar"}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Selector de año - REDISEÑADO */}
               <div className="flex items-center mb-4 justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-500">Año:</span>
@@ -854,14 +718,12 @@ const Dashboard = () => {
 
                     {showYearDropdown && (
                       <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[100px]">
-                        {Object.keys(historicalData).map((year) => (
+                        {availableYears.map((year) => (
                           <button
                             key={year}
-                            onClick={() => handleYearSelect(Number.parseInt(year))}
+                            onClick={() => handleYearSelect(year)}
                             className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 ${
-                              Number.parseInt(year) === selectedYear
-                                ? "bg-blue-50 text-blue-600 font-medium"
-                                : "text-gray-700"
+                              year === selectedYear ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"
                             }`}
                           >
                             {year}
@@ -888,57 +750,89 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="flex-grow overflow-hidden">
-                <table className="min-w-full">
-                  <thead>
-                    <tr>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                        Nivel
-                      </th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center py-2">
-                        Fichas
-                      </th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                        Progreso
-                      </th>
-                      <th className="text-left text-xs text-center font-medium text-gray-500 uppercase tracking-wider py-2">
-                        Acción
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedCourses.map((course) => (
-                      <tr key={course.id} className="border-t border-gray-100">
-                        <td className="py-2 text-sm text-gray-700">{course.nivel}</td>
-                        <td className="py-2 text-sm text-gray-700 text-center">{course.cantidadFichas}</td>
-                        <td className="py-2">
-                          <div className="flex items-center gap-2 w-full">
-                            <div className="flex-1 min-w-[100px]">
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className={`h-2 rounded-full ${getStatusColor(course.progreso)}`}
-                                  style={{ width: course.progreso }}
-                                ></div>
+              {/* Mostrar estado de carga o error */}
+              {loading && (
+                <div className="flex-grow flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-2"></div>
+                    <p className="text-gray-600">Cargando datos del backend...</p>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex-grow flex items-center justify-center">
+                  <div className="text-center text-red-500">
+                    <p className="font-semibold">Error al cargar datos</p>
+                    <p className="text-sm">{error}</p>
+                    <button
+                      onClick={refetch}
+                      className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de progreso - DATOS REALES DEL BACKEND */}
+              {!loading && !error && (
+                <div className="flex-grow overflow-hidden">
+                  {dashboardData.levelProgress.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center text-gray-500">
+                        <p className="font-semibold">No hay datos disponibles</p>
+                        <p className="text-sm">
+                          No se encontraron fichas con programación de inglés para el año {selectedYear}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Nivel
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center py-2">
+                            Fichas
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center py-2">
+                            Aprendices
+                          </th>
+                          <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                            Progreso
+                          </th>
+                          
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboardData.levelProgress.map((course) => (
+                          <tr key={course.id} className="border-t border-gray-100">
+                            <td className="py-2 text-sm text-gray-700">{course.nivel}</td>
+                            <td className="py-2 text-sm text-gray-700 text-center">{course.cantidadFichas}</td>
+                            <td className="py-2 text-sm text-gray-700 text-center">{course.cantidadAprendices}</td>
+                            <td className="py-2">
+                              <div className="flex items-center gap-2 w-full">
+                                <div className="flex-1 min-w-[100px]">
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full ${getStatusColor(course.progreso)}`}
+                                      style={{ width: course.progreso }}
+                                    ></div>
+                                  </div>
+                                </div>
+                                <span className="text-sm text-gray-600 text-right">{course.progreso}</span>
                               </div>
-                            </div>
-                            <span className="text-sm text-gray-600 w-11 text-right">{course.progreso}</span>
-                          </div>
-                        </td>
-                        <td className="py-2 text-center">
-                          <Tooltip text="Ver Fichas" position="top">
-                            <button
-                              onClick={() => navigateToLevelDetail(course)}
-                              className="px-3 py-1 text-xs text-center rounded-md transition-colors"
-                            >
-                              <Eye className="h-5 w-6 text-blue-500" />
-                            </button>
-                          </Tooltip>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            </td>
+                            
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -947,4 +841,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default DashboardUpdated
