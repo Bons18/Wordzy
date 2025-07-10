@@ -138,7 +138,38 @@ export function useDashboardData() {
       // Crear un mapa de niveles únicos
       const allLevelsMap = new Map()
 
-      // Procesar cada ficha con programación
+      // PASO 1: Identificar todos los niveles únicos disponibles en todas las programaciones
+      programmings.forEach((programming) => {
+        if (programming.levels && programming.levels.length > 0) {
+          programming.levels.forEach((level, levelIndex) => {
+            const levelNumber = levelIndex + 1
+            const levelName = level.name || `Nivel ${levelNumber}`
+
+            // Obtener evaluaciones programadas para este nivel
+            const evaluacionesProgramadas = getEvaluationsFromLevel(level)
+
+            if (evaluacionesProgramadas.length > 0) {
+              if (!allLevelsMap.has(levelNumber)) {
+                allLevelsMap.set(levelNumber, {
+                  nivel: levelName,
+                  cantidadFichas: 0,
+                  cantidadAprendices: 0,
+                  totalCompletitud: 0,
+                  aprendicesConProgreso: 0, // Solo los que tienen progreso
+                  fichasWithThisLevel: new Set(),
+                  aprendicesUnicos: new Set(), // Para evitar duplicados
+                  evaluacionesProgramadas: evaluacionesProgramadas,
+                })
+                console.log(`🆕 Nivel global creado: ${levelName} con ${evaluacionesProgramadas.length} evaluaciones`)
+              }
+            }
+          })
+        }
+      })
+
+      console.log(`🎯 Niveles globales identificados: ${allLevelsMap.size}`)
+
+      // PASO 2: Procesar cada ficha con programación
       for (const course of coursesWithProgramming) {
         console.log(`\n🔄 Procesando ficha: ${course.code} - ${course.fk_programs}`)
 
@@ -149,121 +180,95 @@ export function useDashboardData() {
           continue
         }
 
-        console.log(`📋 Programación encontrada: ${programming.programId?.name}`)
-        console.log(`📋 Niveles en programación: ${programming.levels?.length}`)
-
         // Obtener aprendices de esta ficha
         const fichaApprentices = apprentices.filter((apprentice) => {
           const hasThisFicha = apprentice.ficha && apprentice.ficha.includes(Number.parseInt(course.code))
-          if (hasThisFicha) {
-            console.log(
-              `👤 Aprendiz ${apprentice.nombre || apprentice.name || apprentice._id} pertenece a ficha ${course.code}`,
-            )
-          }
           return hasThisFicha
         })
 
         console.log(`👥 Aprendices en ficha ${course.code}:`, fichaApprentices.length)
 
-        if (fichaApprentices.length === 0) {
-          console.log(`⚠️ No hay aprendices en la ficha ${course.code}`)
-          // Continuar procesando aunque no haya aprendices para contar la ficha
-        }
-
-        // Procesar cada nivel de esta programación
+        // PASO 3: Para cada nivel que existe en esta programación
         for (let levelIndex = 0; levelIndex < programming.levels.length; levelIndex++) {
           const level = programming.levels[levelIndex]
           const levelNumber = levelIndex + 1
-          const levelName = level.name || `Nivel ${levelNumber}`
 
-          console.log(`\n📖 Procesando ${levelName} (índice ${levelIndex})`)
-
-          // Obtener evaluaciones programadas para este nivel
-          const evaluacionesProgramadas = getEvaluationsFromLevel(level)
-
-          console.log(`📋 Evaluaciones en ${levelName}:`, evaluacionesProgramadas.length)
-
-          if (evaluacionesProgramadas.length === 0) {
-            console.log(`⚠️ ${levelName} sin evaluaciones - SALTANDO`)
+          // Verificar si este nivel existe en el mapa global
+          if (!allLevelsMap.has(levelNumber)) {
+            console.log(`⚠️ Nivel ${levelNumber} no existe en mapa global - saltando`)
             continue
           }
 
-          // Mostrar detalles de las evaluaciones
-          evaluacionesProgramadas.forEach((evaluation, idx) => {
-            console.log(`  📝 Evaluación ${idx + 1}: ${evaluation.evaluationId} (${evaluation.type})`)
-          })
-
-          // Inicializar datos del nivel si no existen
-          if (!allLevelsMap.has(levelNumber)) {
-            allLevelsMap.set(levelNumber, {
-              nivel: levelName,
-              cantidadFichas: 0,
-              cantidadAprendices: 0,
-              totalCompletitud: 0,
-              totalAprendicesProcessed: 0,
-              fichasWithThisLevel: new Set(),
-            })
-            console.log(`🆕 Creado nuevo nivel en mapa: ${levelName}`)
-          }
-
           const levelData = allLevelsMap.get(levelNumber)
+          const evaluacionesProgramadas = levelData.evaluacionesProgramadas
 
-          // Agregar esta ficha al nivel si no ha sido agregada
+          console.log(`\n📖 Procesando nivel ${levelNumber} para ficha ${course.code}`)
+
+          // SIEMPRE agregar esta ficha al nivel (aunque no tenga aprendices)
           if (!levelData.fichasWithThisLevel.has(course.code)) {
             levelData.fichasWithThisLevel.add(course.code)
             levelData.cantidadFichas++
-            console.log(`✅ Ficha ${course.code} agregada al ${levelName} (total fichas: ${levelData.cantidadFichas})`)
+            console.log(
+              `✅ Ficha ${course.code} agregada al nivel ${levelNumber} (total fichas: ${levelData.cantidadFichas})`,
+            )
           }
 
-          // Procesar cada aprendiz de esta ficha para este nivel
+          // PASO 4: Procesar TODOS los aprendices de esta ficha para este nivel
           for (const apprentice of fichaApprentices) {
             const apprenticeId = apprentice._id || apprentice.id
             const apprenticeName = apprentice.nombre || apprentice.name || apprenticeId
 
-            console.log(`\n👤 Procesando aprendiz: ${apprenticeName}`)
+            // SIEMPRE contar el aprendiz (aunque no tenga progreso)
+            if (!levelData.aprendicesUnicos.has(apprenticeId)) {
+              levelData.aprendicesUnicos.add(apprenticeId)
+              levelData.cantidadAprendices++
+              console.log(
+                `👤 Aprendiz ${apprenticeName} agregado al nivel ${levelNumber} (total: ${levelData.cantidadAprendices})`,
+              )
+            }
 
+            // Obtener progreso del aprendiz
             const progressData = await fetchApprenticeProgress(apprenticeId)
-            console.log(`📊 Datos de progreso obtenidos: ${progressData.length} registros`)
 
             // Filtrar evaluaciones de este nivel específico
             const evaluacionesRealizadas = progressData.filter((p) => p.level === levelNumber)
-            console.log(`📊 Evaluaciones realizadas en nivel ${levelNumber}: ${evaluacionesRealizadas.length}`)
 
-            // Contar evaluaciones aprobadas
-            let evaluacionesAprobadas = 0
-            evaluacionesProgramadas.forEach((evalProgramada) => {
-              const evalId = evalProgramada.evaluationId
-              const evalRealizada = evaluacionesRealizadas.find(
-                (er) =>
-                  (er.evaluationId === evalId ||
-                    er.evaluationId?._id === evalId ||
-                    er.evaluationId?.toString() === evalId?.toString()) &&
-                  er.passed === true,
+            if (evaluacionesRealizadas.length > 0) {
+              console.log(
+                `📊 Aprendiz ${apprenticeName} tiene ${evaluacionesRealizadas.length} evaluaciones realizadas`,
               )
 
-              if (evalRealizada) {
-                evaluacionesAprobadas++
-                console.log(`✅ Evaluación aprobada: ${evalId}`)
-              } else {
-                console.log(`❌ Evaluación no aprobada: ${evalId}`)
-              }
-            })
+              // Contar evaluaciones aprobadas
+              let evaluacionesAprobadas = 0
+              evaluacionesProgramadas.forEach((evalProgramada) => {
+                const evalId = evalProgramada.evaluationId
+                const evalRealizada = evaluacionesRealizadas.find(
+                  (er) =>
+                    (er.evaluationId === evalId ||
+                      er.evaluationId?._id === evalId ||
+                      er.evaluationId?.toString() === evalId?.toString()) &&
+                    er.passed === true,
+                )
 
-            // Calcular porcentaje de completitud para este aprendiz
-            const completitudAprendiz = (evaluacionesAprobadas / evaluacionesProgramadas.length) * 100
-            levelData.totalCompletitud += completitudAprendiz
-            levelData.totalAprendicesProcessed++
+                if (evalRealizada) {
+                  evaluacionesAprobadas++
+                }
+              })
 
-            console.log(
-              `📊 ${apprenticeName} en ${levelName}: ${evaluacionesAprobadas}/${evaluacionesProgramadas.length} (${Math.round(completitudAprendiz)}%)`,
-            )
+              // Calcular porcentaje de completitud para este aprendiz
+              const completitudAprendiz = (evaluacionesAprobadas / evaluacionesProgramadas.length) * 100
+
+              // SOLO sumar al promedio si tiene progreso
+              levelData.totalCompletitud += completitudAprendiz
+              levelData.aprendicesConProgreso++
+
+              console.log(
+                `📊 ${apprenticeName} en nivel ${levelNumber}: ${evaluacionesAprobadas}/${evaluacionesProgramadas.length} (${Math.round(completitudAprendiz)}%) - Aprendices con progreso: ${levelData.aprendicesConProgreso}`,
+              )
+            } else {
+              console.log(`⚪ Aprendiz ${apprenticeName} sin progreso en nivel ${levelNumber}`)
+            }
           }
-
-          console.log(`📈 Estado actual del ${levelName}:`, {
-            fichas: levelData.cantidadFichas,
-            aprendicesProcessed: levelData.totalAprendicesProcessed,
-            completitudTotal: levelData.totalCompletitud,
-          })
         }
       }
 
@@ -272,27 +277,39 @@ export function useDashboardData() {
         console.log(`Nivel ${levelNumber}:`, {
           nombre: data.nivel,
           fichas: data.cantidadFichas,
-          aprendices: data.totalAprendicesProcessed,
-          completitud: data.totalCompletitud,
+          aprendicesTotal: data.cantidadAprendices,
+          aprendicesConProgreso: data.aprendicesConProgreso,
+          completitudTotal: data.totalCompletitud,
         })
       })
 
       // Convertir Map a array y calcular promedios finales
       const levelProgressArray = Array.from(allLevelsMap.entries())
         .map(([levelNumber, data]) => {
+          // Calcular progreso considerando TODOS los aprendices (con y sin progreso)
+          // Los que no tienen progreso cuentan como 0%
           const progresoPromedio =
-            data.totalAprendicesProcessed > 0 ? Math.round(data.totalCompletitud / data.totalAprendicesProcessed) : 0
+            data.cantidadAprendices > 0 ? Math.round(data.totalCompletitud / data.cantidadAprendices) : 0
 
           console.log(
-            `📈 RESULTADO Nivel ${levelNumber} - Fichas: ${data.cantidadFichas}, Aprendices: ${data.totalAprendicesProcessed}, Progreso: ${progresoPromedio}%`,
+            `📊 Cálculo de progreso para Nivel ${levelNumber}:
+  - Total aprendices: ${data.cantidadAprendices}
+  - Con progreso: ${data.aprendicesConProgreso} 
+  - Sin progreso: ${data.cantidadAprendices - data.aprendicesConProgreso} (cuentan como 0%)
+  - Suma total completitud: ${data.totalCompletitud}
+  - Progreso promedio: ${progresoPromedio}% (${data.totalCompletitud} ÷ ${data.cantidadAprendices})`,
+          )
+
+          console.log(
+            `📈 RESULTADO Nivel ${levelNumber} - Fichas: ${data.cantidadFichas}, Aprendices Total: ${data.cantidadAprendices}, Con Progreso: ${data.aprendicesConProgreso}, Sin Progreso: ${data.cantidadAprendices - data.aprendicesConProgreso}, Progreso Promedio: ${progresoPromedio}%`,
           )
 
           return {
             id: levelNumber,
             nivel: data.nivel,
             cantidadFichas: data.cantidadFichas,
-            cantidadAprendices: data.totalAprendicesProcessed,
-            progreso: `${progresoPromedio}%`,
+            cantidadAprendices: data.cantidadAprendices, // Total de aprendices
+            progreso: `${progresoPromedio}%`, // Promedio de TODOS (incluyendo 0% para los sin progreso)
           }
         })
         .filter((level) => level.cantidadFichas > 0) // Solo mostrar niveles con fichas

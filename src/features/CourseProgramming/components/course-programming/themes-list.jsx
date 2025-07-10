@@ -8,37 +8,105 @@ import { useState } from "react"
 
 export default function ThemesList({ level, levels, setLevels, activeTabs, setActiveTabs, createdTopics = [] }) {
   const [themeValidationErrors, setThemeValidationErrors] = useState({})
-  // Función para obtener temas ya utilizados en TODA la programación
+
+  // ✅ CORREGIDA: Función para obtener temas ya utilizados en TODA la programación
   const getUsedTopicIds = () => {
     const usedIds = new Set()
 
     levels.forEach((lvl) => {
       lvl.themes?.forEach((theme) => {
-        // Verificar diferentes formatos de selectedTheme
         if (theme.selectedTheme) {
+          let topicId = null
+
+          // Manejar diferentes formatos de selectedTheme
           if (typeof theme.selectedTheme === "string") {
-            usedIds.add(theme.selectedTheme)
-          } else if (theme.selectedTheme.value) {
-            usedIds.add(theme.selectedTheme.value)
+            topicId = theme.selectedTheme
+          } else if (typeof theme.selectedTheme === "object" && theme.selectedTheme !== null) {
+            // ✅ IMPORTANTE: Manejar tanto .value como ._id
+            topicId = theme.selectedTheme.value || theme.selectedTheme._id
+          }
+
+          if (topicId) {
+            usedIds.add(topicId)
           }
         }
       })
     })
 
+    console.log("🔍 Temas utilizados en toda la programación:", Array.from(usedIds))
     return usedIds
   }
 
+  // ✅ CORREGIDA: Función para obtener opciones disponibles excluyendo temas ya utilizados
   const getAvailableThemeOptions = (currentThemeId) => {
     const usedIds = getUsedTopicIds()
 
     // Obtener el tema actual para permitir su propia selección
     const currentTheme = level.themes?.find((t) => t.id === currentThemeId)
-    const currentSelection = currentTheme?.selectedTheme?.value || currentTheme?.selectedTheme
+    let currentSelection = null
 
-    return createdTopics.filter((topic) => {
-      const isCurrentSelection = currentSelection === topic.value
-      return isCurrentSelection || !usedIds.has(topic.value)
+    if (currentTheme?.selectedTheme) {
+      if (typeof currentTheme.selectedTheme === "string") {
+        currentSelection = currentTheme.selectedTheme
+      } else if (typeof currentTheme.selectedTheme === "object" && currentTheme.selectedTheme !== null) {
+        // ✅ IMPORTANTE: Manejar tanto .value como ._id
+        currentSelection = currentTheme.selectedTheme.value || currentTheme.selectedTheme._id
+      }
+    }
+
+    console.log(`🎯 Evaluando tema actual (${currentThemeId}):`, {
+      currentSelection,
+      currentTheme: currentTheme?.selectedTheme,
     })
+
+    const availableOptions = createdTopics.filter((topic) => {
+      const isCurrentSelection = currentSelection === topic.value
+      const isAlreadyUsed = usedIds.has(topic.value)
+
+      console.log(`Tema "${topic.label}" (${topic.value}):`, {
+        isCurrentSelection,
+        isAlreadyUsed,
+        willShow: isCurrentSelection || !isAlreadyUsed,
+      })
+
+      // Permitir la selección actual o temas no utilizados
+      return isCurrentSelection || !isAlreadyUsed
+    })
+
+    console.log(
+      "✅ Opciones disponibles para el tema:",
+      availableOptions.map((opt) => opt.label),
+    )
+    return availableOptions
+  }
+
+  // ✅ NUEVA: Función para validar si un tema ya está siendo utilizado
+  const validateThemeSelection = (selectedOption, currentThemeId) => {
+    if (!selectedOption || !selectedOption.value) return true
+
+    const usedIds = getUsedTopicIds()
+    const currentTheme = level.themes?.find((t) => t.id === currentThemeId)
+    let currentSelection = null
+
+    if (currentTheme?.selectedTheme) {
+      if (typeof currentTheme.selectedTheme === "string") {
+        currentSelection = currentTheme.selectedTheme
+      } else if (typeof currentTheme.selectedTheme === "object" && currentTheme.selectedTheme.value) {
+        currentSelection = currentTheme.selectedTheme.value
+      }
+    }
+
+    // Si es la misma selección actual, permitir
+    if (currentSelection === selectedOption.value) {
+      return true
+    }
+
+    // Si ya está siendo utilizado en otro lugar, no permitir
+    if (usedIds.has(selectedOption.value)) {
+      return false
+    }
+
+    return true
   }
 
   const toggleThemeExpand = (levelId, themeId) => {
@@ -55,7 +123,42 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
     )
   }
 
+  // ✅ MEJORADA: Función para actualizar tema con validación
   const updateTheme = (levelId, themeId, selectedOption) => {
+    console.log("🔄 Actualizando tema:", { levelId, themeId, selectedOption })
+
+    // Limpiar errores de validación previos
+    const themeKey = `${levelId}-${themeId}`
+    setThemeValidationErrors((prev) => ({
+      ...prev,
+      [themeKey]: "",
+    }))
+
+    // Validar que el tema no esté ya siendo utilizado en otro lugar
+    if (selectedOption && selectedOption.value) {
+      const usedIds = getUsedTopicIds()
+      const currentTheme = level.themes?.find((t) => t.id === themeId)
+      let currentSelection = null
+
+      if (currentTheme?.selectedTheme) {
+        if (typeof currentTheme.selectedTheme === "string") {
+          currentSelection = currentTheme.selectedTheme
+        } else if (typeof currentTheme.selectedTheme === "object" && currentTheme.selectedTheme !== null) {
+          currentSelection = currentTheme.selectedTheme.value || currentTheme.selectedTheme._id
+        }
+      }
+
+      // Si no es la misma selección actual y ya está siendo utilizado, mostrar error
+      if (currentSelection !== selectedOption.value && usedIds.has(selectedOption.value)) {
+        setThemeValidationErrors((prev) => ({
+          ...prev,
+          [themeKey]: "Este tema ya está siendo utilizado en otro nivel de la programación",
+        }))
+        return
+      }
+    }
+
+    // Actualizar el tema
     setLevels(
       levels.map((level) => {
         if (level.id === levelId) {
@@ -70,6 +173,14 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
   }
 
   const deleteTheme = (levelId, themeId) => {
+    // Limpiar errores de validación al eliminar
+    const themeKey = `${levelId}-${themeId}`
+    setThemeValidationErrors((prev) => {
+      const newErrors = { ...prev }
+      delete newErrors[themeKey]
+      return newErrors
+    })
+
     setLevels(
       levels.map((level) => {
         if (level.id === levelId) {
@@ -149,6 +260,8 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
 
       {level.themes?.map((theme) => {
         const availableOptions = getAvailableThemeOptions(theme.id)
+        const themeKey = `${level.id}-${theme.id}`
+        const hasValidationError = themeValidationErrors[themeKey]
 
         return (
           <div key={theme.id} className="border rounded-md">
@@ -196,12 +309,15 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                     <CustomSelect
                       placeholder="Seleccionar tema"
                       options={availableOptions}
-                      value={theme.selectedTheme} // ✅ Esto ahora debería funcionar correctamente
+                      value={theme.selectedTheme}
                       onChange={(option) => updateTheme(level.id, theme.id, option)}
                     />
-                    {availableOptions.length === 0 && (
+                    {/* ✅ NUEVO: Mostrar mensaje de error si el tema ya está utilizado */}
+                    {hasValidationError && <p className="text-xs text-red-600 mt-1">{hasValidationError}</p>}
+                    {/* ✅ MEJORADO: Mensaje más específico cuando no hay opciones disponibles */}
+                    {availableOptions.length === 0 && !hasValidationError && (
                       <p className="text-xs text-amber-600 mt-1">
-                        ⚠️ Todos los temas disponibles ya han sido utilizados
+                        ⚠️ Todos los temas disponibles ya han sido utilizados en esta programación
                       </p>
                     )}
                   </div>
@@ -216,24 +332,26 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                           min="0"
                           max="100"
                           className={`w-full rounded-l-md border px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                            themeValidationErrors[`${level.id}-${theme.id}`] ? "border-red-300" : "border-gray-300"
+                            themeValidationErrors[`${level.id}-${theme.id}-value`]
+                              ? "border-red-300"
+                              : "border-gray-300"
                           }`}
                           value={theme.progress || ""}
                           onChange={(e) => {
                             const value = Number.parseInt(e.target.value) || 0
-                            const themeKey = `${level.id}-${theme.id}`
+                            const valueKey = `${level.id}-${theme.id}-value`
 
                             // Clear previous error
                             setThemeValidationErrors((prev) => ({
                               ...prev,
-                              [themeKey]: "",
+                              [valueKey]: "",
                             }))
 
                             // Validate value
                             if (value > 100) {
                               setThemeValidationErrors((prev) => ({
                                 ...prev,
-                                [themeKey]: "El valor no puede ser mayor a 100%",
+                                [valueKey]: "El valor no puede ser mayor a 100%",
                               }))
                             }
 
@@ -253,8 +371,10 @@ export default function ThemesList({ level, levels, setLevels, activeTabs, setAc
                           %
                         </span>
                       </div>
-                      {themeValidationErrors[`${level.id}-${theme.id}`] && (
-                        <p className="text-xs text-red-600 mt-1">{themeValidationErrors[`${level.id}-${theme.id}`]}</p>
+                      {themeValidationErrors[`${level.id}-${theme.id}-value`] && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {themeValidationErrors[`${level.id}-${theme.id}-value`]}
+                        </p>
                       )}
                     </div>
                   </div>

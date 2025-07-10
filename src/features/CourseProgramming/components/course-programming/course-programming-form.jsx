@@ -69,6 +69,7 @@ export default function CourseProgrammingForm() {
       setEndDate(formatDateFromDB(programming.endDate))
       setActiveStatus(programming.status)
 
+      // ✅ CORREGIDO: Transformación mejorada para modo edición
       const transformedLevels = (programming.levels || []).map((level) => ({
         _id: level._id,
         id: level._id,
@@ -77,8 +78,10 @@ export default function CourseProgrammingForm() {
         themes: (level.topics || []).map((topic) => {
           let selectedOption = null
           if (topic.topicId) {
+            // ✅ IMPORTANTE: Usar el ID correcto del topic
+            const topicId = typeof topic.topicId === "object" ? topic.topicId._id : topic.topicId
             selectedOption = {
-              value: topic.topicId,
+              value: topicId,
               label: topic.name,
             }
           }
@@ -119,6 +122,7 @@ export default function CourseProgrammingForm() {
         }),
       }))
 
+      console.log("🔄 Datos transformados para edición:", transformedLevels)
       setLevels(transformedLevels)
     }
   }, [id, programming])
@@ -177,6 +181,8 @@ export default function CourseProgrammingForm() {
             }
           }
 
+          console.log(`📝 Tema procesado - Nivel: ${level.name}, Tema: ${topicName}, ID: ${topicId}`)
+
           return {
             topicId: topicId,
             name: topicName,
@@ -197,9 +203,13 @@ export default function CourseProgrammingForm() {
       })),
     }
 
-    console.log("🟢 Fechas enviadas al backend:")
-    console.log("startDate:", data.startDate)
-    console.log("endDate:", data.endDate)
+    console.log("🟢 Datos transformados para backend:")
+    data.levels.forEach((level, index) => {
+      console.log(`Nivel ${index + 1} (${level.name}):`)
+      level.topics.forEach((topic, topicIndex) => {
+        console.log(`  Tema ${topicIndex + 1}: ${topic.name} (ID: ${topic.topicId})`)
+      })
+    })
 
     return data
   }
@@ -225,6 +235,7 @@ export default function CourseProgrammingForm() {
       }))
   }
 
+  // ✅ MEJORADA: Validación que incluye verificación de temas duplicados
   const validateForm = () => {
     const errors = []
     const selectedProgramId = getSelectedProgramValue()
@@ -240,6 +251,42 @@ export default function CourseProgrammingForm() {
 
     if (levels.length > 6) {
       errors.push("No se pueden crear más de 6 niveles")
+    }
+
+    // ✅ NUEVA: Validación de temas duplicados en toda la programación
+    const usedTopicIds = new Set()
+    const duplicatedTopics = []
+
+    levels.forEach((level, levelIndex) => {
+      level.themes?.forEach((theme, themeIndex) => {
+        if (theme.selectedTheme) {
+          let topicId = null
+          let topicName = "Tema"
+
+          if (typeof theme.selectedTheme === "object" && theme.selectedTheme.value) {
+            topicId = theme.selectedTheme.value
+            topicName = theme.selectedTheme.label || topicName
+          } else if (typeof theme.selectedTheme === "string") {
+            topicId = theme.selectedTheme
+            const topic = topics?.find((t) => t._id === topicId)
+            topicName = topic?.name || topicName
+          }
+
+          if (topicId) {
+            if (usedTopicIds.has(topicId)) {
+              duplicatedTopics.push(`"${topicName}" está duplicado`)
+            } else {
+              usedTopicIds.add(topicId)
+            }
+          }
+        }
+      })
+    })
+
+    if (duplicatedTopics.length > 0) {
+      errors.push(
+        `Temas duplicados encontrados: ${duplicatedTopics.join(", ")}. Cada tema solo puede ser utilizado una vez en la programación.`,
+      )
     }
 
     if (levels.length > 0) {
@@ -493,7 +540,7 @@ export default function CourseProgrammingForm() {
             ) : isEditMode ? (
               "Guardar Cambios"
             ) : (
-              "Añadir Programación"
+              "Añadir Programaci��n"
             )}
           </button>
         </div>
