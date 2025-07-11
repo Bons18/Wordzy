@@ -31,12 +31,22 @@ const Ranking = () => {
   const [selectedPrograma, setSelectedPrograma] = useState("")
 
   // Hook para obtener datos generales de la API
-  const { metrics, courses, students, programs, loading, error, refetch } = useGetRankingMetrics()
+  const {
+    metrics,
+    fichas,
+    programas,
+    students,
+    allStudents,
+    loading,
+    error,
+    refetch,
+    updateFichasByPrograma,
+    updateProgramasByFicha,
+  } = useGetRankingMetrics()
 
   // Hooks para obtener estudiantes específicos por ficha y programa
-  const { students: studentsByCourse, loading: loadingStudentsByCourse } = useGetStudentsByCourse(selectedFicha)
-
-  const { students: studentsByProgram, loading: loadingStudentsByProgram } = useGetStudentsByProgram(selectedPrograma)
+  const { students: studentsByFicha, loading: loadingStudentsByFicha } = useGetStudentsByCourse(selectedFicha)
+  const { students: studentsByPrograma, loading: loadingStudentsByPrograma } = useGetStudentsByProgram(selectedPrograma)
 
   // Lista de meses
   const months = [
@@ -104,65 +114,97 @@ const Ranking = () => {
     setIsYearDropdownOpen(!isYearDropdownOpen)
   }
 
-  // Preparar datos para los dropdowns
-  const fichasOptions = courses.map((course) => ({
-    id: course.code,
-    name: `Ficha ${course.code}`,
-    ...course,
-  }))
+  // Manejar selección de ficha
+  const handleFichaSelect = (ficha) => {
+    console.log("🎯 Ficha selected:", ficha)
+    setSelectedFicha(ficha)
 
-  const programasOptions = programs.map((program) => ({
-    id: program.name,
-    name: program.name,
-    code: program.code,
-    ...program,
-  }))
+    if (ficha) {
+      // Actualizar programas basado en la ficha seleccionada
+      updateProgramasByFicha(ficha)
+
+      // Limpiar selección de programa si no está relacionado con la ficha
+      if (selectedPrograma) {
+        const programasRelacionados = programas.filter((p) =>
+          allStudents.some((student) => student.ficha?.includes(ficha) && student.programa === p.id),
+        )
+        if (!programasRelacionados.some((p) => p.id === selectedPrograma)) {
+          setSelectedPrograma("")
+        }
+      }
+    } else {
+      // Si se limpia la ficha, restaurar todos los programas
+      updateProgramasByFicha(null)
+    }
+  }
+
+  // Manejar selección de programa
+  const handleProgramaSelect = (programa) => {
+    console.log("🎯 Programa selected:", programa)
+    setSelectedPrograma(programa)
+
+    if (programa) {
+      // Actualizar fichas basado en el programa seleccionado
+      updateFichasByPrograma(programa)
+
+      // Limpiar selección de ficha si no está relacionada con el programa
+      if (selectedFicha) {
+        const fichasRelacionadas = fichas.filter((f) =>
+          allStudents.some((student) => student.programa === programa && student.ficha?.includes(f.id)),
+        )
+        if (!fichasRelacionadas.some((f) => f.id === selectedFicha)) {
+          setSelectedFicha("")
+        }
+      }
+    } else {
+      // Si se limpia el programa, restaurar todas las fichas
+      updateFichasByPrograma(null)
+    }
+  }
 
   // Generar datos de ranking basados en datos reales de la API
   const generateRankingData = (type, filterValue = null) => {
     console.log(`🎯 generateRankingData called with type: ${type}, filterValue: ${filterValue}`)
-    console.log(`📊 Available students:`, students?.length || 0)
 
-    const studentsToUse = students
-
+    const studentsToUse = allStudents
     let result = []
 
     switch (type) {
       case "aprendices":
         // Usar todos los estudiantes para el ranking general
-        result = generateRealRanking(studentsToUse, "general").slice(0, 15)
+        result = generateRealRanking(studentsToUse, "general")
+        console.log(`📊 Top Ranking de Aprendices: ${result.length} students`)
         break
 
       case "ficha":
-        if (filterValue && studentsByCourse.length > 0) {
+        if (filterValue && studentsByFicha.length > 0) {
           // Usar estudiantes específicos de la ficha seleccionada
-          result = generateRealRanking(studentsByCourse, "ficha", filterValue)
+          result = generateRealRanking(studentsByFicha, "ficha", filterValue)
+          console.log(`📊 Ficha ${filterValue}: ${result.length} students`)
         } else {
-          // Datos generales limitados
-          result = generateRealRanking(studentsToUse, "general").slice(0, 10)
+          // Si no hay filtro, mostrar todos los estudiantes
+          result = generateRealRanking(studentsToUse, "general")
+          console.log(`📊 All students for ficha: ${result.length} students`)
         }
         break
 
       case "programa":
-        if (filterValue && studentsByProgram.length > 0) {
+        if (filterValue && studentsByPrograma.length > 0) {
           // Usar estudiantes específicos del programa seleccionado
-          result = generateRealRanking(studentsByProgram, "programa", filterValue)
+          result = generateRealRanking(studentsByPrograma, "programa", filterValue)
+          console.log(`📊 Programa ${filterValue}: ${result.length} students`)
         } else {
-          // Datos generales limitados
-          result = generateRealRanking(studentsToUse, "general").slice(0, 10)
+          // Si no hay filtro, mostrar todos los estudiantes
+          result = generateRealRanking(studentsToUse, "general")
+          console.log(`📊 All students for programa: ${result.length} students`)
         }
         break
 
       default:
-        result = generateRealRanking(studentsToUse, "general").slice(0, 10)
+        result = generateRealRanking(studentsToUse, "general")
     }
 
-    console.log(`🎯 generateRankingData result for ${type}:`, result)
-    console.log(
-      `🏆 Points in result:`,
-      result.map((r) => `${r.nombre}: ${r.puntos}`),
-    )
-
+    console.log(`🎯 generateRankingData result for ${type}:`, result.length)
     return result
   }
 
@@ -348,12 +390,12 @@ const Ranking = () => {
               <span className="font-medium">Filtros activos:</span>
               {selectedFicha && (
                 <span className="bg-blue-100 px-2 py-1 rounded text-xs">
-                  Ficha: {selectedFicha} ({studentsByCourse.length} estudiantes)
+                  Ficha: {selectedFicha} ({studentsByFicha.length} estudiantes)
                 </span>
               )}
               {selectedPrograma && (
                 <span className="bg-blue-100 px-2 py-1 rounded text-xs">
-                  Programa: {selectedPrograma} ({studentsByProgram.length} estudiantes)
+                  Programa: {selectedPrograma} ({studentsByPrograma.length} estudiantes)
                 </span>
               )}
             </div>
@@ -378,12 +420,12 @@ const Ranking = () => {
               icon={<FileText className="h-4 w-4" />}
               color="purple"
               data={generateRankingData("ficha", selectedFicha)}
-              loading={loading || loadingStudentsByCourse}
+              loading={loading || loadingStudentsByFicha}
               filterComponent={
                 <FilterDropdown
-                  options={fichasOptions}
+                  options={fichas}
                   selectedValue={selectedFicha}
-                  onSelect={setSelectedFicha}
+                  onSelect={handleFichaSelect}
                   placeholder="Seleccionar ficha"
                   displayKey="name"
                   valueKey="id"
@@ -398,12 +440,12 @@ const Ranking = () => {
               icon={<Calendar className="h-4 w-4" />}
               color="green"
               data={generateRankingData("programa", selectedPrograma)}
-              loading={loading || loadingStudentsByProgram}
+              loading={loading || loadingStudentsByPrograma}
               filterComponent={
                 <FilterDropdown
-                  options={programasOptions}
+                  options={programas}
                   selectedValue={selectedPrograma}
-                  onSelect={setSelectedPrograma}
+                  onSelect={handleProgramaSelect}
                   placeholder="Seleccionar programa"
                   displayKey="name"
                   valueKey="id"

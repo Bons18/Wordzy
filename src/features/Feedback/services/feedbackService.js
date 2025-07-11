@@ -1,130 +1,316 @@
 // Servicio para manejar las operaciones de retroalimentación
-const API_BASE_URL = "https://sara-api-ingdanielbs-projects.vercel.app/api/v1"
+const API_BASE_URL = "http://localhost:3000/api"
 
-// Función para obtener las fichas desde la API real
+// Función para obtener todos los usuarios desde la API
+const getAllUsers = async () => {
+  console.log("🌐 Intentando conectar con:", `${API_BASE_URL}/user`)
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/user`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Agregar timeout
+      signal: AbortSignal.timeout(10000), // 10 segundos timeout
+    })
+
+    console.log("📡 Respuesta de la API:", response.status, response.statusText)
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("📦 Datos recibidos:", data?.length || 0, "usuarios")
+    return data || []
+  } catch (error) {
+    console.error("🚨 Error en getAllUsers:", error.message)
+    if (error.name === "TimeoutError") {
+      throw new Error("Timeout: La API no responde")
+    }
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      throw new Error("No se puede conectar con el servidor. Verifique que esté ejecutándose en http://localhost:3000")
+    }
+    throw error
+  }
+}
+
+// Función para obtener las fichas desde los usuarios aprendices
 export const getFichasFromAPI = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/courses`)
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`)
-    }
-    const data = await response.json()
+    console.log("🎯 Obteniendo fichas de aprendices...")
+    const users = await getAllUsers()
 
-    // Extraer los códigos de ficha y crear el formato necesario
-    const fichas = data.map((course) => ({
-      value: course.code,
-      label: `Ficha ${course.code}`,
-      programa: course.name || "Programa no especificado",
-    }))
+    if (!Array.isArray(users)) {
+      console.warn("⚠️ Los datos de usuarios no son un array:", typeof users)
+      throw new Error("Formato de datos inválido")
+    }
+
+    console.log("👥 Total de usuarios recibidos:", users.length)
+
+    // Filtrar usuarios que sean aprendices
+    const aprendices = users.filter((user) => {
+      const esAprendiz = user && user.tipoUsuario === "aprendiz"
+      if (esAprendiz) {
+        console.log(
+          "👨‍🎓 Aprendiz encontrado:",
+          user.nombre,
+          user.apellido,
+          "- Ficha:",
+          user.ficha,
+          "- Programa:",
+          user.programa,
+        )
+      }
+      return esAprendiz
+    })
+
+    console.log("👨‍🎓 Total aprendices encontrados:", aprendices.length)
+
+    // Extraer todas las fichas de los aprendices
+    const todasLasFichas = []
+
+    aprendices.forEach((aprendiz) => {
+      // Manejar que ficha puede ser un array o un valor único
+      if (Array.isArray(aprendiz.ficha)) {
+        // Si es array, agregar todos los elementos
+        aprendiz.ficha.forEach((ficha) => {
+          if (ficha && ficha.toString().trim() !== "") {
+            todasLasFichas.push(ficha.toString())
+            console.log("📋 Ficha encontrada (array):", ficha, "para", aprendiz.nombre, aprendiz.apellido)
+          }
+        })
+      } else if (aprendiz.ficha) {
+        // Si es un valor único
+        if (aprendiz.ficha.toString().trim() !== "") {
+          todasLasFichas.push(aprendiz.ficha.toString())
+          console.log("📋 Ficha encontrada (único):", aprendiz.ficha, "para", aprendiz.nombre, aprendiz.apellido)
+        }
+      }
+    })
+
+    console.log("📋 Todas las fichas extraídas:", todasLasFichas)
+
+    // Obtener fichas únicas
+    const fichasUnicas = [...new Set(todasLasFichas)]
+
+    console.log("📋 Fichas únicas encontradas:", fichasUnicas)
+
+    if (fichasUnicas.length === 0) {
+      console.warn("⚠️ No se encontraron fichas válidas")
+      throw new Error("No se encontraron fichas de aprendices")
+    }
+
+    // Crear el formato necesario para los selectores
+    const fichas = fichasUnicas.map((ficha) => {
+      // Buscar el programa asociado a esta ficha
+      const aprendizConEstaFicha = aprendices.find((aprendiz) => {
+        if (Array.isArray(aprendiz.ficha)) {
+          return aprendiz.ficha.includes(Number.parseInt(ficha))
+        }
+        return aprendiz.ficha.toString() === ficha
+      })
+
+      return {
+        value: ficha,
+        label: `Ficha ${ficha}`,
+        programa: aprendizConEstaFicha?.programa || "Programa SENA",
+      }
+    })
 
     // Ordenar por código de ficha
-    return fichas.sort((a, b) => {
+    const fichasOrdenadas = fichas.sort((a, b) => {
       const numA = Number.parseInt(a.value) || 0
       const numB = Number.parseInt(b.value) || 0
       return numA - numB
     })
+
+    console.log("✅ Fichas finales ordenadas:", fichasOrdenadas)
+    return fichasOrdenadas
   } catch (error) {
-    console.error("Error al obtener fichas de la API:", error)
-    // Fallback con datos mock si la API falla
-    return [
-      { value: "2669742", label: "Ficha 2669742", programa: "ADSO" },
-      { value: "2669743", label: "Ficha 2669743", programa: "ADSO" },
-      { value: "2669744", label: "Ficha 2669744", programa: "Multimedia" },
-      { value: "2669745", label: "Ficha 2669745", programa: "Redes" },
-    ]
+    console.error("❌ Error en getFichasFromAPI:", error.message)
+    throw error
   }
 }
 
-// Datos mock para instructores
-export const getInstructors = () => {
-  return [
-    { nombre: "Ana García", especialidad: "Inglés Técnico" },
-    { nombre: "Carlos Rodríguez", especialidad: "Inglés Conversacional" },
-    { nombre: "María López", especialidad: "Inglés Empresarial" },
-    { nombre: "Juan Martínez", especialidad: "Inglés General" },
-    { nombre: "Laura Sánchez", especialidad: "Inglés Técnico" },
-  ]
+// Función para obtener instructores desde la API
+export const getInstructors = async () => {
+  try {
+    console.log("👨‍🏫 Obteniendo instructores...")
+    const users = await getAllUsers()
+
+    if (!Array.isArray(users)) {
+      throw new Error("Formato de datos inválido")
+    }
+
+    console.log("👥 Total de usuarios para filtrar instructores:", users.length)
+
+    // Filtrar usuarios que sean instructores
+    const instructores = users.filter((user) => {
+      const esInstructor = user && user.tipoUsuario === "instructor"
+      if (esInstructor) {
+        console.log("👩‍🏫 Instructor encontrado:", user.nombre, user.apellido)
+      }
+      return esInstructor
+    })
+
+    console.log("👩‍🏫 Total instructores encontrados:", instructores.length)
+
+    // Crear el formato necesario para los selectores
+    const instructorsData = instructores.map((instructor) => ({
+      nombre: `${instructor.nombre || ""} ${instructor.apellido || ""}`.trim() || "Sin nombre",
+      especialidad: instructor.especialidad || "Inglés General",
+      id: instructor._id || instructor.id,
+    }))
+
+    const instructorsOrdenados = instructorsData.sort((a, b) => a.nombre.localeCompare(b.nombre))
+    console.log("✅ Instructores finales:", instructorsOrdenados)
+    return instructorsOrdenados
+  } catch (error) {
+    console.error("❌ Error en getInstructors:", error.message)
+    throw error
+  }
 }
 
-// Datos mock para niveles
-export const getNiveles = () => {
-  return ["Básico", "Intermedio", "Avanzado"]
+// Función para obtener niveles basados en progresoNiveles de los usuarios APRENDICES
+export const getNiveles = async () => {
+  try {
+    console.log("📊 Obteniendo niveles de aprendices...")
+    const users = await getAllUsers()
+
+    if (!Array.isArray(users)) {
+      throw new Error("Formato de datos inválido")
+    }
+
+    console.log("👥 Total de usuarios recibidos:", users.length)
+
+    // Filtrar usuarios que sean aprendices PRIMERO
+    const aprendices = users.filter((user) => {
+      const esAprendiz = user && user.tipoUsuario === "aprendiz"
+      if (esAprendiz) {
+        console.log(
+          "👨‍🎓 Aprendiz para niveles:",
+          user.nombre,
+          user.apellido,
+          "- Progreso:",
+          user.progresoNiveles?.length || 0,
+          "niveles",
+        )
+      }
+      return esAprendiz
+    })
+
+    console.log("👨‍🎓 Total aprendices para extraer niveles:", aprendices.length)
+
+    // Obtener todos los niveles de progreso únicos SOLO de aprendices
+    const nivelesProgreso = new Set()
+
+    aprendices.forEach((aprendiz) => {
+      if (aprendiz.progresoNiveles && Array.isArray(aprendiz.progresoNiveles)) {
+        aprendiz.progresoNiveles.forEach((progreso) => {
+          if (progreso && progreso.nivel) {
+            nivelesProgreso.add(progreso.nivel.toString())
+            console.log("📈 Nivel encontrado:", progreso.nivel, "para aprendiz:", aprendiz.nombre, aprendiz.apellido)
+          }
+        })
+      }
+    })
+
+    // Convertir a array y ordenar
+    const nivelesArray = Array.from(nivelesProgreso).sort((a, b) => {
+      const numA = Number.parseInt(a)
+      const numB = Number.parseInt(b)
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB
+      }
+      return a.localeCompare(b)
+    })
+
+    console.log("📈 Niveles únicos encontrados en aprendices:", nivelesArray)
+
+    // Si no hay niveles en los aprendices, usar los niveles fijos 1, 2, 3
+    const niveles = nivelesArray.length > 0 ? nivelesArray : ["1", "2", "3"]
+    console.log("✅ Niveles finales para filtro:", niveles)
+    return niveles
+  } catch (error) {
+    console.error("❌ Error en getNiveles:", error.message)
+    throw error
+  }
 }
 
 // Función para buscar datos de retroalimentación basado en filtros
 export const searchFeedbackData = async (filters) => {
   try {
+    console.log("🔍 Buscando datos de retroalimentación con filtros:", filters)
+
     // Simular delay de API
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // Datos mock de retroalimentación
-    const mockData = [
-      {
-        id: 1,
-        programa: "ADSO",
-        ficha: "2669742",
-        nivel: "Básico",
-        tema: "Present Simple",
-        actividad: "Grammar Exercise 1",
-        ejecutada: "Sí",
-        instructor: "Ana García",
-        fecha: "2024-01-15",
-        totalPreguntas: 20,
-        aprendicesPresentes: 25,
-      },
-      {
-        id: 2,
-        programa: "ADSO",
-        ficha: "2669742",
-        nivel: "Básico",
-        tema: "Vocabulary Building",
-        actividad: "Word Association",
-        ejecutada: "No",
-        instructor: "Ana García",
-        fecha: "2024-01-16",
-        totalPreguntas: 15,
-        aprendicesPresentes: 23,
-      },
-      {
-        id: 3,
-        programa: "Multimedia",
-        ficha: "2669744",
-        nivel: "Intermedio",
-        tema: "Past Tense",
-        actividad: "Story Telling",
-        ejecutada: "Sí",
-        instructor: "Carlos Rodríguez",
-        fecha: "2024-01-17",
-        totalPreguntas: 25,
-        aprendicesPresentes: 28,
-      },
-      {
-        id: 4,
-        programa: "Redes",
-        ficha: "2669745",
-        nivel: "Avanzado",
-        tema: "Technical English",
-        actividad: "Network Terminology",
-        ejecutada: "Sí",
-        instructor: "María López",
-        fecha: "2024-01-18",
-        totalPreguntas: 30,
-        aprendicesPresentes: 20,
-      },
-      {
-        id: 5,
-        programa: "ADSO",
-        ficha: "2669743",
-        nivel: "Intermedio",
-        tema: "Future Tense",
-        actividad: "Planning Activities",
-        ejecutada: "No",
-        instructor: "Juan Martínez",
-        fecha: "2024-01-19",
-        totalPreguntas: 18,
-        aprendicesPresentes: 26,
-      },
+    // Obtener datos reales de aprendices para generar datos más realistas
+    const users = await getAllUsers()
+    const aprendices = users.filter((user) => user && user.tipoUsuario === "aprendiz")
+
+    // Generar datos mock basados en los datos reales de aprendices
+    const mockData = []
+    let id = 1
+
+    // Crear algunas actividades de ejemplo para cada ficha encontrada
+    const fichasReales = new Set()
+    aprendices.forEach((aprendiz) => {
+      if (Array.isArray(aprendiz.ficha)) {
+        aprendiz.ficha.forEach((ficha) => fichasReales.add(ficha.toString()))
+      } else if (aprendiz.ficha) {
+        fichasReales.add(aprendiz.ficha.toString())
+      }
+    })
+
+    const temas = [
+      "Present Simple",
+      "Past Tense",
+      "Future Tense",
+      "Vocabulary Building",
+      "Technical English",
+      "Grammar Basics",
     ]
+    const actividades = [
+      "Grammar Exercise",
+      "Vocabulary Test",
+      "Reading Comprehension",
+      "Listening Practice",
+      "Speaking Activity",
+    ]
+    const instructoresEjemplo = ["Ana García", "Carlos Rodríguez", "María López", "Juan Martínez"]
+
+    Array.from(fichasReales).forEach((ficha) => {
+      const aprendizDeFicha = aprendices.find((a) =>
+        Array.isArray(a.ficha) ? a.ficha.includes(Number.parseInt(ficha)) : a.ficha.toString() === ficha,
+      )
+
+      // Crear 2-3 actividades por ficha
+      for (let i = 0; i < Math.floor(Math.random() * 2) + 2; i++) {
+        const nivel = Math.floor(Math.random() * 3) + 1
+        const tema = temas[Math.floor(Math.random() * temas.length)]
+        const actividad = actividades[Math.floor(Math.random() * actividades.length)]
+        const instructor = instructoresEjemplo[Math.floor(Math.random() * instructoresEjemplo.length)]
+
+        mockData.push({
+          id: id++,
+          programa: aprendizDeFicha?.programa || "Programa SENA",
+          ficha: ficha,
+          nivel: nivel.toString(),
+          tema: tema,
+          actividad: `${actividad} ${i + 1}`,
+          ejecutada: Math.random() > 0.3 ? "Sí" : "No",
+          instructor: instructor,
+          fecha: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1)
+            .toISOString()
+            .split("T")[0],
+          totalPreguntas: Math.floor(Math.random() * 20) + 10,
+          aprendicesPresentes: Math.floor(Math.random() * 15) + 15,
+        })
+      }
+    })
 
     // Filtrar datos basado en los filtros aplicados
     let filteredData = mockData
@@ -141,77 +327,149 @@ export const searchFeedbackData = async (filters) => {
       filteredData = filteredData.filter((item) => item.instructor === filters.instructor)
     }
 
+    console.log("📊 Datos filtrados:", filteredData.length, "resultados")
     return filteredData
   } catch (error) {
-    console.error("Error al buscar datos de retroalimentación:", error)
+    console.error("❌ Error al buscar datos de retroalimentación:", error)
     throw new Error("Error al obtener los datos de retroalimentación")
+  }
+}
+
+// Función para obtener detalles específicos de una retroalimentación por ID
+export const getFeedbackDetails = async (feedbackId) => {
+  try {
+    console.log("📋 Obteniendo detalles de retroalimentación para ID:", feedbackId)
+
+    // Obtener datos reales de aprendices
+    const users = await getAllUsers()
+    const aprendices = users.filter((user) => user && user.tipoUsuario === "aprendiz")
+    const instructores = users.filter((user) => user && user.tipoUsuario === "instructor")
+
+    // Simular delay de API
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    // Generar datos basados en el ID
+    const fichasDisponibles = []
+    aprendices.forEach((aprendiz) => {
+      if (Array.isArray(aprendiz.ficha)) {
+        aprendiz.ficha.forEach((ficha) => {
+          fichasDisponibles.push({
+            ficha: ficha.toString(),
+            programa: aprendiz.programa,
+            aprendices: aprendices.filter((a) =>
+              Array.isArray(a.ficha) ? a.ficha.includes(ficha) : a.ficha === ficha,
+            ),
+          })
+        })
+      } else if (aprendiz.ficha) {
+        fichasDisponibles.push({
+          ficha: aprendiz.ficha.toString(),
+          programa: aprendiz.programa,
+          aprendices: aprendices.filter((a) =>
+            Array.isArray(a.ficha) ? a.ficha.includes(aprendiz.ficha) : a.ficha === aprendiz.ficha,
+          ),
+        })
+      }
+    })
+
+    // Seleccionar una ficha basada en el ID
+    const fichaIndex = (feedbackId - 1) % fichasDisponibles.length
+    const fichaSeleccionada = fichasDisponibles[fichaIndex]
+
+    if (!fichaSeleccionada) {
+      throw new Error("No se encontraron datos para esta retroalimentación")
+    }
+
+    const temas = ["Present Simple", "Past Tense", "Future Tense", "Vocabulary Building", "Technical English"]
+    const actividades = ["Grammar Exercise", "Vocabulary Test", "Reading Comprehension", "Listening Practice"]
+
+    const instructorSeleccionado = instructores[feedbackId % instructores.length] || {
+      nombre: "Ana",
+      apellido: "García",
+    }
+
+    // Crear los detalles de la retroalimentación
+    const feedbackDetails = {
+      id: feedbackId,
+      programa: fichaSeleccionada.programa,
+      ficha: fichaSeleccionada.ficha,
+      nivel: (((feedbackId - 1) % 3) + 1).toString(),
+      tema: temas[(feedbackId - 1) % temas.length],
+      actividad: `${actividades[(feedbackId - 1) % actividades.length]} ${feedbackId}`,
+      ejecutada: feedbackId % 4 !== 0 ? "Sí" : "No", // 75% ejecutadas
+      instructor: `${instructorSeleccionado.nombre} ${instructorSeleccionado.apellido}`,
+      fecha: new Date(2024, (feedbackId - 1) % 12, (feedbackId % 28) + 1).toISOString().split("T")[0],
+      totalPreguntas: 15 + (feedbackId % 15),
+      aprendicesPresentes: fichaSeleccionada.aprendices.length,
+      aprendicesInscritos: fichaSeleccionada.aprendices.length + Math.floor(Math.random() * 5),
+    }
+
+    console.log("✅ Detalles de retroalimentación generados:", feedbackDetails)
+    return feedbackDetails
+  } catch (error) {
+    console.error("❌ Error al obtener detalles de retroalimentación:", error)
+    throw new Error("Error al cargar los detalles de la retroalimentación")
   }
 }
 
 // Función para obtener detalles de estudiantes para una actividad específica
 export const getStudentDetails = async (feedbackId) => {
   try {
+    console.log("👥 Obteniendo detalles de estudiantes para feedback ID:", feedbackId)
+
+    // Obtener datos reales de aprendices
+    const users = await getAllUsers()
+    const aprendices = users.filter((user) => user && user.tipoUsuario === "aprendiz")
+
     // Simular delay de API
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // Generar datos mock de estudiantes basado en el ID de retroalimentación
-    const baseStudents = [
-      "Juan Pérez",
-      "María González",
-      "Carlos López",
-      "Ana Martínez",
-      "Luis Rodríguez",
-      "Carmen Sánchez",
-      "Pedro Jiménez",
-      "Laura Fernández",
-      "Miguel Torres",
-      "Isabel Ruiz",
-      "Francisco Morales",
-      "Elena Vargas",
-      "Roberto Castro",
-      "Patricia Ortega",
-      "Daniel Ramos",
-      "Lucía Herrera",
-      "Andrés Delgado",
-      "Cristina Peña",
-      "Javier Guerrero",
-      "Mónica Vega",
-      "Alejandro Mendoza",
-      "Beatriz Aguilar",
-      "Raúl Medina",
-      "Silvia Romero",
-      "Emilio Navarro",
-    ]
+    // Obtener los detalles de la retroalimentación para saber qué ficha usar
+    const feedbackDetails = await getFeedbackDetails(feedbackId)
 
-    const fichas = ["2669742", "2669743", "2669744", "2669745"]
-    const estados = ["Presente", "Ausente"]
+    // Filtrar aprendices de la ficha específica
+    const aprendicesDeLaFicha = aprendices.filter((aprendiz) => {
+      if (Array.isArray(aprendiz.ficha)) {
+        return aprendiz.ficha.includes(Number.parseInt(feedbackDetails.ficha))
+      }
+      return aprendiz.ficha?.toString() === feedbackDetails.ficha
+    })
+
+    console.log(`👨‍🎓 Aprendices encontrados para ficha ${feedbackDetails.ficha}:`, aprendicesDeLaFicha.length)
+
     const horas = ["08:00", "10:00", "14:00", "16:00"]
 
-    // Generar entre 20-25 estudiantes
-    const numStudents = Math.floor(Math.random() * 6) + 20
-    const students = []
-
-    for (let i = 0; i < numStudents; i++) {
+    const students = aprendicesDeLaFicha.map((aprendiz, index) => {
       const isPresent = Math.random() > 0.15 // 85% probabilidad de estar presente
       const calificacion = isPresent
         ? (Math.random() * 2 + 3).toFixed(1) // Entre 3.0 y 5.0 si está presente
         : "0.0" // 0.0 si está ausente
 
-      students.push({
-        id: i + 1,
-        aprendiz: baseStudents[i % baseStudents.length] + ` ${i + 1}`,
-        ficha: fichas[Math.floor(Math.random() * fichas.length)],
+      // Obtener la primera ficha del aprendiz
+      const fichaAprendiz = Array.isArray(aprendiz.ficha) ? aprendiz.ficha[0] : aprendiz.ficha
+
+      return {
+        id: index + 1,
+        aprendiz: `${aprendiz.nombre} ${aprendiz.apellido}`,
+        ficha: fichaAprendiz?.toString() || "Sin ficha",
+        documento: aprendiz.documento || "Sin documento",
+        programa: aprendiz.programa || "Sin programa",
+        estado: aprendiz.estado || "Activo",
         hora: horas[Math.floor(Math.random() * horas.length)],
         estado: isPresent ? "Presente" : "Ausente",
         calificacion: calificacion,
         preguntasFalladas: isPresent ? Math.floor(Math.random() * 5) : 0,
         observaciones: isPresent ? "Participación activa" : "No asistió a clase",
-      })
-    }
+        progresoActual: aprendiz.progresoActual || 0,
+        puntos: aprendiz.puntos || 0,
+      }
+    })
 
-    return students.sort((a, b) => a.aprendiz.localeCompare(b.aprendiz))
+    const studentsOrdenados = students.sort((a, b) => a.aprendiz.localeCompare(b.aprendiz))
+    console.log("✅ Estudiantes procesados:", studentsOrdenados.length)
+    return studentsOrdenados
   } catch (error) {
-    console.error("Error al obtener detalles de estudiantes:", error)
+    console.error("❌ Error al obtener detalles de estudiantes:", error)
     throw new Error("Error al cargar los detalles de los estudiantes")
   }
 }
@@ -219,6 +477,8 @@ export const getStudentDetails = async (feedbackId) => {
 // Función para obtener preguntas falladas de un estudiante
 export const getStudentFailedQuestions = async (studentId, feedbackId) => {
   try {
+    console.log("❓ Obteniendo preguntas falladas para estudiante:", studentId)
+
     // Simular delay de API
     await new Promise((resolve) => setTimeout(resolve, 800))
 
@@ -280,7 +540,7 @@ export const getStudentFailedQuestions = async (studentId, feedbackId) => {
 
     return failedQuestions
   } catch (error) {
-    console.error("Error al obtener preguntas falladas:", error)
+    console.error("❌ Error al obtener preguntas falladas:", error)
     throw new Error("Error al cargar las preguntas falladas")
   }
 }

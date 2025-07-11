@@ -1,48 +1,50 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getStudentsByCourse } from "../services/rankingService"
+import { getStudentsByFicha } from "../services/rankingService"
 
-export const useGetStudentsByCourse = (courseNumber) => {
+export const useGetStudentsByCourse = (courseCode) => {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      if (!courseNumber) {
-        setStudents([])
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-
-        console.log(`🔍 Fetching students for course: ${courseNumber}`)
-        const response = await getStudentsByCourse(courseNumber)
-
-        if (response.success) {
-          console.log(`✅ Students fetched for course ${courseNumber}:`, response.data.length)
-          setStudents(response.data)
-        } else {
-          throw new Error("Error al obtener estudiantes por ficha")
-        }
-      } catch (err) {
-        console.error(`❌ Error fetching students for course ${courseNumber}:`, err)
-        setError(err.message || "Error al cargar estudiantes")
-        setStudents([])
-      } finally {
-        setLoading(false)
-      }
+  const fetchStudentsByCourse = async () => {
+    if (!courseCode) {
+      setStudents([])
+      return
     }
 
-    fetchStudents()
-  }, [courseNumber])
+    try {
+      setLoading(true)
+      setError(null)
+
+      console.log("🔄 Fetching students by course:", courseCode)
+
+      const response = await getStudentsByFicha(courseCode)
+
+      if (response.success) {
+        console.log("✅ Students by course fetched successfully:", response.data.length)
+        setStudents(response.data)
+      } else {
+        throw new Error(response.message || "Error al obtener estudiantes por ficha")
+      }
+    } catch (err) {
+      console.error("❌ Error fetching students by course:", err)
+      setError(err.message || "Error al cargar estudiantes por ficha")
+      setStudents([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStudentsByCourse()
+  }, [courseCode])
 
   return {
     students,
     loading,
     error,
+    refetch: fetchStudentsByCourse,
   }
 }

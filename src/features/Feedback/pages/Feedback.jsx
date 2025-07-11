@@ -13,6 +13,8 @@ import StudentDetailPanel from "../components/StudentDetailPanel"
 import { useStudentDetails } from "../hooks/useStudentDetails"
 
 const Feedback = () => {
+  console.log("🚀 Renderizando componente Feedback")
+
   const navigate = useNavigate()
   const { logout } = useAuth()
 
@@ -25,6 +27,14 @@ const Feedback = () => {
   // Hooks para datos y búsqueda
   const { fichas, instructors, niveles, loading: dataLoading, error: dataError } = useFeedbackData()
   const { feedbackData, loading: searchLoading, error: searchError, hasSearched, searchFeedback } = useFeedbackSearch()
+
+  console.log("📊 Estado actual:", {
+    fichas: fichas?.length || 0,
+    instructors: instructors?.length || 0,
+    niveles: niveles?.length || 0,
+    dataLoading,
+    dataError,
+  })
 
   // Columnas para la tabla de retroalimentación
   const columns = [
@@ -72,46 +82,31 @@ const Feedback = () => {
   }
 
   const handleSearch = (filters) => {
-    console.log("Ejecutando búsqueda con filtros:", filters)
+    console.log("🔍 Ejecutando búsqueda con filtros:", filters)
     searchFeedback(filters)
   }
 
   const handleViewDetail = (item) => {
-    console.log("Mostrando detalle:", item)
+    console.log("👁️ Mostrando detalle:", item)
     setSelectedFeedbackItem(item)
     setShowDetailModal(true)
   }
 
+  // Mostrar pantalla de carga mientras se cargan los datos iniciales
   if (dataLoading) {
+    console.log("⏳ Mostrando pantalla de carga")
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1f384c] mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Cargando datos iniciales...</p>
-          <p className="text-gray-500 text-sm mt-2">Obteniendo fichas de la API...</p>
+          <p className="text-gray-600 text-lg">Cargando módulo de retroalimentación...</p>
+          <p className="text-gray-500 text-sm mt-2">Obteniendo fichas y niveles de aprendices...</p>
         </div>
       </div>
     )
   }
 
-  if (dataError) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-red-800 mb-2">Error al cargar los datos</h3>
-            <p className="text-red-700">{dataError}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  console.log("✅ Renderizando vista principal")
 
   const FeedbackDetailsContent = ({ feedbackItem }) => {
     const { studentData, loading, error, loadStudentData } = useStudentDetails()
@@ -124,7 +119,7 @@ const Feedback = () => {
       }
     }, [feedbackItem?.id])
 
-    const columns = [
+    const studentColumns = [
       { key: "aprendiz", label: "Aprendiz", width: "25%" },
       { key: "ficha", label: "Ficha", width: "15%" },
       { key: "hora", label: "Hora", width: "15%" },
@@ -232,7 +227,7 @@ const Feedback = () => {
           </div>
           <GenericTable
             data={studentData}
-            columns={columns}
+            columns={studentColumns}
             onShow={handleViewStudentDetail}
             defaultItemsPerPage={5}
             showActions={{ show: true, edit: false, delete: false, add: false }}
@@ -259,6 +254,7 @@ const Feedback = () => {
           <div>
             <h1 className="text-2xl font-bold text-[#1f384c]">Retroalimentación</h1>
             <p className="text-sm text-gray-600 mt-1">Gestión de retroalimentación de actividades de inglés</p>
+            {dataError && <p className="text-sm text-orange-600 mt-1">⚠️ {dataError}</p>}
           </div>
           <div className="relative" ref={dropdownRef}>
             <button

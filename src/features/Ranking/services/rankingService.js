@@ -1,100 +1,13 @@
-const API_BASE_URL = "https://sara-api-ingdanielbs-projects.vercel.app/api/v1"
 const LOCAL_API_BASE_URL = "http://localhost:3000/api"
-const API_KEY = "sara_d32775a2ea8a39a3.a14bb968e21a6be6821d19f2764945338ba182b972aff43732b0c7c8314d343a"
-
-const apiHeaders = {
-  "Content-Type": "application/json",
-  "x-api-key": API_KEY,
-}
 
 const localApiHeaders = {
   "Content-Type": "application/json",
 }
 
-// Servicio para obtener cursos (fichas) desde la API original
-export const getCourses = async (page = 1, limit = 100) => {
-  try {
-    console.log("🔄 Fetching courses from API...")
-    const response = await fetch(`${API_BASE_URL}/courses?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: apiHeaders,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    console.log("✅ Courses fetched successfully:", data?.data?.length || 0)
-    return data
-  } catch (error) {
-    console.error("❌ Error fetching courses:", error)
-    // Retornar datos de prueba en caso de error
-    return {
-      data: [
-        { code: "2691", name: "Ficha 2691" },
-        { code: "2692", name: "Ficha 2692" },
-        { code: "2693", name: "Ficha 2693" },
-      ],
-    }
-  }
-}
-
-// Servicio para obtener estudiantes (nombres) desde la API original
-export const getStudents = async (page = 1, limit = 1000) => {
-  try {
-    console.log("🔄 Fetching students from external API...")
-    const response = await fetch(`${API_BASE_URL}/courses-students?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: apiHeaders,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    console.log("✅ Students fetched successfully:", data?.data?.length || 0)
-    return data
-  } catch (error) {
-    console.error("❌ Error fetching students:", error)
-    return { data: [] }
-  }
-}
-
-// Servicio para obtener programas desde la API original
-export const getPrograms = async (page = 1, limit = 100) => {
-  try {
-    console.log("🔄 Fetching programs from API...")
-    const response = await fetch(`${API_BASE_URL}/programs?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: apiHeaders,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    console.log("✅ Programs fetched successfully:", data?.data?.length || 0)
-    return data
-  } catch (error) {
-    console.error("❌ Error fetching programs:", error)
-    // Retornar datos de prueba en caso de error
-    return {
-      data: [
-        { name: "ADSO", code: "ADSO" },
-        { name: "Multimedia", code: "MULT" },
-        { name: "Contabilidad", code: "CONT" },
-      ],
-    }
-  }
-}
-
-// Servicio para obtener estudiantes con puntos desde la API local
+// Servicio principal para obtener todos los datos desde la API local
 export const getStudentPoints = async () => {
   try {
-    console.log("🔄 Fetching student points from local API...")
+    console.log("🔄 Fetching all data from local API...")
     const response = await fetch(`${LOCAL_API_BASE_URL}/user`, {
       method: "GET",
       headers: localApiHeaders,
@@ -105,89 +18,77 @@ export const getStudentPoints = async () => {
     }
 
     const data = await response.json()
-    console.log("✅ Student points fetched successfully:", Array.isArray(data) ? data.length : 0)
+    console.log("✅ Data fetched successfully:", Array.isArray(data) ? data.length : 0)
+
+    // Filtrar solo aprendices
+    const aprendices = Array.isArray(data) ? data.filter((user) => user.tipoUsuario === "aprendiz") : []
+
+    console.log("👨‍🎓 Aprendices filtered:", aprendices.length)
 
     return {
       success: true,
-      data: Array.isArray(data) ? data : [],
+      data: aprendices,
     }
   } catch (error) {
-    console.error("❌ Error fetching student points:", error)
+    console.error("❌ Error fetching data from local API:", error)
     console.log("🔧 Using test data instead...")
 
     // Datos de prueba cuando la API local no está disponible
     const testData = [
       {
-        nombre: "Juan",
-        apellido: "Pérez",
-        puntos: 95,
-        ficha: ["2691"],
-        programa: "ADSO",
+        _id: "test1",
+        tipoUsuario: "aprendiz",
+        nombre: "ADRIANA",
+        apellido: "GOMEZ",
         documento: "1234567890",
-        estado: "En formación",
+        estado: "Activo",
+        puntos: 200,
+        ficha: ["2875155"],
+        programa: "COORDINACION DE SERVICIOS HOTELEROS",
       },
       {
-        nombre: "María",
-        apellido: "García",
-        puntos: 87,
-        ficha: ["2692"],
-        programa: "ADSO",
+        _id: "test2",
+        tipoUsuario: "aprendiz",
+        nombre: "ALBA NURIS",
+        apellido: "MORALES",
         documento: "1234567891",
-        estado: "En formación",
+        estado: "Activo",
+        puntos: 195,
+        ficha: ["2875156"],
+        programa: "ADSO",
       },
       {
-        nombre: "Carlos",
-        apellido: "López",
-        puntos: 82,
-        ficha: ["2691"],
-        programa: "Multimedia",
+        _id: "test3",
+        tipoUsuario: "aprendiz",
+        nombre: "ALEJANDRA",
+        apellido: "BOTERO",
         documento: "1234567892",
-        estado: "En formación",
+        estado: "Activo",
+        puntos: 190,
+        ficha: ["2875155"],
+        programa: "COORDINACION DE SERVICIOS HOTELEROS",
       },
       {
-        nombre: "Ana",
-        apellido: "Martínez",
-        puntos: 78,
-        ficha: ["2693"],
-        programa: "ADSO",
+        _id: "test4",
+        tipoUsuario: "aprendiz",
+        nombre: "ALEXANDER",
+        apellido: "VIDALES",
         documento: "1234567893",
-        estado: "En formación",
+        estado: "Activo",
+        puntos: 185,
+        ficha: ["2875157"],
+        programa: "MULTIMEDIA",
       },
       {
-        nombre: "Luis",
-        apellido: "Rodríguez",
-        puntos: 75,
-        ficha: ["2692"],
-        programa: "Multimedia",
+        _id: "test5",
+        tipoUsuario: "aprendiz",
+        nombre: "ANA MARIA",
+        apellido: "DURAN",
         documento: "1234567894",
-        estado: "En formación",
-      },
-      {
-        nombre: "Sofia",
-        apellido: "Hernández",
-        puntos: 92,
-        ficha: ["2691"],
+        estado: "Activo",
+        puntos: 180,
+        ficha: ["2875156"],
         programa: "ADSO",
-        documento: "1234567895",
-        estado: "En formación",
-      },
-      {
-        nombre: "Diego",
-        apellido: "Morales",
-        puntos: 68,
-        ficha: ["2693"],
-        programa: "Contabilidad",
-        documento: "1234567896",
-        estado: "En formación",
-      },
-      {
-        nombre: "Valentina",
-        apellido: "Castro",
-        puntos: 89,
-        ficha: ["2692"],
-        programa: "Multimedia",
-        documento: "1234567897",
-        estado: "En formación",
       },
     ]
 
@@ -204,75 +105,163 @@ export const getStudentFullName = (student) => {
   if (student.nombre && student.apellido) {
     return `${student.nombre} ${student.apellido}`.trim()
   }
-  if (student.name && student.last_name) {
-    return `${student.name} ${student.last_name}`.trim()
-  }
-  return student.nombre || student.name || `Estudiante ${student.documento || student.document || "N/A"}`
+  return student.nombre || `Estudiante ${student.documento || "N/A"}`
 }
 
-// Función para obtener número de ficha del estudiante
-export const getStudentCourseNumber = (student) => {
-  // La API local tiene el campo "ficha" como array
-  if (student.ficha && Array.isArray(student.ficha) && student.ficha.length > 0) {
-    return student.ficha[0].toString()
+// Función para obtener fichas del estudiante
+export const getStudentFichas = (student) => {
+  if (student.ficha && Array.isArray(student.ficha)) {
+    return student.ficha
   }
-  // La API externa tiene "course_number"
-  if (student.course_number) {
-    return student.course_number.toString()
-  }
-  return "N/A"
+  return []
 }
 
-// Servicio para obtener estudiantes por ficha específica desde la API local
-export const getStudentsByCourse = async (courseNumber) => {
+// Función para obtener el programa del estudiante
+export const getStudentProgram = (student) => {
+  return student.programa || "N/A"
+}
+
+// Función para extraer fichas únicas de los datos de estudiantes
+export const getUniqueFichas = (students) => {
+  const uniqueFichas = new Set()
+
+  students.forEach((student) => {
+    const fichas = getStudentFichas(student)
+    fichas.forEach((ficha) => {
+      if (ficha) {
+        uniqueFichas.add(ficha)
+      }
+    })
+  })
+
+  return Array.from(uniqueFichas)
+    .sort()
+    .map((ficha) => ({
+      id: ficha,
+      name: `Ficha ${ficha}`,
+      code: ficha,
+    }))
+}
+
+// Función para extraer programas únicos de los datos de estudiantes
+export const getUniqueProgramas = (students) => {
+  const uniqueProgramas = new Set()
+
+  students.forEach((student) => {
+    const programa = getStudentProgram(student)
+    if (programa !== "N/A") {
+      uniqueProgramas.add(programa)
+    }
+  })
+
+  return Array.from(uniqueProgramas)
+    .sort()
+    .map((programa) => ({
+      id: programa,
+      name: programa,
+      code: programa.replace(/\s+/g, "_").toUpperCase(),
+    }))
+}
+
+// Función para obtener fichas relacionadas con un programa específico
+export const getFichasByPrograma = (students, programa) => {
+  const fichasRelacionadas = new Set()
+
+  students
+    .filter((student) => getStudentProgram(student) === programa)
+    .forEach((student) => {
+      const fichas = getStudentFichas(student)
+      fichas.forEach((ficha) => {
+        if (ficha) {
+          fichasRelacionadas.add(ficha)
+        }
+      })
+    })
+
+  return Array.from(fichasRelacionadas)
+    .sort()
+    .map((ficha) => ({
+      id: ficha,
+      name: `Ficha ${ficha}`,
+      code: ficha,
+    }))
+}
+
+// Función para obtener programas relacionados con una ficha específica
+export const getProgramasByFicha = (students, ficha) => {
+  const programasRelacionados = new Set()
+
+  students
+    .filter((student) => {
+      const fichas = getStudentFichas(student)
+      return fichas.includes(ficha)
+    })
+    .forEach((student) => {
+      const programa = getStudentProgram(student)
+      if (programa !== "N/A") {
+        programasRelacionados.add(programa)
+      }
+    })
+
+  return Array.from(programasRelacionados)
+    .sort()
+    .map((programa) => ({
+      id: programa,
+      name: programa,
+      code: programa.replace(/\s+/g, "_").toUpperCase(),
+    }))
+}
+
+// Servicio para obtener estudiantes por ficha específica
+export const getStudentsByFicha = async (fichaCode) => {
   try {
     const response = await getStudentPoints()
 
     if (response.success && response.data) {
       const filteredStudents = response.data.filter((student) => {
-        const studentCourseNumber = getStudentCourseNumber(student)
-        return studentCourseNumber === courseNumber.toString()
+        const fichas = getStudentFichas(student)
+        return fichas.includes(fichaCode)
       })
 
-      console.log(`🎯 Students filtered by course ${courseNumber}:`, filteredStudents.length)
+      console.log(`🎯 Students filtered by ficha ${fichaCode}:`, filteredStudents.length)
 
       return {
         success: true,
         data: filteredStudents,
-        message: `Estudiantes de la ficha ${courseNumber} obtenidos exitosamente`,
+        message: `Estudiantes de la ficha ${fichaCode} obtenidos exitosamente`,
       }
     }
 
     return response
   } catch (error) {
-    console.error("Error fetching students by course:", error)
+    console.error("Error fetching students by ficha:", error)
     throw error
   }
 }
 
-// Servicio para obtener estudiantes por programa específico desde la API local
-export const getStudentsByProgram = async (programCode) => {
+// Servicio para obtener estudiantes por programa específico
+export const getStudentsByPrograma = async (programa) => {
   try {
     const response = await getStudentPoints()
 
     if (response.success && response.data) {
-      // Por ahora filtrar por programa usando el campo "programa"
       const filteredStudents = response.data.filter((student) => {
-        return student.programa && student.programa.toLowerCase().includes(programCode.toLowerCase())
+        const studentPrograma = getStudentProgram(student)
+        return studentPrograma === programa
       })
 
-      console.log(`🎯 Students filtered by program ${programCode}:`, filteredStudents.length)
+      console.log(`🎯 Students filtered by programa ${programa}:`, filteredStudents.length)
 
       return {
         success: true,
         data: filteredStudents,
-        message: `Estudiantes del programa ${programCode} obtenidos exitosamente`,
+        message: `Estudiantes del programa ${programa} obtenidos exitosamente`,
       }
     }
 
     return response
   } catch (error) {
-    console.error("Error fetching students by program:", error)
+    console.error("Error fetching students by programa:", error)
     throw error
   }
 }
@@ -282,7 +271,6 @@ export const getRankingMetrics = async () => {
   try {
     console.log("🚀 Starting getRankingMetrics...")
 
-    // Obtener estudiantes con puntos de la API local
     const pointsResponse = await getStudentPoints()
 
     if (!pointsResponse.success) {
@@ -290,29 +278,19 @@ export const getRankingMetrics = async () => {
     }
 
     const studentsWithPoints = pointsResponse.data || []
-    console.log("📊 Students with points loaded:", studentsWithPoints.length)
+    console.log("📊 Students loaded:", studentsWithPoints.length)
 
-    // Obtener datos adicionales de las APIs externas para métricas
-    const [coursesResponse, programsResponse] = await Promise.all([getCourses(1, 1000), getPrograms(1, 1000)])
+    // Extraer fichas y programas únicos de los datos de estudiantes
+    const uniqueFichas = getUniqueFichas(studentsWithPoints)
+    const uniqueProgramas = getUniqueProgramas(studentsWithPoints)
 
-    // Calcular métricas usando principalmente datos locales
-    const uniqueFichas = new Set()
-    const uniquePrograms = new Set()
-
-    studentsWithPoints.forEach((student) => {
-      const courseNumber = getStudentCourseNumber(student)
-      if (courseNumber !== "N/A") {
-        uniqueFichas.add(courseNumber)
-      }
-      if (student.programa) {
-        uniquePrograms.add(student.programa)
-      }
-    })
+    console.log("🏫 Unique fichas found:", uniqueFichas.length)
+    console.log("📚 Unique programas found:", uniqueProgramas.length)
 
     const metrics = {
       aprendices: studentsWithPoints.length,
-      fichas: Math.max(uniqueFichas.size, coursesResponse?.data?.length || 0),
-      programas: Math.max(uniquePrograms.size, programsResponse?.data?.length || 0),
+      fichas: uniqueFichas.length,
+      programas: uniqueProgramas.length,
     }
 
     console.log("✅ Metrics calculated:", metrics)
@@ -320,9 +298,11 @@ export const getRankingMetrics = async () => {
     return {
       success: true,
       data: metrics,
-      courses: coursesResponse.data || [],
+      courses: uniqueFichas, // Para compatibilidad
       students: studentsWithPoints,
-      programs: programsResponse.data || [],
+      programs: uniqueProgramas, // Para compatibilidad
+      fichas: uniqueFichas,
+      programas: uniqueProgramas,
       pointsData: studentsWithPoints,
     }
   } catch (error) {
@@ -344,50 +324,55 @@ export const generateRealRanking = (students, type = "general", filterValue = nu
 
   let filteredStudents = [...students]
 
-  // Filtrar solo estudiantes activos
+  // Filtrar solo estudiantes activos y que sean aprendices
   filteredStudents = filteredStudents.filter(
     (student) =>
-      student.estado === "En formación" ||
-      student.estado === "Activo" ||
-      (!student.estado && student.estado !== "Retirado"),
+      student.tipoUsuario === "aprendiz" &&
+      (student.estado === "Activo" ||
+        student.estado === "En formación" ||
+        (!student.estado && student.estado !== "Retirado" && student.estado !== "Inactivo")),
   )
 
-  console.log(`🔍 Active students after filtering: ${filteredStudents.length}`)
+  console.log(`🔍 Active apprentices after filtering: ${filteredStudents.length}`)
 
   // Aplicar filtros específicos
   if (type === "ficha" && filterValue) {
     filteredStudents = filteredStudents.filter((student) => {
-      const courseNumber = getStudentCourseNumber(student)
-      return courseNumber === filterValue.toString()
+      const fichas = getStudentFichas(student)
+      return fichas.includes(filterValue.toString())
     })
     console.log(`🎯 Students after ficha filter (${filterValue}): ${filteredStudents.length}`)
   } else if (type === "programa" && filterValue) {
     filteredStudents = filteredStudents.filter((student) => {
-      return student.programa && student.programa.toLowerCase().includes(filterValue.toLowerCase())
+      const programa = getStudentProgram(student)
+      return programa === filterValue
     })
     console.log(`🎯 Students after programa filter (${filterValue}): ${filteredStudents.length}`)
   }
 
-  // Mapear a formato de ranking - ASEGURAR QUE LOS PUNTOS SE MANTENGAN
+  // Mapear a formato de ranking
   const rankingData = filteredStudents.map((student) => {
     const puntos = Number.parseInt(student.puntos) || 0
     const nombre = getStudentFullName(student)
+    const fichas = getStudentFichas(student)
 
     const studentData = {
       nombre: nombre,
       puntos: puntos,
-      ficha: getStudentCourseNumber(student),
-      programa: student.programa || "N/A",
+      ficha: fichas.length > 0 ? fichas[0] : "N/A", // Primera ficha para compatibilidad
+      fichas: fichas, // Todas las fichas
+      programa: getStudentProgram(student),
       estado: student.estado || "N/A",
       documento: student.documento || "N/A",
       nivel: student.nivel || 1,
       progreso: student.progresoActual || 0,
+      tipoUsuario: student.tipoUsuario || "aprendiz",
     }
 
     return studentData
   })
 
-  // Filtrar estudiantes con puntos válidos
+  // Filtrar estudiantes con puntos válidos (mayor a 0)
   const validStudents = rankingData.filter((student) => student.puntos > 0)
   console.log(`🏆 Students with valid points: ${validStudents.length}`)
 
@@ -414,3 +399,30 @@ export const generateRealRanking = (students, type = "general", filterValue = nu
 
   return sortedRanking
 }
+
+// Funciones legacy mantenidas para compatibilidad
+export const getCourses = async () => {
+  const response = await getStudentPoints()
+  if (response.success) {
+    const fichas = getUniqueFichas(response.data)
+    return { data: fichas }
+  }
+  return { data: [] }
+}
+
+export const getPrograms = async () => {
+  const response = await getStudentPoints()
+  if (response.success) {
+    const programas = getUniqueProgramas(response.data)
+    return { data: programas }
+  }
+  return { data: [] }
+}
+
+export const getStudents = async () => {
+  return await getStudentPoints()
+}
+
+// Nuevas funciones específicas para la funcionalidad solicitada
+export const getStudentsByCourse = getStudentsByFicha
+export const getStudentsByProgram = getStudentsByPrograma

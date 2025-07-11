@@ -2,47 +2,55 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, User, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
+import { ArrowLeft, User, CheckCircle, XCircle, AlertTriangle, RefreshCw } from "lucide-react"
 import GenericTable from "../../../shared/components/Table"
 import { useStudentDetails } from "../hooks/useStudentDetails"
+import { getFeedbackDetails } from "../services/feedbackService"
 import StudentDetailPanel from "../components/StudentDetailPanel"
 
 const FeedbackDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { studentData, loading, error, loadStudentData } = useStudentDetails()
+  const { studentData, loading: studentsLoading, error: studentsError, loadStudentData } = useStudentDetails()
   const [showStudentPanel, setShowStudentPanel] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(null)
-
-  // Mock data para la actividad (en una app real vendría de la API)
-  const [feedbackItem] = useState({
-    id: Number.parseInt(id),
-    programa: "ADSO",
-    ficha: "2669742",
-    nivel: "Básico",
-    tema: "Present Simple",
-    actividad: "Grammar Exercise 1",
-    ejecutada: "Sí",
-    instructor: "Ana García",
-    fecha: "2024-01-15",
-    totalPreguntas: 20,
-    aprendicesPresentes: 25,
-  })
+  const [feedbackItem, setFeedbackItem] = useState(null)
+  const [feedbackLoading, setFeedbackLoading] = useState(true)
+  const [feedbackError, setFeedbackError] = useState(null)
 
   useEffect(() => {
     if (id) {
+      loadFeedbackDetails()
       loadStudentData(Number.parseInt(id))
     }
   }, [id])
 
+  const loadFeedbackDetails = async () => {
+    try {
+      setFeedbackLoading(true)
+      setFeedbackError(null)
+      console.log("🔍 Cargando detalles de retroalimentación para ID:", id)
+
+      const details = await getFeedbackDetails(Number.parseInt(id))
+      setFeedbackItem(details)
+      console.log("✅ Detalles cargados:", details)
+    } catch (error) {
+      console.error("❌ Error al cargar detalles:", error)
+      setFeedbackError(error.message)
+    } finally {
+      setFeedbackLoading(false)
+    }
+  }
+
   const columns = [
     { key: "aprendiz", label: "Aprendiz", width: "25%" },
-    { key: "ficha", label: "Ficha", width: "15%" },
-    { key: "hora", label: "Hora", width: "15%" },
+    { key: "ficha", label: "Ficha", width: "12%" },
+    { key: "documento", label: "Documento", width: "15%" },
+    { key: "hora", label: "Hora", width: "10%" },
     {
       key: "estado",
       label: "Estado",
-      width: "15%",
+      width: "12%",
       render: (item) => (
         <span
           className={`px-2 py-1 rounded-md text-xs font-medium ${
@@ -56,7 +64,7 @@ const FeedbackDetails = () => {
     {
       key: "calificacion",
       label: "Calificación",
-      width: "15%",
+      width: "12%",
       render: (item) => (
         <span
           className={`font-medium ${
@@ -71,6 +79,12 @@ const FeedbackDetails = () => {
         </span>
       ),
     },
+    {
+      key: "puntos",
+      label: "Puntos",
+      width: "10%",
+      render: (item) => <span className="text-blue-600 font-medium">{item.puntos || 0}</span>,
+    },
   ]
 
   const handleViewStudentDetail = (student) => {
@@ -82,28 +96,65 @@ const FeedbackDetails = () => {
     navigate("/feedback")
   }
 
-  if (loading) {
+  const handleRetry = () => {
+    loadFeedbackDetails()
+    loadStudentData(Number.parseInt(id))
+  }
+
+  // Loading state
+  if (feedbackLoading || studentsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1f384c] mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Cargando detalles...</p>
+          <p className="text-gray-600 text-lg">Cargando detalles desde la API...</p>
+          <p className="text-gray-500 text-sm mt-2">Obteniendo datos reales de aprendices</p>
         </div>
       </div>
     )
   }
 
-  if (error) {
+  // Error state
+  if (feedbackError || studentsError) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-red-800 mb-2">Error al cargar los detalles</h3>
-            <p className="text-red-700">{error}</p>
-            <div className="flex gap-2 mt-4">
+            <p className="text-red-700 mb-4">{feedbackError || studentsError}</p>
+            <div className="flex gap-2">
               <button
-                onClick={() => loadStudentData(Number.parseInt(id))}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                onClick={handleRetry}
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Reintentar
+              </button>
+              <button
+                onClick={handleBack}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Volver
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // No data state
+  if (!feedbackItem) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h3 className="text-lg font-medium text-yellow-800 mb-2">No se encontraron datos</h3>
+            <p className="text-yellow-700 mb-4">No se pudieron cargar los detalles de esta retroalimentación</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRetry}
+                className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors"
               >
                 Reintentar
               </button>
@@ -137,6 +188,12 @@ const FeedbackDetails = () => {
           <p className="text-sm text-gray-600 mt-1">
             {feedbackItem.tema} - {feedbackItem.actividad}
           </p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Datos reales de la API</span>
+            <span className="text-xs text-gray-500">
+              Ficha {feedbackItem.ficha} • {feedbackItem.programa}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -155,7 +212,7 @@ const FeedbackDetails = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Nivel</p>
-              <p className="font-medium">{feedbackItem.nivel}</p>
+              <p className="font-medium">Nivel {feedbackItem.nivel}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Tema</p>
@@ -246,10 +303,26 @@ const FeedbackDetails = () => {
           </div>
         </div>
 
+        {/* Información adicional de datos reales */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle className="w-5 h-5 text-blue-600" />
+            <h4 className="font-medium text-blue-800">Datos Reales de la API</h4>
+          </div>
+          <p className="text-blue-700 text-sm">
+            Los aprendices mostrados corresponden a usuarios reales con <strong>tipoUsuario: "aprendiz"</strong> de la
+            ficha <strong>{feedbackItem.ficha}</strong>. Los datos incluyen nombres, documentos, programas y puntos
+            reales de la base de datos.
+          </p>
+        </div>
+
         {/* Tabla de aprendices */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <h4 className="text-lg font-medium text-[#1f384c]">Lista de Aprendices ({studentData.length})</h4>
+            <p className="text-sm text-gray-600 mt-1">
+              Aprendices reales de la ficha {feedbackItem.ficha} - {feedbackItem.programa}
+            </p>
           </div>
           <GenericTable
             data={studentData}
